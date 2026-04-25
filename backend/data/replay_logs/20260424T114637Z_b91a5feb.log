@@ -1,0 +1,6 @@
+[ReplayStart] replay_id=20260424T114637Z_b91a5feb scene_id=simple_home_1f experiment_type=pure_human agent_model=human_player
+[HumanStart] session_id=20260424T114637Z_b91a5feb spawn_room=kitchen spawn_anchor=stove_kitchen_knob
+[HumanStep] step=0 action=move target=door_kitchen ok=True world=1.0000
+[HumanStep] step=1 action=push target=door_kitchen ok=True world=0.9400
+[HumanStep] step=2 action=move target=bathroom ok=True world=0.9600
+[ReplayEnd] replay_id=20260424T114637Z_b91a5feb reason=human_stopped steps=3

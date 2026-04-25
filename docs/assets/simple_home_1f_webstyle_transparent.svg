@@ -1,0 +1,253 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1424" height="1209" viewBox="-671.1 -627.4 1424.9 1209.4">
+<defs>
+<style>
+svg { background:transparent; }
+text { font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif; }
+.edge-layer line { vector-effect: non-scaling-stroke; stroke-linecap: round; }
+.room-node { fill: #f8f5ef; stroke: #8c5c39; stroke-width: 3; }
+.room-node.agent-room { fill: #ffd8c0; stroke: #c75b21; }
+.object-node { fill: #4f7d72; stroke: #f7f1e8; stroke-width: 2.5; }
+.object-node.fixture-node { fill: #4f7d72; }
+.object-node.movable-node { fill: #be6a2d; }
+.object-node.agent-node { fill: #f0c419; stroke: #7a5b00; stroke-width: 3; }
+.node-label { font-size: 12px; font-weight: 700; text-anchor: middle; dominant-baseline: central; fill: #231f1b; }
+.object-label { font-size: 10px; }
+.agent-label { font-size: 11px; font-weight: 800; }
+</style>
+</defs>
+<text x="-647.1" y="-599.4" font-family="Iowan Old Style, Palatino Linotype, serif" font-size="24" font-weight="700" fill="#231b14">Graphworld Prototype · Simple Home 1F</text>
+<text x="-647.1" y="-577.4" font-size="12" font-weight="700" fill="#6d6459">网站风格导出 · 节点 72 · 连线 85</text>
+<g class="edge-layer">
+<line x1="0.0" y1="404.0" x2="-133.5" y2="352.8" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="0.0" y1="404.0" x2="145.1" y2="421.8" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="0.0" y1="404.0" x2="-117.1" y2="486.0" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="0.0" y1="404.0" x2="-40.7" y2="252.0" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="0.0" y1="404.0" x2="95.7" y2="297.7" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="95.7" y1="297.7" x2="95.7" y2="188.7" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="95.7" y1="297.7" x2="206.7" y2="297.7" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="95.7" y1="297.7" x2="95.7" y2="406.7" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-349.9" y1="-202.0" x2="-233.5" y2="-303.2" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-349.9" y1="-202.0" x2="-499.9" y2="-180.9" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-349.9" y1="-202.0" x2="-394.0" y2="-57.5" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-349.9" y1="-202.0" x2="-482.0" y2="-301.6" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-349.9" y1="-202.0" x2="-360.4" y2="-352.7" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-349.9" y1="-202.0" x2="-202.5" y2="-133.3" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-349.9" y1="-202.0" x2="-271.7" y2="-34.3" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-349.9" y1="202.0" x2="-469.6" y2="285.8" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-349.9" y1="202.0" x2="-388.4" y2="58.2" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-349.9" y1="202.0" x2="-268.8" y2="67.1" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-349.9" y1="202.0" x2="-207.1" y2="209.5" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-349.9" y1="202.0" x2="-477.7" y2="131.1" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-349.9" y1="202.0" x2="-273.3" y2="346.1" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-349.9" y1="202.0" x2="-397.9" y2="409.9" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-349.9" y1="202.0" x2="-125.7" y2="120.4" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-349.9" y1="202.0" x2="-142.5" y2="294.3" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-349.9" y1="202.0" x2="-575.1" y2="170.3" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-268.8" y1="67.1" x2="-268.8" y2="-56.3" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-268.8" y1="67.1" x2="-268.8" y2="196.8" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-268.8" y1="67.1" x2="-133.9" y2="67.1" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-273.3" y1="346.1" x2="-273.3" y2="210.5" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-273.3" y1="346.1" x2="-273.3" y2="475.3" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-273.3" y1="346.1" x2="-142.0" y2="346.1" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-273.3" y1="346.1" x2="-413.9" y2="346.1" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-125.7" y1="120.4" x2="3.2" y2="120.4" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-125.7" y1="120.4" x2="-125.7" y2="-9.6" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="-575.1" y1="170.3" x2="-575.1" y2="54.6" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="349.9" y1="202.0" x2="240.3" y2="293.9" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="349.9" y1="202.0" x2="205.5" y2="179.1" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="349.9" y1="202.0" x2="384.5" y2="63.2" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="349.9" y1="202.0" x2="481.5" y2="146.1" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="349.9" y1="202.0" x2="411.4" y2="346.9" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="349.9" y1="202.0" x2="540.7" y2="335.6" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="349.9" y1="202.0" x2="273.5" y2="88.7" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="384.5" y1="63.2" x2="505.0" y2="63.2" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="384.5" y1="63.2" x2="384.5" y2="-45.8" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="540.7" y1="335.6" x2="417.4" y2="335.6" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="540.7" y1="335.6" x2="540.7" y2="216.5" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="540.7" y1="335.6" x2="661.8" y2="335.6" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="540.7" y1="335.6" x2="540.7" y2="454.7" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="505.0" y1="63.2" x2="505.0" y2="-61.0" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="349.9" y1="-202.0" x2="486.3" y2="-149.6" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="349.9" y1="-202.0" x2="216.4" y2="-150.8" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="349.9" y1="-202.0" x2="411.6" y2="-69.5" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="349.9" y1="-202.0" x2="374.5" y2="-357.5" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="349.9" y1="-202.0" x2="240.3" y2="-293.9" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="349.9" y1="-202.0" x2="476.4" y2="-275.1" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="349.9" y1="-202.0" x2="289.7" y2="-60.1" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="349.9" y1="-202.0" x2="125.6" y2="-253.8" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="240.3" y1="-293.9" x2="363.4" y2="-293.9" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="240.3" y1="-293.9" x2="240.3" y2="-402.9" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="125.6" y1="-253.8" x2="246.1" y2="-253.8" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="125.6" y1="-253.8" x2="125.6" y2="-375.4" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="0.0" y1="-404.0" x2="-125.3" y2="-328.7" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="0.0" y1="-404.0" x2="134.6" y2="-380.3" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="0.0" y1="-404.0" x2="64.9" y2="-531.4" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="0.0" y1="-404.0" x2="35.4" y2="-250.6" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="0.0" y1="-404.0" x2="-118.9" y2="-484.2" class="edge-contains" style="stroke: rgba(181,105,33,0.35); stroke-width:2; stroke-dasharray:4 4;" />
+<line x1="0.0" y1="404.0" x2="-349.9" y2="-202.0" class="edge-neighbor" style="stroke: rgba(63,115,85,0.95); stroke-width:3;" />
+<line x1="-349.9" y1="-202.0" x2="-349.9" y2="202.0" class="edge-neighbor" style="stroke: rgba(63,115,85,0.95); stroke-width:3;" />
+<line x1="-349.9" y1="-202.0" x2="349.9" y2="202.0" class="edge-neighbor" style="stroke: rgba(63,115,85,0.95); stroke-width:3;" />
+<line x1="-349.9" y1="-202.0" x2="0.0" y2="-404.0" class="edge-neighbor" style="stroke: rgba(63,115,85,0.95); stroke-width:3;" />
+<line x1="-349.9" y1="202.0" x2="349.9" y2="-202.0" class="edge-neighbor" style="stroke: rgba(63,115,85,0.95); stroke-width:3;" />
+<line x1="349.9" y1="202.0" x2="349.9" y2="-202.0" class="edge-neighbor" style="stroke: rgba(63,115,85,0.95); stroke-width:3;" />
+<line x1="-477.7" y1="131.1" x2="-142.5" y2="294.3" class="edge-controls" style="stroke: rgba(152,78,163,0.92); stroke-width:2.2; stroke-dasharray:8 4;" />
+<line x1="411.6" y1="-69.5" x2="240.3" y2="-293.9" class="edge-controls" style="stroke: rgba(152,78,163,0.92); stroke-width:2.2; stroke-dasharray:8 4;" />
+<line x1="289.7" y1="-60.1" x2="476.4" y2="-275.1" class="edge-controls" style="stroke: rgba(152,78,163,0.92); stroke-width:2.2; stroke-dasharray:8 4;" />
+<line x1="145.1" y1="421.8" x2="-40.7" y2="252.0" class="edge-controls" style="stroke: rgba(152,78,163,0.92); stroke-width:2.2; stroke-dasharray:8 4;" />
+<line x1="-233.5" y1="-303.2" x2="-482.0" y2="-301.6" class="edge-controls" style="stroke: rgba(152,78,163,0.92); stroke-width:2.2; stroke-dasharray:8 4;" />
+<line x1="-469.6" y1="285.8" x2="-397.9" y2="409.9" class="edge-controls" style="stroke: rgba(152,78,163,0.92); stroke-width:2.2; stroke-dasharray:8 4;" />
+<line x1="205.5" y1="179.1" x2="411.4" y2="346.9" class="edge-controls" style="stroke: rgba(152,78,163,0.92); stroke-width:2.2; stroke-dasharray:8 4;" />
+<line x1="486.3" y1="-149.6" x2="374.5" y2="-357.5" class="edge-controls" style="stroke: rgba(152,78,163,0.92); stroke-width:2.2; stroke-dasharray:8 4;" />
+<line x1="-125.3" y1="-328.7" x2="35.4" y2="-250.6" class="edge-controls" style="stroke: rgba(152,78,163,0.92); stroke-width:2.2; stroke-dasharray:8 4;" />
+<line x1="-133.9" y1="67.1" x2="-268.8" y2="67.1" class="edge-controls" style="stroke: rgba(152,78,163,0.92); stroke-width:2.2; stroke-dasharray:8 4;" />
+<line x1="-125.7" y1="-9.6" x2="-125.7" y2="120.4" class="edge-controls" style="stroke: rgba(152,78,163,0.92); stroke-width:2.2; stroke-dasharray:8 4;" />
+<line x1="-575.1" y1="54.6" x2="-575.1" y2="170.3" class="edge-controls" style="stroke: rgba(152,78,163,0.92); stroke-width:2.2; stroke-dasharray:8 4;" />
+<line x1="125.6" y1="-375.4" x2="125.6" y2="-253.8" class="edge-controls" style="stroke: rgba(152,78,163,0.92); stroke-width:2.2; stroke-dasharray:8 4;" />
+</g>
+<g class="node-layer">
+<circle cx="0.0" cy="-404.0" r="34" class="room-node" />
+<text x="0.0" y="-404.0" class="node-label">阳台</text>
+<circle cx="349.9" cy="-202.0" r="34" class="room-node" />
+<text x="349.9" y="-202.0" class="node-label">卫生间</text>
+<circle cx="349.9" cy="202.0" r="34" class="room-node agent-room" />
+<text x="349.9" y="202.0" class="node-label">卧室</text>
+<circle cx="0.0" cy="404.0" r="34" class="room-node" />
+<text x="0.0" y="404.0" class="node-label">玄关</text>
+<circle cx="-349.9" cy="202.0" r="34" class="room-node" />
+<text x="-349.9" y="202.0" class="node-label">厨房</text>
+<circle cx="-349.9" cy="-202.0" r="34" class="room-node" />
+<text x="-349.9" y="-202.0" class="node-label">客厅</text>
+<circle cx="240.3" cy="293.9" r="16" class="object-node fixture-node" />
+<text x="240.3" y="311.9" class="node-label object-label">床</text>
+<circle cx="-133.5" cy="352.8" r="16" class="object-node fixture-node" />
+<text x="-133.5" y="370.8" class="node-label object-label">座椅</text>
+<circle cx="-125.3" cy="-328.7" r="16" class="object-node fixture-node" />
+<text x="-125.3" y="-310.7" class="node-label object-label">按钮</text>
+<circle cx="486.3" cy="-149.6" r="16" class="object-node fixture-node" />
+<text x="486.3" y="-131.6" class="node-label object-label">按钮</text>
+<circle cx="205.5" cy="179.1" r="16" class="object-node fixture-node" />
+<text x="205.5" y="197.1" class="node-label object-label">按钮</text>
+<circle cx="145.1" cy="421.8" r="16" class="object-node fixture-node" />
+<text x="145.1" y="439.8" class="node-label object-label">按钮</text>
+<circle cx="-469.6" cy="285.8" r="16" class="object-node fixture-node" />
+<text x="-469.6" y="303.8" class="node-label object-label">按钮</text>
+<circle cx="-233.5" cy="-303.2" r="16" class="object-node fixture-node" />
+<text x="-233.5" y="-285.2" class="node-label object-label">按钮</text>
+<circle cx="-499.9" cy="-180.9" r="16" class="object-node fixture-node" />
+<text x="-499.9" y="-162.9" class="node-label object-label">桌子</text>
+<circle cx="-388.4" cy="58.2" r="16" class="object-node fixture-node" />
+<text x="-388.4" y="76.2" class="node-label object-label">操作台</text>
+<circle cx="384.5" cy="63.2" r="16" class="object-node fixture-node" />
+<text x="384.5" y="81.2" class="node-label object-label">书桌</text>
+<circle cx="505.0" cy="63.2" r="16" class="object-node fixture-node" />
+<text x="505.0" y="81.2" class="node-label object-label">抽屉</text>
+<circle cx="-268.8" cy="67.1" r="16" class="object-node fixture-node" />
+<text x="-268.8" y="85.1" class="node-label object-label">洗碗机</text>
+<circle cx="-133.9" cy="67.1" r="16" class="object-node fixture-node" />
+<text x="-133.9" y="85.1" class="node-label object-label">按钮</text>
+<circle cx="-268.8" cy="196.8" r="16" class="object-node fixture-node" />
+<text x="-268.8" y="214.8" class="node-label object-label">门</text>
+<circle cx="64.9" cy="-531.4" r="16" class="object-node fixture-node" />
+<text x="64.9" y="-513.4" class="node-label object-label">门</text>
+<circle cx="216.4" cy="-150.8" r="16" class="object-node fixture-node" />
+<text x="216.4" y="-132.8" class="node-label object-label">门</text>
+<circle cx="481.5" cy="146.1" r="16" class="object-node fixture-node" />
+<text x="481.5" y="164.1" class="node-label object-label">门</text>
+<circle cx="-117.1" cy="486.0" r="16" class="object-node fixture-node" />
+<text x="-117.1" y="504.0" class="node-label object-label">门</text>
+<circle cx="-273.3" cy="210.5" r="16" class="object-node fixture-node" />
+<text x="-273.3" y="228.5" class="node-label object-label">门</text>
+<circle cx="-207.1" cy="209.5" r="16" class="object-node fixture-node" />
+<text x="-207.1" y="227.5" class="node-label object-label">门</text>
+<circle cx="-394.0" cy="-57.5" r="16" class="object-node fixture-node" />
+<text x="-394.0" y="-39.5" class="node-label object-label">门</text>
+<circle cx="411.6" cy="-69.5" r="16" class="object-node fixture-node" />
+<text x="411.6" y="-51.5" class="node-label object-label">水龙头</text>
+<circle cx="-477.7" cy="131.1" r="16" class="object-node fixture-node" />
+<text x="-477.7" y="149.1" class="node-label object-label">水龙头</text>
+<circle cx="-273.3" cy="346.1" r="16" class="object-node fixture-node" />
+<text x="-273.3" y="364.1" class="node-label object-label">冰箱</text>
+<circle cx="35.4" cy="-250.6" r="16" class="object-node fixture-node" />
+<text x="35.4" y="-232.6" class="node-label object-label">灯</text>
+<circle cx="374.5" cy="-357.5" r="16" class="object-node fixture-node" />
+<text x="374.5" y="-339.5" class="node-label object-label">灯</text>
+<circle cx="411.4" cy="346.9" r="16" class="object-node fixture-node" />
+<text x="411.4" y="364.9" class="node-label object-label">灯</text>
+<circle cx="-40.7" cy="252.0" r="16" class="object-node fixture-node" />
+<text x="-40.7" y="270.0" class="node-label object-label">灯</text>
+<circle cx="-397.9" cy="409.9" r="16" class="object-node fixture-node" />
+<text x="-397.9" y="427.9" class="node-label object-label">灯</text>
+<circle cx="-482.0" cy="-301.6" r="16" class="object-node fixture-node" />
+<text x="-482.0" y="-283.6" class="node-label object-label">灯</text>
+<circle cx="-125.7" cy="120.4" r="16" class="object-node fixture-node" />
+<text x="-125.7" y="138.4" class="node-label object-label">微波炉</text>
+<circle cx="-125.7" cy="-9.6" r="16" class="object-node fixture-node" />
+<text x="-125.7" y="8.4" class="node-label object-label">按钮</text>
+<circle cx="3.2" cy="120.4" r="16" class="object-node fixture-node" />
+<text x="3.2" y="138.4" class="node-label object-label">门</text>
+<circle cx="-118.9" cy="-484.2" r="16" class="object-node fixture-node" />
+<text x="-118.9" y="-466.2" class="node-label object-label">盆栽</text>
+<circle cx="95.7" cy="297.7" r="16" class="object-node fixture-node" />
+<text x="95.7" y="315.7" class="node-label object-label">架子</text>
+<circle cx="240.3" cy="-293.9" r="16" class="object-node fixture-node" />
+<text x="240.3" y="-275.9" class="node-label object-label">洗手池</text>
+<circle cx="-142.5" cy="294.3" r="16" class="object-node fixture-node" />
+<text x="-142.5" y="312.3" class="node-label object-label">洗手池</text>
+<circle cx="-360.4" cy="-352.7" r="16" class="object-node fixture-node" />
+<text x="-360.4" y="-334.7" class="node-label object-label">沙发</text>
+<circle cx="-575.1" cy="170.3" r="16" class="object-node fixture-node" />
+<text x="-575.1" y="188.3" class="node-label object-label">炉灶</text>
+<circle cx="-575.1" cy="54.6" r="16" class="object-node fixture-node" />
+<text x="-575.1" y="72.6" class="node-label object-label">旋钮</text>
+<circle cx="476.4" cy="-275.1" r="16" class="object-node fixture-node" />
+<text x="476.4" y="-257.1" class="node-label object-label">马桶</text>
+<circle cx="-202.5" cy="-133.3" r="16" class="object-node fixture-node" />
+<text x="-202.5" y="-115.3" class="node-label object-label">垃圾桶</text>
+<circle cx="-271.7" cy="-34.3" r="16" class="object-node fixture-node" />
+<text x="-271.7" y="-16.3" class="node-label object-label">显示屏</text>
+<circle cx="540.7" cy="335.6" r="16" class="object-node fixture-node" />
+<text x="540.7" y="353.6" class="node-label object-label">柜子</text>
+<circle cx="417.4" cy="335.6" r="16" class="object-node fixture-node" />
+<text x="417.4" y="353.6" class="node-label object-label">门</text>
+<circle cx="125.6" cy="-253.8" r="16" class="object-node fixture-node" />
+<text x="125.6" y="-235.8" class="node-label object-label">洗衣机</text>
+<circle cx="125.6" cy="-375.4" r="16" class="object-node fixture-node" />
+<text x="125.6" y="-357.4" class="node-label object-label">按钮</text>
+<circle cx="246.1" cy="-253.8" r="16" class="object-node fixture-node" />
+<text x="246.1" y="-235.8" class="node-label object-label">门</text>
+<rect x="372.5" y="-57.8" width="24" height="24" rx="4" ry="4" class="object-node movable-node" />
+<text x="384.5" y="-27.8" class="node-label object-label">书</text>
+<rect x="-280.8" y="-68.3" width="24" height="24" rx="4" ry="4" class="object-node movable-node" />
+<text x="-268.8" y="-38.3" class="node-label object-label">碗</text>
+<rect x="122.6" y="-392.3" width="24" height="24" rx="4" ry="4" class="object-node movable-node" />
+<text x="134.6" y="-362.3" class="node-label object-label">椅子</text>
+<rect x="528.7" y="204.5" width="24" height="24" rx="4" ry="4" class="object-node movable-node" />
+<text x="540.7" y="234.5" class="node-label object-label">衣服</text>
+<rect x="649.8" y="323.6" width="24" height="24" rx="4" ry="4" class="object-node movable-node" />
+<text x="661.8" y="353.6" class="node-label object-label">衣服</text>
+<rect x="528.7" y="442.7" width="24" height="24" rx="4" ry="4" class="object-node movable-node" />
+<text x="540.7" y="472.7" class="node-label object-label">衣服</text>
+<rect x="228.3" y="-414.9" width="24" height="24" rx="4" ry="4" class="object-node movable-node" />
+<text x="240.3" y="-384.9" class="node-label object-label">杯子</text>
+<rect x="-154.0" y="334.1" width="24" height="24" rx="4" ry="4" class="object-node movable-node" />
+<text x="-142.0" y="364.1" class="node-label object-label">果汁</text>
+<rect x="-285.3" y="463.3" width="24" height="24" rx="4" ry="4" class="object-node movable-node" />
+<text x="-273.3" y="493.3" class="node-label object-label">牛奶</text>
+<rect x="83.7" y="176.7" width="24" height="24" rx="4" ry="4" class="object-node movable-node" />
+<text x="95.7" y="206.7" class="node-label object-label">鞋</text>
+<rect x="194.7" y="285.7" width="24" height="24" rx="4" ry="4" class="object-node movable-node" />
+<text x="206.7" y="315.7" class="node-label object-label">鞋</text>
+<rect x="83.7" y="394.7" width="24" height="24" rx="4" ry="4" class="object-node movable-node" />
+<text x="95.7" y="424.7" class="node-label object-label">鞋</text>
+<rect x="493.0" y="-73.0" width="24" height="24" rx="4" ry="4" class="object-node movable-node" />
+<text x="505.0" y="-43.0" class="node-label object-label">文具套装</text>
+<rect x="277.7" y="-72.1" width="24" height="24" rx="4" ry="4" class="object-node movable-node" />
+<text x="289.7" y="-42.1" class="node-label object-label">马桶刷</text>
+<rect x="351.4" y="-305.9" width="24" height="24" rx="4" ry="4" class="object-node movable-node" />
+<text x="363.4" y="-275.9" class="node-label object-label">牙刷</text>
+<rect x="-425.9" y="334.1" width="24" height="24" rx="4" ry="4" class="object-node movable-node" />
+<text x="-413.9" y="364.1" class="node-label object-label">蔬菜</text>
+<rect x="264.5" y="79.7" width="18" height="18" transform="rotate(45 273.5 88.7)" class="object-node agent-node" />
+<text x="273.5" y="108.7" class="node-label agent-label">human</text>
+</g>
+</svg>

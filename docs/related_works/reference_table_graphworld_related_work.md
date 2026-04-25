@@ -1,0 +1,21 @@
+# GraphWorld 相关工作参考文献表
+
+说明：
+- 该表按论文写作需求分为三大类。
+- 字段紧扣 GraphWorld 当前研究目标：持续演化环境、图结构世界底座、长期开放任务、多维评分、人机共居/社会交互。
+- `HLR` 暂按“作者前作（IROS 投稿版本）”占位，正式题名和链接后续可替换。
+
+| 大类 | 简称 | 文章全称 | 发表刊物/会议 | 文章链接 | 代码 / 项目链接 | 核心参考点（与 GraphWorld 的联系） | 是否单轮任务 | 是否有显式语言指令 |
+|---|---|---|---|---|---|---|---|---|
+| 具身智能体开放任务评测引擎 | TongTest | The Tong Test: Evaluating Artificial General Intelligence Through Dynamic Embodied Physical and Social Interactions | Engineering, 2024 | https://www.sciencedirect.com/science/article/pii/S209580992300293X | 无公开代码（论文/平台设想为主） | 强调 DEPSI、无限任务生成、价值与能力并重的评测哲学；可作为 GraphWorld“持续环境 + 世界分/人类分”立意的重要上位参考。 | 否（开放持续评测导向） | 可选，不是核心前提 |
+| 具身智能体开放任务评测引擎 | TongSIM | TongSIM: A General Platform for Simulating Intelligent Machines | arXiv, 2025 | https://arxiv.org/abs/2512.20206 | https://github.com/bigai-ai/tongsim | 更接近“通用具身训练/测试平台”，强调动态环境、多类型 agent 和高保真仿真；可用于对照 GraphWorld 的 graph-native、轻量可控、长期评测定位。 | 否（平台可配置） | 可选 |
+| 具身智能体开放任务评测引擎 | VirtualHome | VirtualHome: Simulating Household Activities via Programs | CVPR, 2018 | https://arxiv.org/abs/1806.07011 | https://github.com/xavierpuigf/virtualhome | 家庭活动程序化仿真的经典起点，证明“场景图/程序驱动状态更新”可行；但更偏脚本执行，缺少 GraphWorld 这种长期开放演化与多维评分。 | 是 | 否（程序脚本为主） |
+| 具身智能体开放任务评测引擎 | ALFRED | ALFRED: A Benchmark for Interpreting Grounded Instructions for Everyday Tasks | CVPR, 2020 | https://arxiv.org/abs/1912.01734 | https://github.com/askforalfred/alfred | 典型指令跟随型 embodied benchmark；适合对比 GraphWorld 不只做“给定指令-完成任务-重置”，而是强调无尽运行中的主动维护与长期决策。 | 是 | 是 |
+| 具身智能体开放任务评测引擎 | Habitat 3.0 | Habitat 3.0: A Co-Habitat for Humans, Avatars and Robots | ICCV, 2023 | https://arxiv.org/abs/2310.13724 | https://github.com/facebookresearch/habitat-lab | 人机共居/人类动态行为的代表平台；可支撑 GraphWorld 中外生事件、人类活动、人类分设计的相关工作脉络。 | 多为是（episode 为主） | 可选 |
+| 具身智能体开放任务评测引擎 | BEHAVIOR-1K | BEHAVIOR-1K: A Human-Centered, Embodied AI Benchmark with 1,000 Everyday Activities and Realistic Simulation | arXiv, 2024 | https://arxiv.org/abs/2403.09227 | https://behavior.stanford.edu/ | 强调高保真日常活动、细粒度状态谓词与长期任务；是 GraphWorld 在“状态丰富性”上的重要近邻，但它更偏高保真物理仿真，GraphWorld 更偏图原生和长期评分闭环。 | 是 | 是 |
+| Agent 相关工作 | MIA | Creating Multimodal Interactive Agents with Imitation and Self-Supervised Learning | arXiv, 2021 | https://arxiv.org/abs/2112.03763 | 暂无稳定官方代码链接 | 面向多模态交互 agent，强调在交互环境中学习语言/视觉/动作耦合；可作为 GraphWorld 中 observation-acting loop 与交互式 agent 设计的近邻参考。 | 是（交互式 episode） | 是 |
+| Agent 相关工作 | GraphAgent | GraphAgent: Agentic Graph Language Assistant | EMNLP, 2025 | https://arxiv.org/abs/2412.17029 | https://github.com/HKUDS/GraphAgent | 强调“图作为 agent 中间表示/推理底座”；与 GraphWorld 的共同点是图驱动推理，但其对象更偏静态图任务，GraphWorld 更强调物理世界状态演化与动作闭环。 | 是 | 是 |
+| 传统任务规划方法 | HLR | State-aware Closed-loop Task Planning Based on Hierarchical Scene Graph | IROS 投稿版本（待正式录用信息） | 待补 | 待补 | 可作为你们自己从“层次化场景图 + 长程任务规划”走向“持续演化图世界 + 开放决策”的前序工作参照；其核心在于 state-aware、hierarchical scene graph 与 closed-loop planning。 | 是 | 是 |
+| 传统任务规划方法 | SayCan | Do As I Can, Not As I Say: Grounding Language in Robotic Affordances | CoRL, 2022 | https://arxiv.org/abs/2204.01691 | https://say-can.github.io/ | 代表“语言规划 + affordance grounding”；与 GraphWorld 的联系在于动作可行性约束、legal action space 和 grounded planning，但它不处理长期开放环境维护。 | 是 | 是 |
+| 传统任务规划方法 | SayPlan | SayPlan: Grounding Large Language Models using 3D Scene Graphs for Scalable Robot Task Planning | CoRL, 2023 | https://sayplan.github.io/ | https://sayplan.github.io/ | 直接把 3D 场景图用于大尺度任务规划，是 GraphWorld 最直接的图规划近邻之一；但其图主要服务单次任务规划，不是持续演化的世界底座。 | 是 | 是 |
+| 传统任务规划方法 | ConceptGraphs | ConceptGraphs: Open-Vocabulary 3D Scene Graphs for Perception and Planning | ICRA, 2024 | https://concept-graphs.github.io/ | https://github.com/concept-graphs/concept-graphs | 更偏“开放词汇 3D 场景图构建”，适合支撑 GraphWorld 的图输入/图底座动机；但它重点在感知与建图，不在长期开放任务评测。 | 否（非标准任务回合论文） | 否 |

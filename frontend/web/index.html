@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Graphworld Prototype</title>
+    <link rel="stylesheet" href="/styles.css?v=20260419-ui-fixes-2" />
+    <link rel="stylesheet" href="/graphflow.bundle.css?v=20260419-reactflow-2" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>Graphworld Prototype</h1>
+        </div>
+        <div class="topbar-actions">
+          <div class="mode-toggle" aria-label="View Mode">
+            <button id="modeScene" class="mode-button active" type="button">运行模式</button>
+            <button id="modeReplay" class="mode-button" type="button">回放模式</button>
+          </div>
+          <label class="scene-picker">
+            <span id="scenePickerLabel">场景</span>
+            <select id="sceneSelect"></select>
+          </label>
+          <button id="langToggle" class="lang-toggle" type="button">EN</button>
+        </div>
+      </header>
+      <main class="layout">
+        <aside class="sidebar sidebar-left">
+          <section class="card" id="nodeInfoCard">
+            <div class="card-title" id="nodeInfoTitle">节点信息</div>
+            <div id="nodeInfo" class="node-info">点击中间画布里的房间或物体查看详情。</div>
+          </section>
+          <section class="card" id="metricsCard">
+            <div class="card-head">
+              <div class="card-title" id="metricsTitle">Score</div>
+              <button id="metricsExpandButton" class="card-expand-button" type="button">放大</button>
+            </div>
+            <div id="metricsPanel" class="metrics-panel"></div>
+          </section>
+          <section class="card" id="replayStepCard">
+            <div class="card-head">
+              <div class="card-title" id="replayStepTitle">Current Action</div>
+            </div>
+            <div id="replayStepPanel" class="replay-step-panel">
+              选择一条回放后，这里会显示当前动作和 reasoning。
+            </div>
+          </section>
+        </aside>
+        <section class="canvas-panel">
+          <div class="canvas-header">
+            <div>
+              <div class="panel-title" id="sceneTitle">加载中...</div>
+              <div class="panel-subtitle" id="floorTitle">准备读取场景</div>
+            </div>
+            <div class="stats" id="sceneStats"></div>
+          </div>
+          <section class="timeline-panel" id="timelinePanel">
+            <div class="timeline-header">
+              <div>
+                <div class="card-title" id="timelineTitle">时间轴</div>
+                <div class="panel-subtitle" id="timelineSubtitle">控制场景时间推进</div>
+              </div>
+              <div class="timeline-readout">
+                <div id="timelineClock">Day 1 · 08:00</div>
+                <div id="timelineStep">Day 1 / 100</div>
+              </div>
+            </div>
+            <div class="timeline-actions">
+              <button id="timelineStart" class="timeline-button" type="button">开始</button>
+              <button id="timelinePause" class="timeline-button" type="button">暂停</button>
+              <button id="timelineEnd" class="timeline-button" type="button">结束</button>
+              <button id="timelineReset" class="timeline-button" type="button">归零</button>
+            </div>
+            <div class="timeline-speed" id="timelineSpeedGroup" aria-label="Timeline Speed">
+              <button id="timelineSpeed1x" class="timeline-button timeline-speed-button active" type="button">1x</button>
+              <button id="timelineSpeed3x" class="timeline-button timeline-speed-button" type="button">3x</button>
+              <button id="timelineSpeed10x" class="timeline-button timeline-speed-button" type="button">10x</button>
+              <button id="timelineSpeed100x" class="timeline-button timeline-speed-button" type="button">100x</button>
+            </div>
+            <div class="timeline-run-config is-collapsed" id="timelineRunConfig">
+              <div class="timeline-config-header">
+                <div>
+                  <div class="card-title" id="runConfigTitle">运行配置</div>
+                  <div class="panel-subtitle" id="runConfigSubtitle">在当前场景里发起一次机器人运行</div>
+                </div>
+                <button id="runConfigToggle" class="timeline-button" type="button">展开</button>
+              </div>
+              <div class="replay-run-form timeline-run-form" id="timelineRunForm">
+                <div class="replay-inline-grid">
+                  <label class="scene-picker">
+                    <span id="replayRunSceneLabel">场景</span>
+                    <select id="replayRunScene"></select>
+                  </label>
+                  <label class="scene-picker">
+                    <span id="replayRunExperimentLabel">实验</span>
+                    <select id="replayRunExperiment" class="replay-input"></select>
+                  </label>
+                </div>
+                <div class="replay-inline-grid">
+                  <label class="scene-picker">
+                    <span id="replayRunModelLabel">模型</span>
+                    <select id="replayRunModel" class="replay-input"></select>
+                  </label>
+                  <label class="scene-picker">
+                    <span id="replayRunDaysLabel">天数</span>
+                    <input id="replayRunDays" class="replay-input" type="number" min="1" value="7" />
+                  </label>
+                </div>
+                <div class="replay-inline-grid">
+                  <label class="scene-picker">
+                    <span id="replayRunTimeoutLabel">超时</span>
+                    <input id="replayRunTimeout" class="replay-input" type="number" min="1" value="30" />
+                  </label>
+                </div>
+                <div class="replay-inline-grid timeline-run-footer">
+                  <label class="scene-picker">
+                    <span id="replayRunAgentLabel">Agent ID</span>
+                    <input id="replayRunAgent" class="replay-input" value="robot_01" />
+                  </label>
+                  <button id="replayRunButton" class="timeline-button replay-run-button" type="button">开始一次机器人运行</button>
+                </div>
+              </div>
+            </div>
+          </section>
+          <div class="canvas-stage">
+            <div id="graphFlow" class="graph-flow"></div>
+            <svg id="graphSvg" viewBox="-450 -330 900 660" preserveAspectRatio="xMidYMid meet" hidden></svg>
+            <div id="hoverTooltip" class="hover-tooltip" hidden></div>
+          </div>
+        </section>
+        <aside class="sidebar sidebar-right">
+          <section class="card is-hidden" id="humanControlCard">
+            <div class="card-head">
+              <div class="card-title" id="humanControlTitle">Human Control</div>
+              <button id="humanEndButton" class="timeline-button" type="button">结束</button>
+            </div>
+            <div id="humanSummaryBar" class="replay-summary-bar"></div>
+            <div id="humanActionHint" class="panel-subtitle">将鼠标移动到动作上查看效果。</div>
+            <div id="humanActionTypes" class="human-action-types"></div>
+            <div id="humanActionCandidates" class="human-action-candidates"></div>
+          </section>
+          <section class="card" id="replayConsoleCard">
+            <div class="card-head">
+              <div class="card-title" id="replayConsoleTitle">回放控制台</div>
+              <button id="replayAnalysisButton" class="card-expand-button" type="button">分析</button>
+            </div>
+            <div id="replaySummaryBar" class="replay-summary-bar"></div>
+            <div class="replay-player">
+              <div class="timeline-actions replay-actions">
+                <button id="replayFirst" class="timeline-button" type="button">|&lt;</button>
+                <button id="replayPrev" class="timeline-button" type="button">&lt;</button>
+                <button id="replayPlay" class="timeline-button" type="button">播放</button>
+                <button id="replayPause" class="timeline-button" type="button">暂停</button>
+                <button id="replayNext" class="timeline-button" type="button">&gt;</button>
+                <button id="replayLast" class="timeline-button" type="button">&gt;|</button>
+              </div>
+              <input id="replaySlider" class="replay-slider" type="range" min="0" max="0" value="0" />
+              <div id="replayReadout" class="floor-meta">未选择回放</div>
+            </div>
+            <div id="replayList" class="replay-list"></div>
+          </section>
+          <section class="card" id="floorCard">
+            <div class="card-title" id="floorListTitle">楼层</div>
+            <div id="floorList" class="floor-list"></div>
+          </section>
+          <section class="card" id="legendCard">
+            <div class="card-title" id="legendTitle">图例</div>
+            <div class="legend-block">
+              <div class="legend-subtitle" id="legendNodesTitle">节点</div>
+              <div class="legend-list">
+                <div class="legend-item">
+                  <span class="legend-swatch legend-node legend-room"></span>
+                  <span id="legendRoomLabel">房间</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-swatch legend-node legend-fixture"></span>
+                  <span id="legendFixtureLabel">设施</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-swatch legend-node legend-movable"></span>
+                  <span id="legendMovableLabel">可移动物体</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-swatch legend-node legend-agent"></span>
+                  <span id="legendAgentLabel">智能体</span>
+                </div>
+              </div>
+            </div>
+            <div class="legend-block">
+              <div class="legend-subtitle" id="legendSemanticTitle">对象语义</div>
+              <div class="legend-list">
+                <div class="legend-item">
+                  <span class="legend-icon-shell">
+                    <svg class="legend-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M5 9h14M7 9v10M17 9v10M7 19h10"></path>
+                    </svg>
+                  </span>
+                  <span id="legendSemanticFurniture">家具 / Furniture</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-icon-shell">
+                    <svg class="legend-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M7 3h10v18H7zM9 6h6M12 10a4 4 0 1 0 0 8a4 4 0 1 0 0-8z"></path>
+                    </svg>
+                  </span>
+                  <span id="legendSemanticAppliance">设备 / Appliance</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-icon-shell">
+                    <svg class="legend-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 7a5 5 0 1 0 0 10a5 5 0 1 0 0-10zM12 10v4"></path>
+                    </svg>
+                  </span>
+                  <span id="legendSemanticControl">控制 / Control</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-icon-shell">
+                    <svg class="legend-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M5 7h14v4H5zM5 13h14v4H5zM12 9h0M12 15h0"></path>
+                    </svg>
+                  </span>
+                  <span id="legendSemanticContainer">容器 / Container</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-icon-shell">
+                    <svg class="legend-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M9 6l3-2l3 2l-1 3h-4zM8 9h8v11H8z"></path>
+                    </svg>
+                  </span>
+                  <span id="legendSemanticTool">工具 / Tool</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-icon-shell">
+                    <svg class="legend-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 4c2 2 3 4 3 6c0 4-3 7-3 10c0-3-3-6-3-10c0-2 1-4 3-6zM8 14c2-1 6-1 8 0"></path>
+                    </svg>
+                  </span>
+                  <span id="legendSemanticDecoration">装饰品 / Decoration</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-icon-shell">
+                    <svg class="legend-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M9 4h6M10 4v3M8 7h8l-1 12H9L8 7M12 10v6"></path>
+                    </svg>
+                  </span>
+                  <span id="legendSemanticConsumable">消耗品 / Consumable</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-icon-shell">
+                    <svg class="legend-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M8 7h8M9 7V5h6v2M7 9h10v10H7zM10 12h4M10 15h4"></path>
+                    </svg>
+                  </span>
+                  <span id="legendSemanticPersonalItem">个人物品 / Personal Item</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-icon-shell">
+                    <svg class="legend-icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 5a3 3 0 1 0 0 6a3 3 0 1 0 0-6zM7 20c0-3 2-6 5-6s5 3 5 6"></path>
+                    </svg>
+                  </span>
+                  <span id="legendSemanticAgent">智能体 / Agent</span>
+                </div>
+              </div>
+            </div>
+            <div class="legend-block">
+              <div class="legend-subtitle" id="legendStatesTitle">状态颜色</div>
+              <div class="legend-list">
+                <div class="legend-item">
+                  <span class="legend-swatch legend-state legend-state-fresh"></span>
+                  <span id="legendStateFresh">健康/新鲜</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-swatch legend-state legend-state-wilted"></span>
+                  <span id="legendStateWilted">枯萎/异常</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-swatch legend-state legend-state-on"></span>
+                  <span id="legendStateOn">运行中</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-swatch legend-state legend-state-open"></span>
+                  <span id="legendStateOpen">开启/开门</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-swatch legend-state legend-state-cold"></span>
+                  <span id="legendStateCold">冷藏/低温</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-swatch legend-state legend-state-warm"></span>
+                  <span id="legendStateWarm">温热</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-swatch legend-state legend-state-spoiled"></span>
+                  <span id="legendStateSpoiled">变质</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-swatch legend-state legend-state-dirty"></span>
+                  <span id="legendStateDirty">脏乱</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-swatch legend-state legend-state-full"></span>
+                  <span id="legendStateFull">满载/待处理</span>
+                </div>
+              </div>
+            </div>
+            <div class="legend-block">
+              <div class="legend-subtitle" id="legendEdgesTitle">连线</div>
+              <div class="legend-list">
+                <div class="legend-item">
+                  <span class="legend-swatch legend-edge legend-edge-neighbor"></span>
+                  <span id="legendEdgeNeighborLabel">房间邻接</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-swatch legend-edge legend-edge-contains"></span>
+                  <span id="legendEdgeContainsLabel">包含/位于其中</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-swatch legend-edge legend-edge-controls"></span>
+                  <span id="legendEdgeControlsLabel">控制关系</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </main>
+    </div>
+    <section id="metricsWindow" class="floating-window" hidden>
+      <div id="metricsWindowHeader" class="floating-window-header">
+        <div>
+          <div class="floating-window-kicker" id="metricsWindowKicker">Metrics</div>
+          <div class="card-title" id="metricsWindowTitle">场景评分</div>
+        </div>
+        <button id="metricsWindowClose" class="floating-window-close" type="button" aria-label="Close">×</button>
+      </div>
+      <div id="metricsWindowBody" class="metrics-panel metrics-panel-expanded"></div>
+    </section>
+    <script src="/vendor_dagre.min.js?v=20260419-ui-fixes-2" defer></script>
+    <script src="/vendor_elk.bundled.js?v=20260419-ui-fixes-2" defer></script>
+    <script src="/graphflow.bundle.js?v=20260419-reactflow-2" defer></script>
+    <script src="/app.js?v=20260419-ui-fixes-2" defer></script>
+  </body>
+</html>

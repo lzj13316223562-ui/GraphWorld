@@ -1,0 +1,2 @@
+[ReplayStart] replay_id=20260424T095542Z_76f2bbfa scene_id=simple_home_1f experiment_type=pure_human agent_model=human_player
+[HumanStart] session_id=20260424T095542Z_76f2bbfa spawn_room=bathroom spawn_anchor=button_bathroom

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1081" height="951" viewBox="0 0 1081 951">
+<rect width="100%" height="100%" fill="#faf8f2"/>
+<text x="40" y="34" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#25313c">GraphWorld Simple Home 1F</text>
+<text x="40" y="58" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#5b6770">Template: hub_home | Seed: 7</text>
+<rect x="322.4" y="368.4" width="411.2" height="348.8" rx="10" fill="#d9ecff" stroke="#34495e" stroke-width="3"/>
+<text x="528.0" y="536.8" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#1f2933">客厅</text>
+<text x="528.0" y="558.8" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#52606d">Living Room</text>
+<text x="332.4" y="707.2" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#52606d">5.1m x 4.4m</text>
+<rect x="80.0" y="454.8" width="242.4" height="176.0" rx="10" fill="#efe6d6" stroke="#34495e" stroke-width="3"/>
+<text x="201.2" y="536.8" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#1f2933">玄关</text>
+<text x="201.2" y="558.8" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#52606d">Entrance</text>
+<text x="90.0" y="620.8" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#52606d">3.0m x 2.2m</text>
+<rect x="351.2" y="110.0" width="352.8" height="258.4" rx="10" fill="#f8d9e6" stroke="#34495e" stroke-width="3"/>
+<text x="527.6" y="233.2" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#1f2933">卧室</text>
+<text x="527.6" y="255.2" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#52606d">Bedroom</text>
+<text x="361.2" y="358.4" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#52606d">4.4m x 3.2m</text>
+<rect x="733.6" y="443.6" width="245.6" height="199.2" rx="10" fill="#dff3ea" stroke="#34495e" stroke-width="3"/>
+<text x="856.4" y="537.2" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#1f2933">浴室</text>
+<text x="856.4" y="559.2" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#52606d">Bathroom</text>
+<text x="743.6" y="632.8" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#52606d">3.1m x 2.5m</text>
+<rect x="380.8" y="717.2" width="294.4" height="224.0" rx="10" fill="#fde7c7" stroke="#34495e" stroke-width="3"/>
+<text x="528.0" y="823.2" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#1f2933">厨房</text>
+<text x="528.0" y="845.2" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#52606d">Kitchen</text>
+<text x="390.8" y="931.2" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#52606d">3.7m x 2.8m</text>
+<rect x="700.8" y="717.2" width="340.8" height="192.0" rx="10" fill="#e7f7d4" stroke="#34495e" stroke-width="3"/>
+<text x="871.2" y="807.2" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#1f2933">阳台</text>
+<text x="871.2" y="829.2" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#52606d">Balcony</text>
+<text x="710.8" y="899.2" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#52606d">4.3m x 2.4m</text>
+</svg>

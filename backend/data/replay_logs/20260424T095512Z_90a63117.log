@@ -1,0 +1,2 @@
+[ReplayStart] replay_id=20260424T095512Z_90a63117 scene_id=simple_home_1f experiment_type=pure_human agent_model=human_player
+[HumanStart] session_id=20260424T095512Z_90a63117 spawn_room=kitchen spawn_anchor=door_fridge_kitchen

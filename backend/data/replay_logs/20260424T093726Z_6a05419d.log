@@ -1,0 +1,4 @@
+[ReplayStart] replay_id=20260424T093726Z_6a05419d scene_id=simple_home_1f experiment_type=pure_human agent_model=human_player
+[HumanStart] session_id=20260424T093726Z_6a05419d spawn_room=kitchen
+[HumanStep] step=0 action=move target=dishwasher_kitchen_door ok=True world=1.0000
+[HumanStep] step=1 action=push target=dishwasher_kitchen_door ok=True world=0.9800

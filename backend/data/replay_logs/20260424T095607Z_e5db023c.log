@@ -1,0 +1,5 @@
+[ReplayStart] replay_id=20260424T095607Z_e5db023c scene_id=simple_home_1f experiment_type=pure_human agent_model=human_player
+[HumanStart] session_id=20260424T095607Z_e5db023c spawn_room=bathroom spawn_anchor=faucet_bathroom
+[HumanStep] step=0 action=move target=door_bathroom ok=True world=1.0000
+[HumanStep] step=1 action=push target=door_bathroom ok=True world=0.9400
+[HumanStep] step=2 action=move target=bedroom ok=True world=0.9600

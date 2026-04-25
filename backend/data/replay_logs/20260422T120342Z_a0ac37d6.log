@@ -1,0 +1,3 @@
+[ReplayStart] replay_id=20260422T120342Z_a0ac37d6 scene_id=simple_home_1f experiment_type=no_robot agent_model=npc_only_baseline
+[ReplayLog] /opt/data/private/zijian/GraphWorld/backend/data/replay_logs/20260422T120342Z_a0ac37d6.log
+[ReplayEnd] replay_id=20260422T120342Z_a0ac37d6

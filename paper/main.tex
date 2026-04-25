@@ -1,0 +1,134 @@
+\documentclass[journal]{IEEEtran}
+
+\usepackage[UTF8,fontset=none]{ctex}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage{hyperref}
+
+\hypersetup{
+  hidelinks,
+  colorlinks=false,
+  pdfauthor={GraphWorld Authors},
+  pdftitle={GraphWorld: A Persistent Self-Evolving Graph World Model for Long-Horizon Embodied Agent Learning}
+}
+
+% 先支持中文写作，后续再统一收敛到英文投稿稿。
+\setmainfont{TeX Gyre Termes}
+\setsansfont{TeX Gyre Heros}
+\setmonofont{TeX Gyre Cursor}
+\setCJKmainfont{Noto Serif CJK SC}
+\setCJKsansfont{Noto Sans CJK SC}
+\setCJKmonofont{Noto Sans Mono CJK SC}
+
+\begin{document}
+
+\title{GraphWorld: A Persistent Self-Evolving Graph World Model for Long-Horizon Embodied Agent Learning}
+
+\author{Author~1,~\IEEEmembership{Member,~IEEE,}
+        Author~2,~\IEEEmembership{Member,~IEEE,}
+        and~Author~3,~\IEEEmembership{Senior Member,~IEEE}%
+\thanks{This work was supported in part by XXX.}%
+\thanks{Author affiliations and contact emails go here.}%
+\thanks{Manuscript received Month XX, 2026; revised Month XX, 2026.}}
+
+\markboth{IEEE Transactions on Robotics,~Vol.~XX, No.~XX, Month~2026}%
+{Author \MakeLowercase{\textit{et al.}}: GraphWorld}
+
+\maketitle
+
+\begin{abstract}
+We present GraphWorld, a persistent self-evolving graph world model for long-horizon embodied agent learning. Instead of treating a scene graph as a static semantic snapshot used only for short-horizon planning, GraphWorld elevates the graph into a runtime world substrate that continuously evolves under temporal progression, human routines, exogenous disturbances, and agent actions. The system unifies building topology, room-level functionality, object affordances, interaction states, and control relations in a hierarchical symbolic graph, and connects this representation to a pipeline for scene generation, task synthesis, symbolic execution, and benchmark construction. This design allows the same world representation to support scene construction, state tracking, temporal simulation, and planning-oriented evaluation. We describe the architecture of GraphWorld, its graph engine and temporal evolution mechanisms, and its role as an infrastructure layer for studying persistent embodied environments beyond episodic task settings.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Embodied AI, scene graphs, world models, long-horizon planning, symbolic simulation, service robots.
+\end{IEEEkeywords}
+
+\section{Introduction}
+Most scene graph and semantic map formulations in embodied AI describe the environment as a structured but largely static snapshot. They are highly useful for grounding, navigation, and task planning, yet they usually stop at representing the current world state for a bounded episode. In contrast, long-lived service environments do not remain static: humans move, objects are displaced, cleanliness changes over time, food spoils, and new task opportunities or conflicts keep emerging.
+
+GraphWorld is motivated by the need for a symbolic world model that remains active over time. Our central premise is that a sufficiently expressive graph can serve not only as an environment representation, but also as a persistent world substrate for task generation, symbolic simulation, and long-horizon decision-making. To this end, GraphWorld combines three ingredients: 1) a hierarchical graph engine that represents floors, rooms, objects, tools, and agents together with typed relations; 2) a runtime evolution mechanism that updates graph state through time, human routines, and exogenous effects; and 3) a planning and benchmark pipeline that links graph worlds to symbolic execution and downstream evaluation.
+
+The main contribution of this paper is a practical system perspective on self-evolving symbolic graph worlds. Rather than focusing solely on perception or one-shot task execution, we ask how to build a reusable world substrate that continuously changes and remains suitable for embodied planning research.
+
+\section{Related Work}
+\subsection{Scene Graphs and Semantic World Representations}
+Scene graphs and semantic maps have become standard intermediate representations for embodied agents. Prior work has studied online semantic mapping, task-relevant scene graphs, and state-aware graph updates for planning and grounding~\cite{hydrarss2022,sayplan2023,taskography2022}.
+
+\subsection{Persistent Simulated Worlds}
+Recent work on persistent or socially active environments emphasizes worlds that remain active over time instead of terminating after a single task~\cite{generativeagents2023}. However, many such systems rely primarily on natural language memories or behavior traces rather than an explicit symbolic graph state suitable for robot planning.
+
+\subsection{Symbolic Planning and Long-Horizon Benchmarks}
+Planning-oriented embodied systems have increasingly adopted structured intermediate states and long-horizon decomposition, but most still operate in finite episode settings~\cite{saycan2022,innermonologue2022}. GraphWorld is aimed at the gap between structured symbolic planning and persistent world evolution.
+
+\section{Method}
+\subsection{自演化图世界模型定义}
+我们将 GraphWorld 定义为一个带有时间推进机制的层次化符号图世界模型。与传统 scene graph 相比，我们希望保留已有工作的主要优点，包括层次化空间表达、面向任务的状态更新、功能关系建模以及可用于规划的中间表示；在此基础上，进一步把时间作为世界的一等公民显式纳入图定义中，使图不再只是某一时刻的静态快照，而成为一个可持续演化的运行时世界状态。
+
+形式上，GraphWorld 可表示为
+\[
+\mathcal{G}_t=(\mathcal{V}, \mathcal{E}, \mathcal{A}, \mathcal{S}_t, \mathcal{T}_t),
+\]
+其中 $\mathcal{V}$ 表示节点集合，$\mathcal{E}$ 表示关系集合，$\mathcal{A}$ 表示节点的静态属性与可供性，$\mathcal{S}_t$ 表示时刻 $t$ 下的动态状态，$\mathcal{T}_t$ 表示与时间相关的全局上下文，包括当前 step、分钟级时间、事件日志以及例行活动阶段等信息。
+
+在节点层面，我们采用层次化建模方式，把楼宇、楼层、房间、物体、移动工具以及智能体统一纳入同一张图中。该设计继承了已有层次场景图在空间组织上的优势，使系统既能表达宏观拓扑，也能表达细粒度物体交互。在边层面，我们区分至少四类关键关系：包含关系、邻接关系、支撑关系以及控制关系。前两者用于表达空间与拓扑结构，后两者用于表达交互性与可操作性。相比传统静态图，我们进一步允许节点状态和部分边关系随时间变化，例如门的开闭、垃圾桶的填充程度、食物的新鲜程度、人的当前位置以及运行时生成的 containment 关系。
+
+因此，我们提出的图具有两个核心特征。第一，它兼容已有 scene graph 工作中常见的层次表达、状态感知更新和任务相关关系建模能力。第二，它具有持续时间维度：世界中的变化既可以由机器人动作触发，也可以由 NPC 的日程、外生事件和环境演化触发。换言之，GraphWorld 不仅表示世界，还承担 world model 的职责。
+
+\subsection{图的构建方法}
+GraphWorld 的构建采用“先拓扑、后填充、再运行时化”的三阶段流程。
+
+\paragraph{1) 房间拓扑生成}
+第一阶段生成建筑级与楼层级拓扑。系统首先根据场景类型选择房间集合与功能分区规则，例如 hospital、office、library、hotel 等场景具有不同的核心房间、公共区域和服务区域。随后依据房间连接规则生成楼层内的邻接关系，并在多层场景下加入电梯厅、电梯和跨层连通机制。该阶段产出的重点不是几何细节，而是具有可规划意义的 room graph。
+
+\paragraph{2) 房间填充与关系补全}
+第二阶段在房间拓扑之上填充对象。我们为每类房间定义功能组与放置规则：先生成能够代表房间功能的 anchor objects，再围绕 anchor 放置成员对象与小件物体，并补充包含关系、表面支撑关系与邻近关系。通过这一过程，原始房间拓扑被扩展为带有 affordance、object state 和 logical control 的完整 scene graph。与此同时，图引擎会在添加边的同时同步维护节点上的冗余字段，例如房间所包含的对象列表、楼层所包含的房间列表以及房间邻居列表，从而保证图表示与序列化结果的一致性。
+
+\paragraph{3) 运行时状态构建}
+第三阶段将静态 scene graph 转换为可执行的 runtime state。具体而言，系统从图中抽取 parent-of 关系、room-of 关系、结构边、控制边和节点动态状态，形成仿真时使用的内部状态表示。在每个 step 上，世界状态会根据当前时间、NPC 日程、外生事件和动作效果进行更新，之后再把更新结果重新物化为新的图状态和事件日志。这样，GraphWorld 就从一个“构建好的图”变成了一个“持续运行的图世界”。
+
+\subsection{图质量评价}
+仅仅生成图还不够，我们还需要判断图是否足够好，是否适合作为长期任务规划与仿真的世界底座。为此，我们从以下四个维度评价图质量。
+
+\paragraph{1) 结构复杂度与多样性}
+第一类指标衡量图是否足够丰富。我们统计平均房间物体密度以及物体类型熵，用于衡量图中是否包含足够多的可交互元素，以及房间内部是否存在合理的功能多样性。如果图过稀疏，Agent 面临的任务空间会过于单薄；如果图过于单一，则无法体现真实复杂环境中的组合关系。
+
+\paragraph{2) 物理有效性}
+第二类指标衡量图的物理一致性。一个合格的图不应包含大量“悬空物体”或不合理的放置关系。具体而言，我们检查对象是否具有有效的支撑或包含父节点，并把未被 room、surface 或 container 正确承接的对象视为物理无效。这个指标保证图不仅可看，而且可执行。
+
+\paragraph{3) 任务可用性与交互性}
+第三类指标衡量图是否适合用于规划和任务生成。我们关注对象是否具有 affordance 或 state，是否存在足够多的控制边和逻辑边，以及房间图的连通性和平均最短路长度。其本质是在回答一个问题：这个图是否能够承载“去哪里、操作什么、通过什么控制关系改变世界”的任务过程。如果一个图只包含摆设而缺乏交互属性，那么它对于 embodied planning 的价值是有限的。
+
+\paragraph{4) 运行时可演化性}
+第四类指标衡量图是否支持长期演化。我们关注时间推进后，图中的状态变化是否合理、边关系是否能够被重新构建、事件日志是否可回溯，以及 NPC 活动是否能在图上留下结构化影响。与传统静态场景图不同，GraphWorld 的质量不仅由初始图决定，还由其在长时间运行中的稳定性与可解释性决定。
+
+综合来看，我们不是只评价一张图“长得像不像”，而是评价它是否同时满足结构丰富、物理合理、任务可用和长期可演化这四个条件。
+
+\subsection{NPC Agent 概念}
+为了使世界具备持续演化能力，我们在 GraphWorld 中引入 NPC agent 概念。这里的 NPC 并不是用于对话的附属角色，而是世界动力学的一部分。每个 NPC 都具有角色、日程和活动状态，并能够在图上留下持续的状态扰动。
+
+在当前原型中，NPC agent 由角色日程驱动。不同角色对应不同的时间表，例如 resident、patient 和 worker 具有不同的起居、工作、休息与用餐安排。系统根据当前分钟数查询目标活动、目标房间和目标位置，并通过房间拓扑执行逐步移动，而不是瞬间传送。若移动路径上存在门等可控对象，NPC 还会触发相应的控制行为，例如开门进入目标房间。
+
+更重要的是，NPC 的行为会改变世界状态。例如起床和穿衣会改变衣物与房间状态，洗漱会引入清洁度扰动，离家与回家会改变人物位置和事件日志，用餐会触发食物状态变化，夜间活动还可能影响洗衣、垃圾和卫生相关状态。也就是说，NPC 不只是图中的一个节点，而是时间驱动图演化的内部生成器。
+
+我们引入 NPC agent 的目的有三点。第一，它为世界提供非机器人触发的变化来源，使世界具备持续性而非 episode 式静止。第二，它让任务产生具有上下文，例如因为有人活动而出现清洁、整理、补给、照护等任务。第三，它为后续研究长期角色型 agent 提供参照系：机器人面对的不再是空世界，而是一个包含常驻角色、规律活动和突发扰动的活世界。
+
+\section{Current Scope and Limitations}
+The current system already implements the graph substrate, topology-based scene generation, runtime evolution in representative home-like settings, and symbolic benchmark integration. However, several broader goals remain partially realized, including persistent task arrival, full social-rule modeling, and a complete reinforcement learning training loop. We present GraphWorld as an infrastructure prototype and research direction rather than a fully closed-loop learning system.
+
+\section{Conclusion}
+GraphWorld reframes the scene graph as a persistent world model for embodied AI. By combining hierarchical symbolic structure, temporal evolution, and planning-oriented interfaces, it provides a foundation for studying long-horizon embodied agents in environments that keep changing over time.
+
+\section*{Acknowledgment}
+The authors would like to thank the project collaborators and early users of GraphWorld.
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}

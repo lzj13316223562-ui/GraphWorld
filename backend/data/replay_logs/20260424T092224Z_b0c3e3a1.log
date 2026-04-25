@@ -1,0 +1,5 @@
+[ReplayStart] replay_id=20260424T092224Z_b0c3e3a1 scene_id=simple_home_1f experiment_type=pure_human agent_model=human_player
+[HumanStart] session_id=20260424T092224Z_b0c3e3a1 spawn_room=balcony
+[HumanStep] step=0 action=move target=door_balcony ok=True world=1.0000
+[HumanStep] step=1 action=pull target=door_balcony ok=True world=0.9400
+[HumanStep] step=2 action=move target=living_room ok=True world=0.9600

@@ -1,0 +1,3 @@
+[ReplayStart] replay_id=20260425T052008Z_05f75754 scene_id=simple_home_1f experiment_type=pure_human agent_model=human_player
+[HumanStart] session_id=20260425T052008Z_05f75754 spawn_room=kitchen spawn_anchor=faucet_kitchen
+[ReplayEnd] replay_id=20260425T052008Z_05f75754 reason=human_stopped steps=0

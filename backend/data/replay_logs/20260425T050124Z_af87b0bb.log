@@ -1,0 +1,4 @@
+[ReplayStart] replay_id=20260425T050124Z_af87b0bb scene_id=simple_home_1f experiment_type=pure_human agent_model=human_player
+[HumanStart] session_id=20260425T050124Z_af87b0bb spawn_room=bathroom spawn_anchor=button_bathroom
+[HumanStep] step=0 action=move target=door_bathroom ok=True world=1.0000
+[ReplayEnd] replay_id=20260425T050124Z_af87b0bb reason=human_stopped steps=1

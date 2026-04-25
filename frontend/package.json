@@ -1,0 +1,21 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build:graphflow": "esbuild reactflow-src/graphflow.jsx --bundle --format=iife --global-name=GraphFlowBundle --outfile=web/graphflow.bundle.js --loader:.css=css"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@xyflow/react": "^12.10.2",
+    "esbuild": "^0.28.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  },
+  "devDependencies": {
+    "playwright": "^1.40.1"
+  }
+}
