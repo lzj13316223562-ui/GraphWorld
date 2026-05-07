@@ -24,11 +24,16 @@
       },
       "affordance_count": 0,
       "parent": null,
-      "child": [],
-      "interactive_actions": [
-        "move",
-        "scan"
+      "child": [
+        "balcony",
+        "bathroom",
+        "bedroom",
+        "entrance",
+        "kitchen",
+        "living_room",
+        "outside_home"
       ],
+      "interactive_actions": [],
       "floor_number": 1
     },
     {
@@ -45,16 +50,18 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "F1",
       "child": [
         "bench_entrance",
+        "button_entrance",
+        "door_entrance",
+        "light_entrance",
         "shoe_rack_entrance"
       ],
       "interactive_actions": [
         "move",
-        "place",
-        "scan"
+        "place"
       ]
     },
     {
@@ -71,18 +78,20 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "F1",
       "child": [
+        "button_living_room",
         "coffee_table_living_room",
+        "door_living_room",
+        "light_living_room",
         "sofa_living_room",
         "trash_bin_living_room",
         "tv_living_room"
       ],
       "interactive_actions": [
         "move",
-        "place",
-        "scan"
+        "place"
       ]
     },
     {
@@ -99,21 +108,23 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "F1",
       "child": [
+        "button_kitchen",
         "counter_kitchen",
         "dishwasher_kitchen",
+        "door_kitchen",
         "faucet_kitchen",
         "fridge_kitchen",
+        "light_kitchen",
         "microwave_kitchen",
         "sink_kitchen",
         "stove_kitchen"
       ],
       "interactive_actions": [
         "move",
-        "place",
-        "scan"
+        "place"
       ]
     },
     {
@@ -130,17 +141,19 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "F1",
       "child": [
         "bed_bedroom",
+        "button_bedroom",
         "desk_bedroom",
+        "door_bedroom",
+        "light_bedroom",
         "wardrobe_bedroom"
       ],
       "interactive_actions": [
         "move",
-        "place",
-        "scan"
+        "place"
       ]
     },
     {
@@ -157,10 +170,13 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "F1",
       "child": [
+        "button_bathroom",
+        "door_bathroom",
         "faucet_bathroom",
+        "light_bathroom",
         "sink_bathroom",
         "toilet_bathroom",
         "toilet_brush_bathroom",
@@ -168,8 +184,7 @@
       ],
       "interactive_actions": [
         "move",
-        "place",
-        "scan"
+        "place"
       ]
     },
     {
@@ -186,16 +201,18 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "F1",
       "child": [
+        "button_balcony",
         "chair_balcony",
+        "door_balcony",
+        "light_balcony",
         "plant_balcony"
       ],
       "interactive_actions": [
         "move",
-        "place",
-        "scan"
+        "place"
       ]
     },
     {
@@ -214,7 +231,7 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 1,
       "parent": "entrance",
       "child": [
         "shoes_entrance_1",
@@ -222,8 +239,7 @@
         "shoes_entrance_3"
       ],
       "interactive_actions": [
-        "move",
-        "scan"
+        "move"
       ]
     },
     {
@@ -236,20 +252,20 @@
       "mobility": "movable",
       "states": {
         "is_dirty": false,
-        "is_wet": false,
-        "is_dry": true
+        "is_wet": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 3,
       "parent": "shoe_rack_entrance",
       "child": [],
       "interactive_actions": [
         "pick",
-        "scan"
+        "place",
+        "brush"
       ]
     },
     {
@@ -262,20 +278,20 @@
       "mobility": "movable",
       "states": {
         "is_dirty": false,
-        "is_wet": false,
-        "is_dry": true
+        "is_wet": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 3,
       "parent": "shoe_rack_entrance",
       "child": [],
       "interactive_actions": [
         "pick",
-        "scan"
+        "place",
+        "brush"
       ]
     },
     {
@@ -288,20 +304,20 @@
       "mobility": "movable",
       "states": {
         "is_dirty": false,
-        "is_wet": false,
-        "is_dry": true
+        "is_wet": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 3,
       "parent": "shoe_rack_entrance",
       "child": [],
       "interactive_actions": [
         "pick",
-        "scan"
+        "place",
+        "brush"
       ]
     },
     {
@@ -313,22 +329,20 @@
       "semantic_type": "seat",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
-        "fill_level": 0.0,
-        "is_full": false
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 3,
       "parent": "entrance",
       "child": [],
       "interactive_actions": [
+        "brush",
         "move",
-        "place",
-        "scan"
+        "place"
       ]
     },
     {
@@ -347,12 +361,13 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 3,
       "parent": "living_room",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan"
+        "brush",
+        "place",
+        "move"
       ]
     },
     {
@@ -364,22 +379,20 @@
       "semantic_type": "table",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
-        "fill_level": 0.0,
-        "is_full": false
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 4,
+      "affordance_count": 3,
       "parent": "living_room",
       "child": [],
       "interactive_actions": [
-        "move",
+        "brush",
         "place",
-        "scan"
+        "move"
       ]
     },
     {
@@ -392,20 +405,20 @@
       "mobility": "fixed",
       "states": {
         "is_on": false,
-        "fill_level": 0.0,
-        "is_full": false
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 3,
       "parent": "living_room",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan"
+        "press",
+        "brush",
+        "move"
       ]
     },
     {
@@ -417,23 +430,20 @@
       "semantic_type": "counter",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
-        "fill_level": 0.0,
-        "is_full": false
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 4,
+      "affordance_count": 3,
       "parent": "kitchen",
       "child": [],
       "interactive_actions": [
-        "move",
+        "brush",
         "place",
-        "scan",
-        "brush"
+        "move"
       ]
     },
     {
@@ -445,7 +455,7 @@
       "semantic_type": "sink",
       "mobility": "fixed",
       "states": {
-        "is_on": false,
+        "is_dirty": false,
         "fill_level": 0.0,
         "is_full": false
       },
@@ -454,14 +464,13 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 4,
+      "affordance_count": 3,
       "parent": "kitchen",
       "child": [],
       "interactive_actions": [
-        "move",
+        "brush",
         "place",
-        "scan",
-        "brush"
+        "move"
       ]
     },
     {
@@ -473,22 +482,19 @@
       "semantic_type": "faucet",
       "mobility": "fixed",
       "states": {
-        "is_on": false,
-        "fill_level": 0.0,
-        "is_full": false
+        "is_on": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 2,
       "parent": "kitchen",
       "child": [],
       "interactive_actions": [
-        "move",
         "press",
-        "scan"
+        "move"
       ]
     },
     {
@@ -500,30 +506,29 @@
       "semantic_type": "refrigerator",
       "mobility": "fixed",
       "states": {
-        "is_on": true,
-        "fill_level": 0.0,
-        "is_full": false,
         "is_open": false,
-        "cycle_remaining": 0
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 10,
+      "affordance_count": 4,
       "parent": "kitchen",
       "child": [
+        "door_fridge_kitchen",
         "juice_fridge_kitchen",
         "milk_fridge_kitchen",
-        "vegetables_fridge_kitchen",
-        "door_fridge_kitchen"
+        "vegetables_fridge_kitchen"
       ],
       "interactive_actions": [
-        "move",
-        "place",
-        "scan"
-      ]
+        "open",
+        "close",
+        "brush",
+        "move"
+      ],
+      "blocks_containment": true
     },
     {
       "id": "milk_fridge_kitchen",
@@ -534,22 +539,25 @@
       "semantic_type": "milk",
       "mobility": "movable",
       "states": {
+        "is_open": false,
+        "is_rotten": false,
         "freshness": 1.0,
         "temperature": "cold",
-        "is_cooked": false,
-        "is_rotten": false
+        "is_cooked": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 4,
       "parent": "fridge_kitchen",
       "child": [],
       "interactive_actions": [
         "pick",
-        "scan"
+        "place",
+        "open",
+        "close"
       ]
     },
     {
@@ -561,22 +569,25 @@
       "semantic_type": "juice",
       "mobility": "movable",
       "states": {
+        "is_open": false,
+        "is_rotten": false,
         "freshness": 1.0,
         "temperature": "cold",
-        "is_cooked": false,
-        "is_rotten": false
+        "is_cooked": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 4,
       "parent": "fridge_kitchen",
       "child": [],
       "interactive_actions": [
         "pick",
-        "scan"
+        "place",
+        "open",
+        "close"
       ]
     },
     {
@@ -588,22 +599,22 @@
       "semantic_type": "vegetable",
       "mobility": "movable",
       "states": {
+        "is_rotten": false,
         "freshness": 1.0,
         "temperature": "cold",
-        "is_cooked": false,
-        "is_rotten": false
+        "is_cooked": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 2,
       "parent": "fridge_kitchen",
       "child": [],
       "interactive_actions": [
         "pick",
-        "scan"
+        "place"
       ]
     },
     {
@@ -616,9 +627,8 @@
       "mobility": "fixed",
       "states": {
         "is_on": false,
-        "fill_level": 0.0,
-        "is_full": false,
         "is_open": false,
+        "is_dirty": false,
         "cycle_remaining": 0
       },
       "property": {
@@ -626,16 +636,22 @@
         "physical": "",
         "operation": "button_and_door"
       },
-      "affordance_count": 8,
+      "affordance_count": 5,
       "parent": "kitchen",
       "child": [
-        "bowls_dishwasher_kitchen"
+        "bowls_dishwasher_kitchen",
+        "dishwasher_kitchen_button",
+        "dishwasher_kitchen_door"
       ],
       "interactive_actions": [
-        "move",
-        "place",
-        "scan"
-      ]
+        "press",
+        "open",
+        "close",
+        "brush",
+        "move"
+      ],
+      "blocks_containment": true,
+      "requires_closed_to_start": true
     },
     {
       "id": "bowls_dishwasher_kitchen",
@@ -647,21 +663,19 @@
       "mobility": "movable",
       "states": {
         "is_dirty": false,
-        "is_wet": false,
-        "is_dry": true,
-        "is_clean": true
+        "is_wet": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 3,
       "parent": "dishwasher_kitchen",
       "child": [],
       "interactive_actions": [
         "pick",
-        "scan",
+        "place",
         "brush"
       ]
     },
@@ -675,9 +689,8 @@
       "mobility": "fixed",
       "states": {
         "is_on": false,
-        "fill_level": 0.0,
-        "is_full": false,
         "is_open": false,
+        "is_dirty": false,
         "cycle_remaining": 0
       },
       "property": {
@@ -685,13 +698,21 @@
         "physical": "",
         "operation": "button_and_door"
       },
-      "affordance_count": 0,
+      "affordance_count": 5,
       "parent": "kitchen",
-      "child": [],
+      "child": [
+        "microwave_kitchen_button",
+        "microwave_kitchen_door"
+      ],
       "interactive_actions": [
-        "move",
-        "scan"
-      ]
+        "press",
+        "open",
+        "close",
+        "brush",
+        "move"
+      ],
+      "blocks_containment": true,
+      "requires_closed_to_start": true
     },
     {
       "id": "stove_kitchen",
@@ -703,20 +724,22 @@
       "mobility": "fixed",
       "states": {
         "is_on": false,
-        "fill_level": 0.0,
-        "is_full": false
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": "knob_only"
       },
-      "affordance_count": 0,
+      "affordance_count": 3,
       "parent": "kitchen",
-      "child": [],
+      "child": [
+        "stove_kitchen_knob"
+      ],
       "interactive_actions": [
         "move",
-        "scan"
+        "press",
+        "brush"
       ]
     },
     {
@@ -728,22 +751,19 @@
       "semantic_type": "bed",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
-        "fill_level": 0.0,
-        "is_full": false
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 2,
       "parent": "bedroom",
       "child": [],
       "interactive_actions": [
-        "move",
-        "place",
-        "scan"
+        "brush",
+        "move"
       ]
     },
     {
@@ -755,30 +775,30 @@
       "semantic_type": "cabinet",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
         "is_open": false,
-        "fill_level": 0.0,
-        "is_full": false
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 6,
+      "affordance_count": 5,
       "parent": "bedroom",
       "child": [
         "clothes_bedroom_1",
         "clothes_bedroom_2",
-        "clothes_bedroom_3"
+        "clothes_bedroom_3",
+        "wardrobe_bedroom_door"
       ],
       "interactive_actions": [
-        "move",
+        "open",
+        "close",
+        "brush",
         "place",
-        "scan",
-        "pull",
-        "push"
-      ]
+        "move"
+      ],
+      "blocks_containment": true
     },
     {
       "id": "wardrobe_bedroom_door",
@@ -789,23 +809,27 @@
       "semantic_type": "door",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
-        "is_open": false
+        "is_open": false,
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': false}",
+        "physical": {
+          "movable": false
+        },
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 3,
+      "parent": "wardrobe_bedroom",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan",
-        "pull",
-        "push"
-      ]
+        "open",
+        "close",
+        "move"
+      ],
+      "door_kind": "structural",
+      "blocks_visibility": true,
+      "blocks_navigation": true
     },
     {
       "id": "clothes_bedroom_1",
@@ -816,23 +840,23 @@
       "semantic_type": "clothes",
       "mobility": "movable",
       "states": {
+        "folded": true,
         "is_dirty": false,
-        "is_wet": false,
-        "is_dry": true,
-        "is_clean": true,
-        "folded": true
+        "is_wet": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 4,
       "parent": "wardrobe_bedroom",
       "child": [],
       "interactive_actions": [
+        "fold",
         "pick",
-        "scan"
+        "place",
+        "brush"
       ]
     },
     {
@@ -844,23 +868,23 @@
       "semantic_type": "clothes",
       "mobility": "movable",
       "states": {
+        "folded": true,
         "is_dirty": false,
-        "is_wet": false,
-        "is_dry": true,
-        "is_clean": true,
-        "folded": true
+        "is_wet": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 4,
       "parent": "wardrobe_bedroom",
       "child": [],
       "interactive_actions": [
+        "fold",
         "pick",
-        "scan"
+        "place",
+        "brush"
       ]
     },
     {
@@ -872,23 +896,23 @@
       "semantic_type": "clothes",
       "mobility": "movable",
       "states": {
+        "folded": true,
         "is_dirty": false,
-        "is_wet": false,
-        "is_dry": true,
-        "is_clean": true,
-        "folded": true
+        "is_wet": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 4,
       "parent": "wardrobe_bedroom",
       "child": [],
       "interactive_actions": [
+        "fold",
         "pick",
-        "scan"
+        "place",
+        "brush"
       ]
     },
     {
@@ -900,25 +924,23 @@
       "semantic_type": "desk",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
-        "fill_level": 0.0,
-        "is_full": false
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 5,
+      "affordance_count": 3,
       "parent": "bedroom",
       "child": [
         "book_stack_bedroom",
         "desk_drawer_bedroom"
       ],
       "interactive_actions": [
-        "move",
+        "brush",
         "place",
-        "scan"
+        "move"
       ]
     },
     {
@@ -930,28 +952,27 @@
       "semantic_type": "drawer",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
         "is_open": false,
-        "fill_level": 0.0,
-        "is_full": false
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 4,
+      "affordance_count": 5,
       "parent": "desk_bedroom",
       "child": [
         "stationery_set_bedroom"
       ],
       "interactive_actions": [
-        "move",
+        "open",
+        "close",
+        "brush",
         "place",
-        "scan",
-        "pull",
-        "push"
-      ]
+        "move"
+      ],
+      "blocks_containment": true
     },
     {
       "id": "stationery_set_bedroom",
@@ -961,18 +982,20 @@
       "semantic_class": "tool",
       "semantic_type": "stationery",
       "mobility": "movable",
-      "states": {},
+      "states": {
+        "is_dirty": false
+      },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 2,
       "parent": "desk_drawer_bedroom",
       "child": [],
       "interactive_actions": [
         "pick",
-        "scan"
+        "place"
       ]
     },
     {
@@ -983,18 +1006,20 @@
       "semantic_class": "personal_item",
       "semantic_type": "book",
       "mobility": "movable",
-      "states": {},
+      "states": {
+        "is_dirty": false
+      },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 2,
       "parent": "desk_bedroom",
       "child": [],
       "interactive_actions": [
         "pick",
-        "scan"
+        "place"
       ]
     },
     {
@@ -1006,7 +1031,7 @@
       "semantic_type": "sink",
       "mobility": "fixed",
       "states": {
-        "is_on": false,
+        "is_dirty": false,
         "fill_level": 0.0,
         "is_full": false
       },
@@ -1015,17 +1040,17 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 4,
+      "affordance_count": 3,
       "parent": "bathroom",
       "child": [
         "cup_bathroom",
-        "toothbrush_bathroom"
+        "toothbrush_bathroom",
+        "toothpaste_bathroom"
       ],
       "interactive_actions": [
-        "move",
+        "brush",
         "place",
-        "scan",
-        "brush"
+        "move"
       ]
     },
     {
@@ -1037,22 +1062,19 @@
       "semantic_type": "faucet",
       "mobility": "fixed",
       "states": {
-        "is_on": false,
-        "fill_level": 0.0,
-        "is_full": false
+        "is_on": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 2,
       "parent": "bathroom",
       "child": [],
       "interactive_actions": [
-        "move",
         "press",
-        "scan"
+        "move"
       ]
     },
     {
@@ -1064,23 +1086,19 @@
       "semantic_type": "toilet",
       "mobility": "fixed",
       "states": {
-        "is_on": false,
-        "fill_level": 0.0,
-        "is_full": false,
-        "cleanliness": 0.92,
-        "is_dirty": false
+        "is_dirty": false,
+        "cleanliness": 0.92
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 2,
       "parent": "bathroom",
       "child": [],
       "interactive_actions": [
         "move",
-        "scan",
         "brush"
       ]
     },
@@ -1093,19 +1111,20 @@
       "semantic_type": "toilet_brush",
       "mobility": "movable",
       "states": {
-        "is_clean": true
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 3,
       "parent": "bathroom",
       "child": [],
       "interactive_actions": [
         "pick",
-        "scan"
+        "place",
+        "brush"
       ]
     },
     {
@@ -1118,9 +1137,8 @@
       "mobility": "fixed",
       "states": {
         "is_on": false,
-        "fill_level": 0.0,
-        "is_full": false,
         "is_open": false,
+        "is_dirty": false,
         "cycle_remaining": 0
       },
       "property": {
@@ -1130,12 +1148,19 @@
       },
       "affordance_count": 5,
       "parent": "bathroom",
-      "child": [],
+      "child": [
+        "washer_bathroom_button",
+        "washer_bathroom_door"
+      ],
       "interactive_actions": [
-        "move",
-        "place",
-        "scan"
-      ]
+        "press",
+        "open",
+        "close",
+        "brush",
+        "move"
+      ],
+      "blocks_containment": true,
+      "requires_closed_to_start": true
     },
     {
       "id": "plant_balcony",
@@ -1146,20 +1171,22 @@
       "semantic_type": "plant",
       "mobility": "fixed",
       "states": {
-        "vitality": 0.92,
-        "is_wilted": false
+        "is_wilted": false,
+        "is_wet": true,
+        "vitality": 0.92
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 3,
       "parent": "balcony",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan"
+        "pick",
+        "place",
+        "move"
       ]
     },
     {
@@ -1170,18 +1197,21 @@
       "semantic_class": "furniture",
       "semantic_type": "chair",
       "mobility": "movable",
-      "states": {},
+      "states": {
+        "is_dirty": false
+      },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 3,
       "parent": "balcony",
       "child": [],
       "interactive_actions": [
-        "pick",
-        "scan"
+        "brush",
+        "place",
+        "move"
       ]
     },
     {
@@ -1193,19 +1223,20 @@
       "semantic_type": "toothbrush",
       "mobility": "movable",
       "states": {
-        "is_clean": true
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 3,
       "parent": "sink_bathroom",
       "child": [],
       "interactive_actions": [
         "pick",
-        "scan"
+        "place",
+        "brush"
       ]
     },
     {
@@ -1218,21 +1249,46 @@
       "mobility": "movable",
       "states": {
         "is_dirty": false,
-        "is_wet": false,
-        "is_dry": true,
-        "is_clean": true
+        "fill_level": 0.0,
+        "is_full": false,
+        "is_wet": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 3,
       "parent": "sink_bathroom",
       "child": [],
       "interactive_actions": [
         "pick",
-        "scan"
+        "place",
+        "brush"
+      ]
+    },
+    {
+      "id": "toothpaste_bathroom",
+      "name": "toothpaste",
+      "name_cn": "牙膏",
+      "node_type": "movable_object",
+      "semantic_class": "personal_item",
+      "semantic_type": "toothpaste",
+      "mobility": "movable",
+      "states": {
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 2,
+      "parent": "sink_bathroom",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "place"
       ]
     },
     {
@@ -1244,7 +1300,7 @@
       "semantic_type": "trash_bin",
       "mobility": "fixed",
       "states": {
-        "is_on": false,
+        "is_dirty": false,
         "fill_level": 0.0,
         "is_full": false
       },
@@ -1253,13 +1309,13 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 8,
+      "affordance_count": 3,
       "parent": "living_room",
       "child": [],
       "interactive_actions": [
-        "move",
+        "brush",
         "place",
-        "scan"
+        "move"
       ]
     },
     {
@@ -1271,23 +1327,31 @@
       "semantic_type": "door",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
-        "is_open": false
+        "is_open": false,
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": "manual_door"
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 3,
+      "parent": "entrance",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan",
-        "pull",
-        "push"
-      ]
+        "open",
+        "close",
+        "move"
+      ],
+      "door_kind": "structural",
+      "connected_rooms": [
+        "outside_home",
+        "entrance"
+      ],
+      "blocks_visibility": true,
+      "blocks_navigation": true
     },
     {
       "id": "light_entrance",
@@ -1298,21 +1362,21 @@
       "semantic_type": "room_light",
       "mobility": "fixed",
       "states": {
-        "is_on": false,
-        "fill_level": 0.0,
-        "is_full": false
+        "is_on": false
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": "button_only"
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "entrance",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan"
+        "press",
+        "move"
       ]
     },
     {
@@ -1329,16 +1393,17 @@
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "entrance",
       "child": [],
       "interactive_actions": [
-        "move",
         "press",
-        "scan"
+        "move"
       ]
     },
     {
@@ -1350,23 +1415,31 @@
       "semantic_type": "door",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
-        "is_open": false
+        "is_open": false,
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": "manual_door"
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 3,
+      "parent": "living_room",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan",
-        "pull",
-        "push"
-      ]
+        "open",
+        "close",
+        "move"
+      ],
+      "door_kind": "structural",
+      "connected_rooms": [
+        "entrance",
+        "living_room"
+      ],
+      "blocks_visibility": true,
+      "blocks_navigation": true
     },
     {
       "id": "light_living_room",
@@ -1377,21 +1450,21 @@
       "semantic_type": "room_light",
       "mobility": "fixed",
       "states": {
-        "is_on": false,
-        "fill_level": 0.0,
-        "is_full": false
+        "is_on": false
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": "button_only"
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "living_room",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan"
+        "press",
+        "move"
       ]
     },
     {
@@ -1408,16 +1481,17 @@
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "living_room",
       "child": [],
       "interactive_actions": [
-        "move",
         "press",
-        "scan"
+        "move"
       ]
     },
     {
@@ -1429,23 +1503,31 @@
       "semantic_type": "door",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
-        "is_open": false
+        "is_open": false,
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": "manual_door"
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 3,
+      "parent": "kitchen",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan",
-        "pull",
-        "push"
-      ]
+        "open",
+        "close",
+        "move"
+      ],
+      "door_kind": "structural",
+      "connected_rooms": [
+        "living_room",
+        "kitchen"
+      ],
+      "blocks_visibility": true,
+      "blocks_navigation": true
     },
     {
       "id": "light_kitchen",
@@ -1456,21 +1538,21 @@
       "semantic_type": "room_light",
       "mobility": "fixed",
       "states": {
-        "is_on": false,
-        "fill_level": 0.0,
-        "is_full": false
+        "is_on": false
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": "button_only"
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "kitchen",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan"
+        "press",
+        "move"
       ]
     },
     {
@@ -1487,16 +1569,17 @@
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "kitchen",
       "child": [],
       "interactive_actions": [
-        "move",
         "press",
-        "scan"
+        "move"
       ]
     },
     {
@@ -1508,23 +1591,31 @@
       "semantic_type": "door",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
-        "is_open": false
+        "is_open": false,
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": "manual_door"
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 3,
+      "parent": "bedroom",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan",
-        "pull",
-        "push"
-      ]
+        "open",
+        "close",
+        "move"
+      ],
+      "door_kind": "structural",
+      "connected_rooms": [
+        "living_room",
+        "bedroom"
+      ],
+      "blocks_visibility": true,
+      "blocks_navigation": true
     },
     {
       "id": "light_bedroom",
@@ -1535,21 +1626,21 @@
       "semantic_type": "room_light",
       "mobility": "fixed",
       "states": {
-        "is_on": false,
-        "fill_level": 0.0,
-        "is_full": false
+        "is_on": false
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": "button_only"
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "bedroom",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan"
+        "press",
+        "move"
       ]
     },
     {
@@ -1566,16 +1657,17 @@
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "bedroom",
       "child": [],
       "interactive_actions": [
-        "move",
         "press",
-        "scan"
+        "move"
       ]
     },
     {
@@ -1587,23 +1679,31 @@
       "semantic_type": "door",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
-        "is_open": false
+        "is_open": false,
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": "manual_door"
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 3,
+      "parent": "bathroom",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan",
-        "pull",
-        "push"
-      ]
+        "open",
+        "close",
+        "move"
+      ],
+      "door_kind": "structural",
+      "connected_rooms": [
+        "bedroom",
+        "bathroom"
+      ],
+      "blocks_visibility": true,
+      "blocks_navigation": true
     },
     {
       "id": "light_bathroom",
@@ -1614,21 +1714,21 @@
       "semantic_type": "room_light",
       "mobility": "fixed",
       "states": {
-        "is_on": false,
-        "fill_level": 0.0,
-        "is_full": false
+        "is_on": false
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": "button_only"
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "bathroom",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan"
+        "press",
+        "move"
       ]
     },
     {
@@ -1645,16 +1745,17 @@
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "bathroom",
       "child": [],
       "interactive_actions": [
-        "move",
         "press",
-        "scan"
+        "move"
       ]
     },
     {
@@ -1666,23 +1767,31 @@
       "semantic_type": "door",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
-        "is_open": false
+        "is_open": false,
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": "manual_door"
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 3,
+      "parent": "balcony",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan",
-        "pull",
-        "push"
-      ]
+        "open",
+        "close",
+        "move"
+      ],
+      "door_kind": "structural",
+      "connected_rooms": [
+        "living_room",
+        "balcony"
+      ],
+      "blocks_visibility": true,
+      "blocks_navigation": true
     },
     {
       "id": "light_balcony",
@@ -1693,21 +1802,21 @@
       "semantic_type": "room_light",
       "mobility": "fixed",
       "states": {
-        "is_on": false,
-        "fill_level": 0.0,
-        "is_full": false
+        "is_on": false
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": "button_only"
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "balcony",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan"
+        "press",
+        "move"
       ]
     },
     {
@@ -1724,16 +1833,17 @@
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "balcony",
       "child": [],
       "interactive_actions": [
-        "move",
         "press",
-        "scan"
+        "move"
       ]
     },
     {
@@ -1745,23 +1855,28 @@
       "semantic_type": "door",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
-        "is_open": false
+        "is_open": false,
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 3,
+      "parent": "dishwasher_kitchen",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan",
-        "pull",
-        "push"
-      ]
+        "open",
+        "close",
+        "move"
+      ],
+      "door_kind": "structural",
+      "requires_closed_to_start": true,
+      "blocks_visibility": true,
+      "blocks_navigation": true
     },
     {
       "id": "dishwasher_kitchen_button",
@@ -1777,16 +1892,17 @@
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "dishwasher_kitchen",
       "child": [],
       "interactive_actions": [
-        "move",
         "press",
-        "scan"
+        "move"
       ]
     },
     {
@@ -1798,23 +1914,28 @@
       "semantic_type": "door",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
-        "is_open": false
+        "is_open": false,
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 3,
+      "parent": "microwave_kitchen",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan",
-        "pull",
-        "push"
-      ]
+        "open",
+        "close",
+        "move"
+      ],
+      "door_kind": "structural",
+      "requires_closed_to_start": true,
+      "blocks_visibility": true,
+      "blocks_navigation": true
     },
     {
       "id": "microwave_kitchen_button",
@@ -1830,16 +1951,17 @@
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "microwave_kitchen",
       "child": [],
       "interactive_actions": [
-        "move",
         "press",
-        "scan"
+        "move"
       ]
     },
     {
@@ -1851,21 +1973,21 @@
       "semantic_type": "knob",
       "mobility": "fixed",
       "states": {
-        "is_on": false,
-        "is_pressed": false
+        "is_on": false
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "stove_kitchen",
       "child": [],
       "interactive_actions": [
         "move",
-        "press",
-        "scan"
+        "press"
       ]
     },
     {
@@ -1877,23 +1999,28 @@
       "semantic_type": "door",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
-        "is_open": false
+        "is_open": false,
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 3,
+      "parent": "washer_bathroom",
       "child": [],
       "interactive_actions": [
-        "move",
-        "scan",
-        "pull",
-        "push"
-      ]
+        "open",
+        "close",
+        "move"
+      ],
+      "door_kind": "structural",
+      "requires_closed_to_start": true,
+      "blocks_visibility": true,
+      "blocks_navigation": true
     },
     {
       "id": "washer_bathroom_button",
@@ -1909,16 +2036,17 @@
       },
       "property": {
         "appearance": "",
-        "physical": "{'movable': False}",
+        "physical": {
+          "movable": false
+        },
         "operation": ""
       },
-      "affordance_count": 0,
-      "parent": null,
+      "affordance_count": 2,
+      "parent": "washer_bathroom",
       "child": [],
       "interactive_actions": [
-        "move",
         "press",
-        "scan"
+        "move"
       ]
     },
     {
@@ -1930,22 +2058,43 @@
       "semantic_type": "door",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
-        "is_open": false
+        "is_open": false,
+        "is_dirty": false
       },
       "property": {
         "appearance": "",
         "physical": "",
         "operation": "manual_door"
       },
-      "affordance_count": 0,
+      "affordance_count": 3,
       "parent": "fridge_kitchen",
       "child": [],
       "interactive_actions": [
+        "open",
+        "close",
+        "move"
+      ],
+      "door_kind": "structural",
+      "requires_closed_to_start": true,
+      "blocks_visibility": true,
+      "blocks_navigation": true
+    },
+    {
+      "id": "outside_home",
+      "name": "outside_home",
+      "name_cn": "屋外",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {},
+      "property": {},
+      "affordance_count": 2,
+      "parent": "F1",
+      "child": [],
+      "interactive_actions": [
         "move",
-        "scan",
-        "pull",
-        "push"
+        "place"
       ]
     }
   ],
@@ -2002,7 +2151,7 @@
       "source_id": "entrance",
       "target_id": "living_room",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -2010,7 +2159,7 @@
       "source_id": "living_room",
       "target_id": "kitchen",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -2018,7 +2167,7 @@
       "source_id": "living_room",
       "target_id": "bedroom",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -2026,15 +2175,7 @@
       "source_id": "living_room",
       "target_id": "balcony",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
-      "category": "structural",
-      "properties": {}
-    },
-    {
-      "source_id": "kitchen",
-      "target_id": "bathroom",
-      "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -2042,7 +2183,7 @@
       "source_id": "bedroom",
       "target_id": "bathroom",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -2351,14 +2492,6 @@
       "properties": {}
     },
     {
-      "source_id": "toilet_brush_bathroom",
-      "target_id": "toilet_bathroom",
-      "edge_type": "control_edge",
-      "relation": "controls",
-      "category": "control",
-      "properties": {}
-    },
-    {
       "source_id": "sink_bathroom",
       "target_id": "toothbrush_bathroom",
       "edge_type": "containment_edge",
@@ -2369,6 +2502,14 @@
     {
       "source_id": "sink_bathroom",
       "target_id": "cup_bathroom",
+      "edge_type": "containment_edge",
+      "relation": "on",
+      "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "sink_bathroom",
+      "target_id": "toothpaste_bathroom",
       "edge_type": "containment_edge",
       "relation": "on",
       "category": "containment",
@@ -2668,6 +2809,22 @@
       "edge_type": "structural_edge",
       "relation": "part_of",
       "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "outside_home",
+      "edge_type": "scene_edge",
+      "relation": "contains",
+      "category": "spatial",
+      "properties": {}
+    },
+    {
+      "source_id": "outside_home",
+      "target_id": "entrance",
+      "edge_type": "scene_edge",
+      "relation": "connected",
+      "category": "spatial",
       "properties": {}
     }
   ]

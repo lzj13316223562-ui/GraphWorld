@@ -88,29 +88,41 @@ SUPPORTED_AGENTS = {
     "vllm-qwen3.5-4b": {
         "type": "openai",
         "model": "qwen35-4b",
+        "model_env": "VLLM_MODEL",
         "api_key": "EMPTY",
+        "api_key_env": "VLLM_API_KEY",
         "base_url": "http://127.0.0.1:8000/v1",
+        "base_url_env": "VLLM_BASE_URL",
         "multimodal": False,
     },
     "vllm-qwen3.5-9b": {
         "type": "openai",
         "model": "qwen35-9b",
+        "model_env": "VLLM_MODEL",
         "api_key": "EMPTY",
+        "api_key_env": "VLLM_API_KEY",
         "base_url": "http://127.0.0.1:8001/v1",
+        "base_url_env": "VLLM_BASE_URL",
         "multimodal": False,
     },
     "vllm-qwen2.5-3b": {
         "type": "openai",
         "model": "qwen25-3b-instruct",
+        "model_env": "VLLM_MODEL",
         "api_key": "EMPTY",
+        "api_key_env": "VLLM_API_KEY",
         "base_url": "http://127.0.0.1:8000/v1",
+        "base_url_env": "VLLM_BASE_URL",
         "multimodal": False,
     },
     "vllm-qwen2.5-7b-awq": {
         "type": "openai",
         "model": "qwen25-7b-instruct-awq",
+        "model_env": "VLLM_MODEL",
         "api_key": "EMPTY",
+        "api_key_env": "VLLM_API_KEY",
         "base_url": "http://127.0.0.1:8000/v1",
+        "base_url_env": "VLLM_BASE_URL",
         "multimodal": False,
     },
 }
@@ -118,6 +130,22 @@ SUPPORTED_AGENTS = {
 # ========== 统一客户端管理 ==========
 
 clients = {}  # 缓存已初始化的客户端
+
+
+def _cfg_value(cfg: dict, key: str):
+    env_key = cfg.get(f"{key}_env")
+    if env_key:
+        return os.environ.get(env_key, cfg.get(key))
+    return cfg.get(key)
+
+
+def resolved_agent_config(agent: str) -> dict:
+    if agent not in SUPPORTED_AGENTS:
+        raise ValueError(f"Unsupported agent: {agent}")
+    cfg = dict(SUPPORTED_AGENTS[agent])
+    for key in ("model", "api_key", "base_url"):
+        cfg[key] = _cfg_value(cfg, key)
+    return cfg
 
 
 class OllamaHTTPClient:
@@ -176,14 +204,9 @@ def get_client(agent: str):
 
         elif client_type == "openai":
             from openai import OpenAI
-            api_key = cfg.get("api_key")
+            api_key = _cfg_value(cfg, "api_key")
             api_key_env = cfg.get("api_key_env")
-            base_url = cfg.get("base_url")
-            base_url_env = cfg.get("base_url_env")
-            if api_key_env:
-                api_key = os.environ.get(api_key_env, api_key)
-            if base_url_env:
-                base_url = os.environ.get(base_url_env, base_url)
+            base_url = _cfg_value(cfg, "base_url")
             if not api_key:
                 hint = f"（可通过环境变量 {api_key_env} 提供）" if api_key_env else ""
                 raise RuntimeError(f"缺少 {agent} 的 API key{hint}")
@@ -282,7 +305,7 @@ def llm_query(system_prompt: str, user_query: str, agent: str = "glm-4", timeout
                 extra_args["extra_body"] = extra_body
 
             response = client.chat.completions.create(
-                model=cfg["model"],
+                model=_cfg_value(cfg, "model"),
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_query}
@@ -360,7 +383,7 @@ def vlm_query(system_prompt: str, image_path: str, user_query: str, agent: str =
                 extra_args["extra_body"] = {"enable_search": True}
                 
             response = client.chat.completions.create(
-                model=cfg["model"],
+                model=_cfg_value(cfg, "model"),
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {
@@ -463,7 +486,7 @@ def vlm_query_multi_base64(
             if enable_search:
                 extra_args["extra_body"] = {"enable_search": True}
             response = client.chat.completions.create(
-                model=cfg["model"],
+                model=_cfg_value(cfg, "model"),
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": content},

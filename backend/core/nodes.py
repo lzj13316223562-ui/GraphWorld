@@ -1,363 +1,259 @@
-"""
-Node 基类体系
-定义场景图中所有节点的基类和子类
-"""
+from __future__ import annotations
 
-from typing import Dict, List, Any, Optional, Set
-from abc import ABC, abstractmethod
+from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any
 
 
-class NodeType(Enum):
-    """节点类型枚举"""
-    OBJECT = "object"
-    ROOM = "room"
+class NodeType(str, Enum):
     FLOOR = "floor"
-    MOBILE_TOOL = "mobile_tool"
-    AGENT = "agent"
+    ROOM = "room"
+    FIXED_OBJECT = "fixed_object"
+    MOVABLE_OBJECT = "movable_object"
+    CONTROL_OBJECT = "control_object"
+    ROBOT = "robot"
+    HUMAN = "human"
 
 
 @dataclass
-class BaseNode(ABC):
-    """
-    场景图节点基类
-    所有物体、房间、楼层等都继承此类
-    """
+class Node:
     id: str
+    semantic_type: str
     name: str
+    name_cn: str
     node_type: NodeType
-    properties: Dict[str, Any] = field(default_factory=dict)
-    
-    def __post_init__(self):
-        """初始化后的验证"""
-        if not self.id:
-            raise ValueError("Node id cannot be empty")
-        if not self.name:
-            raise ValueError("Node name cannot be empty")
-    
-    @abstractmethod
-    def to_dict(self) -> Dict[str, Any]:
-        """转换为字典格式（用于序列化）"""
+    states: dict[str, Any] = field(default_factory=dict)
+    interactive_actions: list[str] = field(default_factory=list)
+    parent: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "name": self.name,
-            "type": self.node_type.value,
-            "properties": self.properties
+            "name_cn": self.name_cn,
+            "node_type": self.node_type.value,
+            "semantic_type": self.semantic_type,
+            "parent": self.parent,
+            "states": deepcopy(self.states),
+            "interactive_actions": list(self.interactive_actions),
         }
-    
-    @classmethod
-    @abstractmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'BaseNode':
-        """从字典创建节点（用于反序列化）"""
-        pass
-    
-    def update_property(self, key: str, value: Any) -> None:
-        """更新节点属性"""
-        self.properties[key] = value
-    
-    def get_property(self, key: str, default: Any = None) -> Any:
-        """获取节点属性"""
-        return self.properties.get(key, default)
-    
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(id={self.id}, name={self.name})"
-    
-    def __hash__(self):
-        return hash(self.id)
-    
-    def __eq__(self, other):
-        if not isinstance(other, BaseNode):
-            return False
-        return self.id == other.id
 
 
 @dataclass
-class Object(BaseNode):
-    """
-    物体节点
-    表示场景中的具体物体（small_objects 和 large_objects）
-    """
-    object_type: str = ""  # 如 "food", "tool", "furniture"
-    is_container: bool = False
-    affordances: List[str] = field(default_factory=list)  # 可执行的动作
-    states: Dict[str, Any] = field(default_factory=dict)  # 物体状态
-    physical_properties: Dict[str, Any] = field(default_factory=dict)  # 物理属性
-    
-    def __post_init__(self):
-        super().__post_init__()
-        if self.node_type != NodeType.OBJECT:
-            self.node_type = NodeType.OBJECT
-    
-    def to_dict(self) -> Dict[str, Any]:
-        base = super().to_dict()
-        base.update({
-            "object_type": self.object_type,
-            "is_container": self.is_container,
-            "affordances": self.affordances,
-            "states": self.states,
-            "physical_properties": self.physical_properties
-        })
-        return base
-    
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Object':
-        return cls(
-            id=data["id"],
-            name=data["name"],
-            node_type=NodeType.OBJECT,
-            object_type=data.get("object_type", ""),
-            is_container=data.get("is_container", False),
-            affordances=data.get("affordances", []),
-            states=data.get("states", {}),
-            physical_properties=data.get("physical_properties", {}),
-            properties=data.get("properties", {})
-        )
-    
-    def has_affordance(self, action: str) -> bool:
-        """检查是否支持某个动作"""
-        return action in self.affordances
-    
-    def get_state(self, state_name: str, default: Any = None) -> Any:
-        """获取物体状态"""
-        return self.states.get(state_name, default)
-    
-    def set_state(self, state_name: str, value: Any) -> None:
-        """设置物体状态"""
-        self.states[state_name] = value
+class Floor(Node):
+    floor_number: int = 1
+
+    def __init__(
+        self,
+        id: str,
+        semantic_type: str = "floor",
+        name: str = "floor",
+        name_cn: str = "楼层",
+        *,
+        states: dict[str, Any] | None = None,
+        interactive_actions: list[str] | None = None,
+        parent: str | None = None,
+        floor_number: int = 1,
+    ) -> None:
+        super().__init__(id, semantic_type, name, name_cn, NodeType.FLOOR, dict(states or {}), list(interactive_actions or []), parent)
+        self.floor_number = floor_number
+
+    def to_dict(self) -> dict[str, Any]:
+        node = super().to_dict()
+        node["floor_number"] = self.floor_number
+        return node
 
 
 @dataclass
-class Room(BaseNode):
-    """
-    房间节点
-    继承自 BaseNode，添加了 neighbours（相邻房间）
-    """
-    floor_id: str = ""  # 所属楼层
-    neighbours: Set[str] = field(default_factory=set)  # 相邻房间 ID
-    contained_objects: Set[str] = field(default_factory=set)  # 房间内的物体 ID
-    
-    def __post_init__(self):
-        super().__post_init__()
-        if self.node_type != NodeType.ROOM:
-            self.node_type = NodeType.ROOM
-    
-    def to_dict(self) -> Dict[str, Any]:
-        base = super().to_dict()
-        base.update({
-            "floor_id": self.floor_id,
-            "neighbours": list(self.neighbours),
-            "contained_objects": list(self.contained_objects)
-        })
-        return base
-    
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Room':
-        return cls(
-            id=data["id"],
-            name=data["name"],
-            node_type=NodeType.ROOM,
-            floor_id=data.get("floor_id", ""),
-            neighbours=set(data.get("neighbours", [])),
-            contained_objects=set(data.get("contained_objects", [])),
-            properties=data.get("properties", {})
-        )
-    
-    def add_neighbour(self, room_id: str) -> None:
-        """添加相邻房间"""
-        self.neighbours.add(room_id)
-    
-    def remove_neighbour(self, room_id: str) -> None:
-        """移除相邻房间"""
-        self.neighbours.discard(room_id)
-    
-    def is_neighbour(self, room_id: str) -> bool:
-        """检查是否为相邻房间"""
-        return room_id in self.neighbours
-    
-    def add_object(self, object_id: str) -> None:
-        """添加物体到房间"""
-        self.contained_objects.add(object_id)
-    
-    def remove_object(self, object_id: str) -> None:
-        """从房间移除物体"""
-        self.contained_objects.discard(object_id)
-    
-    def has_object(self, object_id: str) -> bool:
-        """检查房间是否包含某物体"""
-        return object_id in self.contained_objects
+class Room(Node):
+    floor_id: str | None = None
+
+    def __init__(
+        self,
+        id: str,
+        semantic_type: str = "room",
+        name: str = "room",
+        name_cn: str = "房间",
+        *,
+        states: dict[str, Any] | None = None,
+        interactive_actions: list[str] | None = None,
+        parent: str | None = None,
+        floor_id: str | None = None,
+    ) -> None:
+        super().__init__(id, semantic_type, name, name_cn, NodeType.ROOM, dict(states or {}), list(interactive_actions or []), parent)
+        self.floor_id = floor_id
+
+    def to_dict(self) -> dict[str, Any]:
+        node = super().to_dict()
+        if self.floor_id:
+            node["floor_id"] = self.floor_id
+        return node
 
 
 @dataclass
-class Floor(BaseNode):
-    """
-    楼层节点
-    继承自 Room，包含多个房间
-    """
-    rooms: Set[str] = field(default_factory=set)  # 该楼层的房间 ID 列表
-    floor_number: int = 1  # 楼层编号
-    
-    def __post_init__(self):
-        super().__post_init__()
-        if self.node_type != NodeType.FLOOR:
-            self.node_type = NodeType.FLOOR
-    
-    def to_dict(self) -> Dict[str, Any]:
-        base = super().to_dict()
-        base.update({
-            "rooms": list(self.rooms),
-            "floor_number": self.floor_number
-        })
-        return base
-    
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Floor':
-        return cls(
-            id=data["id"],
-            name=data["name"],
-            node_type=NodeType.FLOOR,
-            rooms=set(data.get("rooms", [])),
-            floor_number=data.get("floor_number", 1),
-            properties=data.get("properties", {})
-        )
-    
-    def add_room(self, room_id: str) -> None:
-        """添加房间到楼层"""
-        self.rooms.add(room_id)
-    
-    def remove_room(self, room_id: str) -> None:
-        """从楼层移除房间"""
-        self.rooms.discard(room_id)
-    
-    def has_room(self, room_id: str) -> bool:
-        """检查楼层是否包含某房间"""
-        return room_id in self.rooms
+class FixedObject(Node):
+    def __init__(
+        self,
+        id: str,
+        semantic_type: str,
+        name: str,
+        name_cn: str,
+        *,
+        states: dict[str, Any] | None = None,
+        interactive_actions: list[str] | None = None,
+        parent: str | None = None,
+    ) -> None:
+        super().__init__(id, semantic_type, name, name_cn, NodeType.FIXED_OBJECT, dict(states or {}), list(interactive_actions or []), parent)
 
 
 @dataclass
-class MobileTool(BaseNode):
-    """
-    移动型工具节点（如电梯、推车等）
-    可以在不同位置之间移动
-    """
-    object_type: str = "mobile_tool" # 工具类型 (e.g. elevator, cart)
-    current_location: str = ""  # 当前位置（房间/楼层 ID）
-    accessible_locations: Set[str] = field(default_factory=set)  # 可到达的位置
-    capacity: int = 1  # 容量（如电梯能承载的人数或物品数量）
-    is_occupied: bool = False  # 是否被占用
-    states: Dict[str, Any] = field(default_factory=dict)  # 状态
-    physical_properties: Dict[str, Any] = field(default_factory=dict)  # 物理属性
-    
-    def __post_init__(self):
-        super().__post_init__()
-        if self.node_type != NodeType.MOBILE_TOOL:
-            self.node_type = NodeType.MOBILE_TOOL
-    
-    def to_dict(self) -> Dict[str, Any]:
-        base = super().to_dict()
-        base.update({
-            "object_type": self.object_type,
-            "current_location": self.current_location,
-            "accessible_locations": list(self.accessible_locations),
-            "capacity": self.capacity,
-            "is_occupied": self.is_occupied,
-            "states": self.states,
-            "physical_properties": self.physical_properties
-        })
-        return base
-    
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'MobileTool':
-        return cls(
-            id=data["id"],
-            name=data["name"],
-            node_type=NodeType.MOBILE_TOOL,
-            object_type=data.get("object_type", "mobile_tool"),
-            current_location=data.get("current_location", ""),
-            accessible_locations=set(data.get("accessible_locations", [])),
-            capacity=data.get("capacity", 1),
-            is_occupied=data.get("is_occupied", False),
-            states=data.get("states", {}),
-            physical_properties=data.get("physical_properties", {}),
-            properties=data.get("properties", {})
-        )
-    
-    def move_to(self, location_id: str) -> bool:
-        """移动到指定位置"""
-        if location_id in self.accessible_locations:
-            self.current_location = location_id
-            return True
-        return False
-    
-    def add_accessible_location(self, location_id: str) -> None:
-        """添加可到达位置"""
-        self.accessible_locations.add(location_id)
-    
-    def can_access(self, location_id: str) -> bool:
-        """检查是否可以到达某位置"""
-        return location_id in self.accessible_locations
+class MovableObject(Node):
+    def __init__(
+        self,
+        id: str,
+        semantic_type: str,
+        name: str,
+        name_cn: str,
+        *,
+        states: dict[str, Any] | None = None,
+        interactive_actions: list[str] | None = None,
+        parent: str | None = None,
+    ) -> None:
+        super().__init__(id, semantic_type, name, name_cn, NodeType.MOVABLE_OBJECT, dict(states or {}), list(interactive_actions or []), parent)
 
 
 @dataclass
-class Agent(BaseNode):
-    """
-    智能体节点（机器人或人）
-    """
-    current_room: str = ""  # 当前所在房间
-    inventory: Set[str] = field(default_factory=set)  # 持有的物体 ID
-    max_inventory: int = 2  # 最大持有数量
-    state: Dict[str, Any] = field(default_factory=dict)  # 智能体状态
-    
-    def __post_init__(self):
-        super().__post_init__()
-        if self.node_type != NodeType.AGENT:
-            self.node_type = NodeType.AGENT
-    
-    def to_dict(self) -> Dict[str, Any]:
-        base = super().to_dict()
-        base.update({
-            "current_room": self.current_room,
-            "inventory": list(self.inventory),
-            "max_inventory": self.max_inventory,
-            "state": self.state
-        })
-        return base
-    
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Agent':
-        return cls(
-            id=data["id"],
-            name=data["name"],
-            node_type=NodeType.AGENT,
-            current_room=data.get("current_room", ""),
-            inventory=set(data.get("inventory", [])),
-            max_inventory=data.get("max_inventory", 2),
-            state=data.get("state", {}),
-            properties=data.get("properties", {})
-        )
-    
-    def pick_object(self, object_id: str) -> bool:
-        """拾取物体"""
-        if len(self.inventory) < self.max_inventory:
-            self.inventory.add(object_id)
-            return True
-        return False
-    
-    def drop_object(self, object_id: str) -> bool:
-        """放下物体"""
-        if object_id in self.inventory:
-            self.inventory.remove(object_id)
-            return True
-        return False
-    
-    def has_object(self, object_id: str) -> bool:
-        """检查是否持有某物体"""
-        return object_id in self.inventory
-    
-    def move_to_room(self, room_id: str) -> None:
-        """移动到指定房间"""
-        self.current_room = room_id
-    
-    def is_inventory_full(self) -> bool:
-        """检查背包是否已满"""
-        return len(self.inventory) >= self.max_inventory
+class ControlObject(Node):
+    door_kind: str | None = None
+    blocks_visibility: bool = False
+    blocks_navigation: bool = False
+    blocks_containment: bool = False
+    requires_closed_to_start: bool = False
+    parent_device_type: str | None = None
+
+    def __init__(
+        self,
+        id: str,
+        semantic_type: str,
+        name: str,
+        name_cn: str,
+        *,
+        states: dict[str, Any] | None = None,
+        interactive_actions: list[str] | None = None,
+        parent: str | None = None,
+        door_kind: str | None = None,
+        blocks_visibility: bool = False,
+        blocks_navigation: bool = False,
+        blocks_containment: bool = False,
+        requires_closed_to_start: bool = False,
+        parent_device_type: str | None = None,
+    ) -> None:
+        super().__init__(id, semantic_type, name, name_cn, NodeType.CONTROL_OBJECT, dict(states or {}), list(interactive_actions or []), parent)
+        self.door_kind = door_kind
+        self.blocks_visibility = blocks_visibility
+        self.blocks_navigation = blocks_navigation
+        self.blocks_containment = blocks_containment
+        self.requires_closed_to_start = requires_closed_to_start
+        self.parent_device_type = parent_device_type
+
+    def to_dict(self) -> dict[str, Any]:
+        node = super().to_dict()
+        if self.door_kind:
+            node["door_kind"] = self.door_kind
+        if self.blocks_visibility:
+            node["blocks_visibility"] = self.blocks_visibility
+        if self.blocks_navigation:
+            node["blocks_navigation"] = self.blocks_navigation
+        if self.blocks_containment:
+            node["blocks_containment"] = self.blocks_containment
+        if self.requires_closed_to_start:
+            node["requires_closed_to_start"] = self.requires_closed_to_start
+        if self.parent_device_type:
+            node["parent_device_type"] = self.parent_device_type
+        return node
+
+
+@dataclass
+class Robot(Node):
+    inventory: list[str] = field(default_factory=list)
+
+    def __init__(
+        self,
+        id: str,
+        semantic_type: str = "robot",
+        name: str = "robot",
+        name_cn: str = "机器人",
+        *,
+        states: dict[str, Any] | None = None,
+        interactive_actions: list[str] | None = None,
+        parent: str | None = None,
+        inventory: list[str] | None = None,
+    ) -> None:
+        super().__init__(id, semantic_type, name, name_cn, NodeType.ROBOT, dict(states or {}), list(interactive_actions or []), parent)
+        self.inventory = list(inventory or [])
+
+    def to_dict(self) -> dict[str, Any]:
+        node = super().to_dict()
+        node["inventory"] = list(self.inventory)
+        return node
+
+
+@dataclass
+class Human(Node):
+    role: str = "human"
+
+    def __init__(
+        self,
+        id: str,
+        semantic_type: str = "human",
+        name: str = "human",
+        name_cn: str = "人类",
+        *,
+        states: dict[str, Any] | None = None,
+        interactive_actions: list[str] | None = None,
+        parent: str | None = None,
+        role: str = "human",
+    ) -> None:
+        super().__init__(id, semantic_type, name, name_cn, NodeType.HUMAN, dict(states or {}), list(interactive_actions or []), parent)
+        self.role = role
+
+    def to_dict(self) -> dict[str, Any]:
+        node = super().to_dict()
+        node["role"] = self.role
+        return node
+
+
+CONTROL_OBJECT_TYPES = frozenset({"button", "door"})
+
+
+def node_type_from_legacy(value: str) -> NodeType:
+    normalized = str(value or "").strip().lower()
+    if normalized in {"floor"}:
+        return NodeType.FLOOR
+    if normalized in {"room", "space"}:
+        return NodeType.ROOM
+    if normalized in {"movable", "movable_object"}:
+        return NodeType.MOVABLE_OBJECT
+    if normalized in {"control", "control_object"}:
+        return NodeType.CONTROL_OBJECT
+    if normalized in {"robot"}:
+        return NodeType.ROBOT
+    if normalized in {"human", "agent"}:
+        return NodeType.HUMAN
+    return NodeType.FIXED_OBJECT
+
+
+__all__ = [
+    "CONTROL_OBJECT_TYPES",
+    "ControlObject",
+    "FixedObject",
+    "Floor",
+    "Human",
+    "MovableObject",
+    "Node",
+    "NodeType",
+    "Robot",
+    "Room",
+    "node_type_from_legacy",
+]

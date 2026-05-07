@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from enum import Enum
 from dataclasses import dataclass
-from typing import Dict
 
 
 class ActionType(str, Enum):
@@ -10,14 +9,10 @@ class ActionType(str, Enum):
     PICK = "pick"
     PLACE = "place"
     PRESS = "press"
-    SCAN = "scan"
     OPEN = "open"
     CLOSE = "close"
     BRUSH = "brush"
-
-    # Deferred actions kept out of the current runtime on purpose:
-    # TOGGLE, GRASP, RELEASE, PLACE_ON, PLACE_IN,
-    # MOVE_TO_ROOM, MOVE_TO_FLOOR, APPROACH_OBJECT, COOK
+    FOLD = "fold"
 
 @dataclass(frozen=True)
 class ActionSpec:
@@ -29,9 +24,7 @@ class ActionSpec:
     mutates_states: bool
     effect_summary: tuple[str, ...]
 
-
-
-ACTION_SPECS: Dict[ActionType, ActionSpec] = {
+ACTION_SPECS: dict[ActionType, ActionSpec] = {
     ActionType.PICK: ActionSpec(
         action_type=ActionType.PICK,
         category="manipulation",
@@ -59,15 +52,6 @@ ACTION_SPECS: Dict[ActionType, ActionSpec] = {
         mutates_states=True,
         effect_summary=("remove(agent -> current_parent)", "add(agent -> target, at/in)"),
     ),
-    ActionType.SCAN: ActionSpec(
-        action_type=ActionType.SCAN,
-        category="observation",
-        params=("agent", "target"),
-        description="Observe a node and read its current states, relations, and local neighborhood.",
-        mutates_edges=False,
-        mutates_states=False,
-        effect_summary=("return(target.states, target.relations, target.affordances)",),
-    ),
     ActionType.PRESS: ActionSpec(
         action_type=ActionType.PRESS,
         category="manipulation",
@@ -75,7 +59,7 @@ ACTION_SPECS: Dict[ActionType, ActionSpec] = {
         description="Press a control-like node such as a button, switch, or faucet.",
         mutates_edges=False,
         mutates_states=True,
-        effect_summary=("toggle/control target state", "possibly propagate to controlled object"),
+        effect_summary=("press target control", "possibly propagate to controlled object"),
     ),
     ActionType.OPEN: ActionSpec(
         action_type=ActionType.OPEN,
@@ -104,7 +88,15 @@ ACTION_SPECS: Dict[ActionType, ActionSpec] = {
         mutates_states=True,
         effect_summary=("set brushed = True", "possibly reduce dirty/particles on target surface"),
     ),
-    #折叠
+    ActionType.FOLD: ActionSpec(
+        action_type=ActionType.FOLD,
+        category="manipulation",
+        params=("agent", "target"),
+        description="Fold dry clothes, towels, or blankets.",
+        mutates_edges=False,
+        mutates_states=True,
+        effect_summary=("require is_wet = False", "set folded = True"),
+    ),
 }
 
 
