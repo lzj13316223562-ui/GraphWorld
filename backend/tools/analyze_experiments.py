@@ -112,7 +112,7 @@ def _response_actions_for_issue(issue_text: str) -> set[str]:
         return {"pick", "place", "close"}
     if "temperature" in text:
         return {"press"}
-    return {"pick", "place", "press", "open", "close", "brush", "scan"}
+    return {"pick", "place", "press", "open", "close", "brush"}
 
 
 def _share_rows(counter: Counter[str], score_rows: dict[str, list[float]], delta_rows: dict[str, list[float]], limit: int | None = None) -> list[dict[str, Any]]:

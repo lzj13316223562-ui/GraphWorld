@@ -35,13 +35,12 @@ RUN_COLORS = {
     "after_refactor": "#1b9e77",
 }
 
-ACTION_ORDER = ["move", "pick", "place", "press", "scan", "open", "close", "brush"]
+ACTION_ORDER = ["move", "pick", "place", "press", "open", "close", "brush"]
 ACTION_COLORS = {
     "move": "#4e79a7",
     "pick": "#f28e2b",
     "place": "#e15759",
     "press": "#76b7b2",
-    "scan": "#59a14f",
     "open": "#edc948",
     "close": "#b07aa1",
     "brush": "#ff9da7",
