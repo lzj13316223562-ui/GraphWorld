@@ -883,7 +883,7 @@
       "source_id": "entrance",
       "target_id": "checkout_area",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -891,7 +891,7 @@
       "source_id": "checkout_area",
       "target_id": "shelf_area",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -899,7 +899,7 @@
       "source_id": "shelf_area",
       "target_id": "produce_area",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -907,7 +907,7 @@
       "source_id": "shelf_area",
       "target_id": "cold_storage",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -915,7 +915,7 @@
       "source_id": "cold_storage",
       "target_id": "staff_room",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },

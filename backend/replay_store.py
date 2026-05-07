@@ -33,7 +33,7 @@ EXPERIMENT_PLANNER_ONLY = "planner_only"
 EXPERIMENT_FULL_AGENT = "full_agent"
 EXPERIMENT_FULL_AGENT_STRONGER = "full_agent_stronger_model"
 EXPERIMENT_PURE_HUMAN = "pure_human"
-TENSORBOARD_ACTION_ORDER = ("move", "pick", "place", "press", "scan", "open", "close", "brush")
+TENSORBOARD_ACTION_ORDER = ("move", "pick", "place", "press", "open", "close", "brush")
 TENSORBOARD_ACTION_INDEX = {name: index for index, name in enumerate(TENSORBOARD_ACTION_ORDER)}
 EXCLUDED_REPLAY_JSON_NAMES = {"experiment_report.json"}
 
@@ -376,7 +376,7 @@ class ReplayStore:
         writer.add_text("meta/action_index_map", "\n".join(action_map_lines), 0)
         writer.add_text(
             "meta/action_index_legend",
-            "0=move\n1=pick\n2=place\n3=press\n4=scan\n5=open\n6=close\n7=brush",
+            "0=move\n1=pick\n2=place\n3=press\n4=open\n5=close\n6=brush",
             0,
         )
 
@@ -492,7 +492,7 @@ class ReplayStore:
             f"scene_id: {scene_id}",
             f"experiment_type: {experiment_type}",
             f"agent_model: {agent_model}",
-            f"max_days: {int(summary.get('max_days') or 0)}",
+            f"max_days: {float(summary.get('max_days') or 0)}",
             f"step_count: {int(summary.get('step_count') or 0)}",
             f"terminated: {bool(summary.get('terminated', False))}",
             f"final_world_score: {float(summary.get('final_world_score') or 0.0)}",
@@ -807,7 +807,7 @@ class ReplayStore:
         timeout: int = 30,
         enable_search: bool = False,
         image_path: str | None = None,
-        max_days: int = 7,
+        max_days: float = 1.5,
         experiment_type: str | None = None,
     ) -> dict[str, Any]:
         normalized_experiment = normalize_experiment_type(experiment_type, agent_model)
@@ -863,7 +863,7 @@ class ReplayStore:
             "experiment_label": experiment_label(normalized_experiment, agent_model),
             "run_name": run_name,
             "log_path": str(log_path),
-            "max_days": int(max_days),
+            "max_days": float(max_days),
             "step_count": len(run.get("steps") or []),
             "terminated": bool(run.get("terminated", False)),
             "termination_reason": str(run.get("termination_reason") or ""),
@@ -906,7 +906,7 @@ class ReplayStore:
         scene_id: str,
         scene: dict[str, Any],
         *,
-        max_days: int = 7,
+        max_days: float = 1.5,
         experiment_type: str | None = None,
     ) -> dict[str, Any]:
         normalized_experiment = normalize_experiment_type(experiment_type, "npc_only_baseline")
@@ -947,7 +947,7 @@ class ReplayStore:
             "experiment_label": experiment_label(normalized_experiment, "npc_only_baseline"),
             "run_name": run_name,
             "log_path": str(log_path),
-            "max_days": int(max_days),
+            "max_days": float(max_days),
             "step_count": len(run.get("steps") or []),
             "terminated": bool(run.get("terminated", False)),
             "termination_reason": str(run.get("termination_reason") or ""),

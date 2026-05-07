@@ -21,7 +21,6 @@ from backend.runtime.agent.robot_executor import execute_robot_action, validate_
 from backend.runtime.agent.robot_memory import (
     RobotMemory,
     load_robot_memory,
-    remember_scan,
     save_robot_memory,
     summarize_memory,
     update_memory_from_observation,
@@ -29,9 +28,9 @@ from backend.runtime.agent.robot_memory import (
 from backend.runtime.agent.robot_observation import build_robot_observation, ensure_scene_robot_stub
 from backend.runtime.agent.robot_reflation import advance_world_one_step
 from backend.runtime.agent.robot_resoning import ALLOWED_ACTIONS
-from backend.runtime.engine.state import build_runtime_state
+from backend.runtime.engine.state import build_runtime_state, is_room_door_node
 from backend.runtime.eval.scene_evaluator import evaluate_scene
-from backend.runtime.schema.home_schema import canonical_node_type, normalize_home_scene, scene_nodes
+from backend.runtime.schema.home_schema import canonical_node_type, canonical_semantic_type, normalize_home_scene, scene_nodes
 
 
 def _room_nodes(scene: dict[str, Any]) -> list[dict[str, Any]]:
@@ -51,7 +50,13 @@ def _spawn_options(scene: dict[str, Any], runtime_state: dict[str, Any]) -> list
     for node in _fixed_object_nodes(scene):
         anchor_id = str(node.get("id") or "")
         room_id = str((runtime_state.get("room_of") or {}).get(anchor_id) or "")
-        if anchor_id and room_id:
+        actions = {str(action).lower() for action in (node.get("interactive_actions") or [])}
+        semantic = canonical_semantic_type(node)
+        if semantic in {"button", "knob", "faucet", "light", "room_light"}:
+            continue
+        if semantic == "door" and not is_room_door_node((runtime_state.get("nodes") or {}).get(anchor_id) or {}):
+            continue
+        if anchor_id and room_id and "move" in actions:
             options.append({"anchor_id": anchor_id, "room_id": room_id, "anchor_kind": "fixed_object"})
     return options
 
@@ -162,8 +167,6 @@ def _effect_preview(candidate: dict[str, Any], runtime_state: dict[str, Any]) ->
     if action_type == "place":
         held = str(candidate.get("object_id") or "")
         return f"Place {held} onto/into {target_id}"
-    if action_type == "scan":
-        return f"Inspect {target_id} and refresh local state knowledge"
     if action_type == "brush":
         return f"Brush/clean {target_id}"
     if action_type == "press":
@@ -260,7 +263,7 @@ def _human_action_candidates(
     ordered = sorted(
         deduped.values(),
         key=lambda item: (
-            ["move", "pick", "place", "press", "scan", "open", "close", "brush"].index(str(item.get("action_type") or "move")),
+            ["move", "pick", "place", "press", "open", "close", "brush"].index(str(item.get("action_type") or "move")),
             str(item.get("target_id") or ""),
         ),
     )
@@ -498,8 +501,6 @@ class HumanSessionStore:
         )
         update_memory_from_observation(session.robot_memory, before_observation)
         update_memory_from_observation(session.robot_memory, after_observation)
-        if str(action.get("action") or "") == "scan" and execution.get("observation"):
-            remember_scan(session.robot_memory, copy.deepcopy(execution.get("observation") or {}))
         save_robot_memory(session.current_scene, session.agent_id, session.robot_memory)
         metrics = evaluate_scene(session.current_scene)
         world_metrics = metrics.get("world_metrics") or {}

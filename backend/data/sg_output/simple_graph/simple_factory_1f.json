@@ -893,7 +893,7 @@
       "source_id": "entrance",
       "target_id": "workshop",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -901,7 +901,7 @@
       "source_id": "workshop",
       "target_id": "assembly_line",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -909,7 +909,7 @@
       "source_id": "assembly_line",
       "target_id": "warehouse",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -917,7 +917,7 @@
       "source_id": "assembly_line",
       "target_id": "control_room",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -925,7 +925,7 @@
       "source_id": "workshop",
       "target_id": "break_room",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -933,7 +933,7 @@
       "source_id": "break_room",
       "target_id": "restroom",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },

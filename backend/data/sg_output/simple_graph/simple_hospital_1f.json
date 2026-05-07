@@ -2453,7 +2453,7 @@
       "source_id": "entrance",
       "target_id": "lobby",
       "edge_type": "room_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -2525,7 +2525,7 @@
       "source_id": "lobby",
       "target_id": "registration",
       "edge_type": "room_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -2533,7 +2533,7 @@
       "source_id": "lobby",
       "target_id": "payment",
       "edge_type": "room_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -2541,7 +2541,7 @@
       "source_id": "lobby",
       "target_id": "waiting_area",
       "edge_type": "room_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -2549,7 +2549,7 @@
       "source_id": "lobby",
       "target_id": "pharmacy",
       "edge_type": "room_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -2557,7 +2557,7 @@
       "source_id": "lobby",
       "target_id": "public_restroom",
       "edge_type": "room_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -2733,7 +2733,7 @@
       "source_id": "waiting_area",
       "target_id": "triage",
       "edge_type": "room_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -2805,7 +2805,7 @@
       "source_id": "triage",
       "target_id": "corridor_main",
       "edge_type": "room_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -2869,7 +2869,7 @@
       "source_id": "corridor_main",
       "target_id": "outpatient_clinic_1",
       "edge_type": "room_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -2877,7 +2877,7 @@
       "source_id": "corridor_main",
       "target_id": "treatment_room",
       "edge_type": "room_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -2885,7 +2885,7 @@
       "source_id": "corridor_main",
       "target_id": "staff_room",
       "edge_type": "room_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },

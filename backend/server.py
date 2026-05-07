@@ -4,6 +4,10 @@ import argparse
 import json
 import shutil
 import subprocess
+import socket
+import time
+import urllib.error
+import urllib.request
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -18,6 +22,58 @@ from backend.scene_store import SceneStore
 
 WEB_DIR = Path(__file__).resolve().parent.parent / "frontend" / "web"
 STORE = SceneStore()
+TENSORBOARD_LOGDIR = Path(__file__).resolve().parent / "data" / "tensorboard"
+_TENSORBOARD_PROC: subprocess.Popen[str] | None = None
+_TENSORBOARD_PORT: int | None = None
+
+
+def _port_available(port: int) -> bool:
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(("0.0.0.0", port))
+        return True
+    except OSError:
+        return False
+
+
+def _ensure_tensorboard() -> int:
+    global _TENSORBOARD_PROC, _TENSORBOARD_PORT
+    if _TENSORBOARD_PROC is not None and _TENSORBOARD_PROC.poll() is None and _TENSORBOARD_PORT is not None:
+        return _TENSORBOARD_PORT
+    if not shutil.which("tensorboard"):
+        raise RuntimeError("tensorboard is not installed or not on PATH")
+    TENSORBOARD_LOGDIR.mkdir(parents=True, exist_ok=True)
+    port = None
+    for candidate in range(6006, 6020):
+        if _port_available(candidate):
+            port = candidate
+            break
+    if port is None:
+        raise RuntimeError("No free port found for tensorboard (6006-6019)")
+    proc = subprocess.Popen(
+        [
+            "tensorboard",
+            "--logdir",
+            str(TENSORBOARD_LOGDIR),
+            "--host",
+            "0.0.0.0",
+            "--port",
+            str(port),
+            "--reload_interval",
+            "2",
+            "--path_prefix",
+            "/tensorboard",
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        text=True,
+    )
+    _TENSORBOARD_PROC = proc
+    _TENSORBOARD_PORT = port
+    # Give it a moment to bind the port.
+    time.sleep(0.15)
+    return port
 
 
 def _ollama_models() -> list[str]:
@@ -62,6 +118,9 @@ class GraphworldHandler(SimpleHTTPRequestHandler):
         path = parsed.path
         query = parse_qs(parsed.query)
         lang = (query.get("lang") or ["en"])[0]
+        if path == "/tensorboard" or path.startswith("/tensorboard/"):
+            self._proxy_tensorboard(parsed)
+            return
         if path == "/api/scenes":
             self._json({"scenes": STORE.list_scenes(lang=lang)})
             return
@@ -82,6 +141,22 @@ class GraphworldHandler(SimpleHTTPRequestHandler):
             return
         if path == "/api/replays":
             self._json({"replays": STORE.list_replays()})
+            return
+        if path.startswith("/api/replays/") and path.endswith("/telemetry"):
+            replay_id = unquote(path.removeprefix("/api/replays/").removesuffix("/telemetry")).strip("/")
+            payload = STORE.get_replay_telemetry(replay_id)
+            if payload is None:
+                self._json({"error": f"Replay not found: {replay_id}"}, HTTPStatus.NOT_FOUND)
+                return
+            self._json(payload)
+            return
+        if path.startswith("/api/human_sessions/") and path.endswith("/scene_view"):
+            session_id = unquote(path.removeprefix("/api/human_sessions/").removesuffix("/scene_view")).strip("/")
+            payload = STORE.get_human_session_scene_view(session_id)
+            if payload is None:
+                self._json({"error": f"Human session or scene view not found: {session_id}"}, HTTPStatus.NOT_FOUND)
+                return
+            self._json(payload)
             return
         if path.startswith("/api/human_sessions/"):
             session_id = unquote(path.removeprefix("/api/human_sessions/")).strip("/")
@@ -122,6 +197,14 @@ class GraphworldHandler(SimpleHTTPRequestHandler):
         if path == "/api/models":
             self._json({"models": _ollama_models()})
             return
+        if path == "/api/tensorboard":
+            try:
+                _ensure_tensorboard()
+            except Exception as error:
+                self._json({"error": str(error)}, HTTPStatus.SERVICE_UNAVAILABLE)
+                return
+            self._json({"base_url": "/tensorboard/"})
+            return
         if path.startswith("/api/replay_metrics/"):
             replay_id = unquote(path.removeprefix("/api/replay_metrics/")).strip("/")
             payload = STORE.get_replay_metrics(replay_id)
@@ -133,6 +216,27 @@ class GraphworldHandler(SimpleHTTPRequestHandler):
         if path in {"", "/"}:
             self.path = "/index.html"
         super().do_GET()
+
+    def _proxy_tensorboard(self, parsed) -> None:
+        try:
+            port = _ensure_tensorboard()
+            upstream_url = f"http://127.0.0.1:{port}{parsed.path}"
+            if parsed.query:
+                upstream_url += f"?{parsed.query}"
+            req = urllib.request.Request(upstream_url, headers={"User-Agent": "GraphWorld"})
+            with urllib.request.urlopen(req, timeout=10) as response:
+                body = response.read()
+                self.send_response(response.status)
+                content_type = response.headers.get("Content-Type")
+                if content_type:
+                    self.send_header("Content-Type", content_type)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+        except urllib.error.HTTPError as error:
+            self.send_error(error.code, error.reason)
+        except Exception as error:
+            self._json({"error": f"TensorBoard proxy failed: {error}"}, HTTPStatus.SERVICE_UNAVAILABLE)
 
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
@@ -175,7 +279,7 @@ class GraphworldHandler(SimpleHTTPRequestHandler):
             timeout=int(payload.get("timeout") or 30),
             enable_search=bool(payload.get("enable_search", False)),
             image_path=payload.get("image_path"),
-            max_days=int(payload.get("max_days") or 7),
+            max_days=float(payload.get("max_days") or 1.5),
             experiment_type=str(payload.get("experiment_type") or ""),
         )
         if replay is None:

@@ -901,7 +901,7 @@
       "source_id": "entrance",
       "target_id": "open_office",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -909,7 +909,7 @@
       "source_id": "open_office",
       "target_id": "meeting_room",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -917,7 +917,7 @@
       "source_id": "open_office",
       "target_id": "pantry",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -925,7 +925,7 @@
       "source_id": "open_office",
       "target_id": "manager_office",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -933,7 +933,7 @@
       "source_id": "pantry",
       "target_id": "restroom",
       "edge_type": "structural_edge",
-      "relation": "adjacent_to",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },

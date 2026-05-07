@@ -1,0 +1,252 @@
+{
+  "scene_name": "simple_home_mini",
+  "scene_name_cn": "极简洗衣住宅",
+  "world_state": {
+    "step": 0,
+    "day": 1,
+    "time_min": 360,
+    "minutes_per_step": 10
+  },
+  "nodes": [
+    {
+      "id": "F1",
+      "name": "Floor 1",
+      "name_cn": "第 1 层",
+      "node_type": "floor",
+      "semantic_type": "floor",
+      "states": {},
+      "parent": null,
+      "child": [
+        "bedroom",
+        "bathroom",
+        "balcony"
+      ],
+      "interactive_actions": []
+    },
+    {
+      "id": "bedroom",
+      "name": "Bedroom",
+      "name_cn": "卧室",
+      "node_type": "room",
+      "semantic_type": "room",
+      "states": {},
+      "parent": "F1",
+      "child": [
+        "wardrobe_bedroom",
+        "robot_01"
+      ],
+      "interactive_actions": [
+        "move",
+        "place"
+      ]
+    },
+    {
+      "id": "bathroom",
+      "name": "Bathroom",
+      "name_cn": "卫生间",
+      "node_type": "room",
+      "semantic_type": "room",
+      "states": {},
+      "parent": "F1",
+      "child": [
+        "washer_bathroom"
+      ],
+      "interactive_actions": [
+        "move",
+        "place"
+      ]
+    },
+    {
+      "id": "balcony",
+      "name": "Balcony",
+      "name_cn": "阳台",
+      "node_type": "room",
+      "semantic_type": "room",
+      "states": {},
+      "parent": "F1",
+      "child": [
+        "drying_rack_balcony"
+      ],
+      "interactive_actions": [
+        "move",
+        "place"
+      ]
+    },
+    {
+      "id": "wardrobe_bedroom",
+      "name": "wardrobe",
+      "name_cn": "衣柜",
+      "node_type": "fixed_object",
+      "semantic_type": "wardrobe",
+      "states": {
+        "is_open": false,
+        "is_dirty": false
+      },
+      "parent": "bedroom",
+      "child": [
+        "clothes_dirty_01"
+      ],
+      "interactive_actions": [
+        "move",
+        "open",
+        "close",
+        "place"
+      ],
+      "blocks_containment": true
+    },
+    {
+      "id": "washer_bathroom",
+      "name": "washer",
+      "name_cn": "洗衣机",
+      "node_type": "fixed_object",
+      "semantic_type": "washer",
+      "states": {
+        "is_open": false,
+        "is_on": false,
+        "is_pressed": false,
+        "is_dirty": false,
+        "cycle_remaining": 0
+      },
+      "parent": "bathroom",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "open",
+        "close",
+        "press",
+        "place"
+      ],
+      "blocks_containment": true,
+      "requires_closed_to_start": true
+    },
+    {
+      "id": "drying_rack_balcony",
+      "name": "drying rack",
+      "name_cn": "晾衣架",
+      "node_type": "fixed_object",
+      "semantic_type": "drying_rack",
+      "states": {
+        "is_dirty": false,
+        "is_blocked": false
+      },
+      "parent": "balcony",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place"
+      ]
+    },
+    {
+      "id": "clothes_dirty_01",
+      "name": "clothes",
+      "name_cn": "脏衣服",
+      "node_type": "movable_object",
+      "semantic_type": "clothes",
+      "states": {
+        "is_dirty": true,
+        "is_wet": false,
+        "folded": false
+      },
+      "parent": "wardrobe_bedroom",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "place",
+        "fold"
+      ]
+    },
+    {
+      "id": "robot_01",
+      "name": "robot",
+      "name_cn": "机器人",
+      "node_type": "robot",
+      "semantic_type": "robot",
+      "states": {},
+      "parent": "bedroom",
+      "child": [],
+      "interactive_actions": []
+    }
+  ],
+  "edges": [
+    {
+      "source_id": "F1",
+      "target_id": "bedroom",
+      "edge_type": "room_floor_edge",
+      "relation": "in",
+      "category": "physical",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "bathroom",
+      "edge_type": "room_floor_edge",
+      "relation": "in",
+      "category": "physical",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "balcony",
+      "edge_type": "room_floor_edge",
+      "relation": "in",
+      "category": "physical",
+      "properties": {}
+    },
+    {
+      "source_id": "bedroom",
+      "target_id": "bathroom",
+      "edge_type": "room_edge",
+      "relation": "next_to",
+      "category": "physical",
+      "properties": {}
+    },
+    {
+      "source_id": "bathroom",
+      "target_id": "balcony",
+      "edge_type": "room_edge",
+      "relation": "next_to",
+      "category": "physical",
+      "properties": {}
+    },
+    {
+      "source_id": "bedroom",
+      "target_id": "wardrobe_bedroom",
+      "edge_type": "object_room_edge",
+      "relation": "in",
+      "category": "physical",
+      "properties": {}
+    },
+    {
+      "source_id": "bathroom",
+      "target_id": "washer_bathroom",
+      "edge_type": "object_room_edge",
+      "relation": "in",
+      "category": "physical",
+      "properties": {}
+    },
+    {
+      "source_id": "balcony",
+      "target_id": "drying_rack_balcony",
+      "edge_type": "object_room_edge",
+      "relation": "in",
+      "category": "physical",
+      "properties": {}
+    },
+    {
+      "source_id": "wardrobe_bedroom",
+      "target_id": "clothes_dirty_01",
+      "edge_type": "object_edge",
+      "relation": "in",
+      "category": "physical",
+      "properties": {}
+    },
+    {
+      "source_id": "bedroom",
+      "target_id": "robot_01",
+      "edge_type": "object_room_edge",
+      "relation": "at",
+      "category": "physical",
+      "properties": {}
+    }
+  ]
+}

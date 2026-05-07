@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Edge 基类体系
 定义场景图中所有边的基类和子类，支持物理与逻辑关系的区分
@@ -30,12 +32,16 @@ class EdgeCategory(Enum):
 class SpatialRelation(Enum):
     """空间与逻辑关系枚举"""
     # --- Physical Relations (Where?) ---
+    AT = "at"
+    IN = "in"
+    ON = "on"
     ONTOP = "ontop"
     INSIDE = "inside"
     UNDER = "under"
     BESIDE = "beside"
     NEXT_TO = "next_to"
     NEAR = "near"
+    HELD_BY = "held_by"
     FAR = "far"
     NEIGHBOUR = "neighbour"      
     CONTAINS = "contains"        
@@ -46,6 +52,120 @@ class SpatialRelation(Enum):
     CONTROLS = "controls"        
     LINKED_TO = "linked_to"      
     POWERED_BY = "powered_by"    
+
+
+CANONICAL_POSITION_RELATIONS = (
+    SpatialRelation.AT.value,
+    SpatialRelation.IN.value,
+    SpatialRelation.ON.value,
+    SpatialRelation.NEAR.value,
+    SpatialRelation.HELD_BY.value,
+    SpatialRelation.INSIDE.value,
+    SpatialRelation.NEXT_TO.value,
+)
+
+PARENT_RELATIONS = (
+    SpatialRelation.AT.value,
+    SpatialRelation.IN.value,
+    SpatialRelation.ON.value,
+    SpatialRelation.NEAR.value,
+    SpatialRelation.HELD_BY.value,
+    SpatialRelation.INSIDE.value,
+    SpatialRelation.CONTAINS.value,
+    SpatialRelation.BELONGS_TO.value,
+)
+
+ROOM_CONNECTIVITY_RELATIONS = (
+    SpatialRelation.NEXT_TO.value,
+    SpatialRelation.NEIGHBOUR.value,
+    SpatialRelation.CONNECTED.value,
+)
+
+
+@dataclass(frozen=True)
+class RelationSpec:
+    relation: str
+    source_roles: tuple[str, ...]
+    target_roles: tuple[str, ...]
+    positive_when: str
+    negative_when: str
+    changed_by: tuple[str, ...]
+    downstream_effects: tuple[str, ...]
+    score_weight: float = 1.0
+
+
+RELATION_SPECS: Dict[str, RelationSpec] = {
+    SpatialRelation.AT.value: RelationSpec(
+        relation=SpatialRelation.AT.value,
+        source_roles=("agent", "human"),
+        target_roles=("room", "fixed_object"),
+        positive_when="agent/human is at intended task location",
+        negative_when="agent/human is blocked from intended task location",
+        changed_by=("move", "human_event"),
+        downstream_effects=("defines reachable action set", "defines visible room context"),
+        score_weight=0.6,
+    ),
+    SpatialRelation.IN.value: RelationSpec(
+        relation=SpatialRelation.IN.value,
+        source_roles=("object",),
+        target_roles=("container", "room"),
+        positive_when="object is in its semantic home container or room",
+        negative_when="object is in an incompatible container or blocks another task",
+        changed_by=("place", "human_event"),
+        downstream_effects=("affects accessibility", "affects order score"),
+        score_weight=1.0,
+    ),
+    SpatialRelation.ON.value: RelationSpec(
+        relation=SpatialRelation.ON.value,
+        source_roles=("object",),
+        target_roles=("surface",),
+        positive_when="object belongs on that surface in current context",
+        negative_when="object is left on a wrong or messy surface",
+        changed_by=("place", "human_event"),
+        downstream_effects=("affects order score", "can expose objects for pick/use"),
+        score_weight=0.8,
+    ),
+    SpatialRelation.NEAR.value: RelationSpec(
+        relation=SpatialRelation.NEAR.value,
+        source_roles=("agent", "object"),
+        target_roles=("object",),
+        positive_when="temporary proximity supports current action",
+        negative_when="object is merely misplaced near an unrelated target",
+        changed_by=("move", "place"),
+        downstream_effects=("allows interaction with fixed/control objects"),
+        score_weight=0.3,
+    ),
+    SpatialRelation.HELD_BY.value: RelationSpec(
+        relation=SpatialRelation.HELD_BY.value,
+        source_roles=("object",),
+        target_roles=("agent",),
+        positive_when="object is being transported toward a useful target",
+        negative_when="object remains held without being placed",
+        changed_by=("pick", "place"),
+        downstream_effects=("blocks picking another object", "enables place"),
+        score_weight=0.5,
+    ),
+    SpatialRelation.INSIDE.value: RelationSpec(
+        relation=SpatialRelation.INSIDE.value,
+        source_roles=("object",),
+        target_roles=("container",),
+        positive_when="object is physically inside a compatible open/closed container",
+        negative_when="object is inaccessible or in the wrong device/container",
+        changed_by=("place", "pick"),
+        downstream_effects=("requires container open for access", "device cycles affect contents"),
+        score_weight=1.0,
+    ),
+    SpatialRelation.NEXT_TO.value: RelationSpec(
+        relation=SpatialRelation.NEXT_TO.value,
+        source_roles=("object", "room"),
+        target_roles=("object", "room"),
+        positive_when="spatial adjacency is structural or task-relevant",
+        negative_when="temporary clutter adjacency persists",
+        changed_by=("scene_layout", "place"),
+        downstream_effects=("supports navigation or local grouping"),
+        score_weight=0.4,
+    ),
+}
 
 
 @dataclass
@@ -260,10 +380,10 @@ def create_edge(source_id: str, target_id: str, relation: SpatialRelation, **kwa
         )
 
     # 2. 物体空间关系
-    elif relation in {SpatialRelation.ONTOP, SpatialRelation.INSIDE, 
+    elif relation in {SpatialRelation.AT, SpatialRelation.IN, SpatialRelation.ON,
+                      SpatialRelation.ONTOP, SpatialRelation.INSIDE,
                       SpatialRelation.UNDER, SpatialRelation.BESIDE,
-                      SpatialRelation.NEXT_TO,
-                      SpatialRelation.NEAR, SpatialRelation.FAR, 
+                      SpatialRelation.NEAR, SpatialRelation.HELD_BY, SpatialRelation.FAR, 
                       SpatialRelation.CONTAINS}: 
         return ObjectEdge(
             source_id=source_id,
@@ -275,7 +395,11 @@ def create_edge(source_id: str, target_id: str, relation: SpatialRelation, **kwa
         )
     
     # 3. 房间邻接
-    elif relation in {SpatialRelation.NEIGHBOUR, SpatialRelation.CONNECTED}:
+    elif relation in {
+        SpatialRelation.NEIGHBOUR,
+        SpatialRelation.CONNECTED,
+        SpatialRelation.NEXT_TO,
+    }:
         return RoomEdge(
             source_id=source_id,
             target_id=target_id,
@@ -287,3 +411,22 @@ def create_edge(source_id: str, target_id: str, relation: SpatialRelation, **kwa
     
     # 默认兜底
     raise ValueError(f"Unknown or unmapped spatial relation: {relation}")
+
+
+__all__ = [
+    "BaseEdge",
+    "CANONICAL_POSITION_RELATIONS",
+    "EdgeCategory",
+    "EdgeType",
+    "ObjectEdge",
+    "ObjectRoomEdge",
+    "PARENT_RELATIONS",
+    "RELATION_SPECS",
+    "RelationSpec",
+    "ROOM_CONNECTIVITY_RELATIONS",
+    "RoomEdge",
+    "RoomFloorEdge",
+    "SpatialRelation",
+    "TransportEdge",
+    "create_edge",
+]

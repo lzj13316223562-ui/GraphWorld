@@ -9,6 +9,7 @@ import re
 
 import networkx as nx
 
+from backend.core import get_object_spec
 from backend.replay_store import ReplayStore
 from backend.human_session_store import HumanSessionStore
 from backend.runtime import evaluate_scene, simulate_scene
@@ -212,10 +213,11 @@ def _bounds_from_layouts(layouts: list[dict]) -> dict | None:
 
 
 def _node_meta(node: dict, *, parent: str | None = None, child: list[str] | None = None, current_location=None) -> dict:
-    return {
+    semantic_type = node.get("semantic_type") or node.get("object_type") or node.get("type")
+    meta = {
         "node_type": canonical_node_type(node),
         "semantic_class": canonical_semantic_class(node),
-        "semantic_type": node.get("semantic_type") or node.get("object_type") or node.get("type"),
+        "semantic_type": semantic_type,
         "mobility": canonical_mobility(node),
         "states": node.get("states") or {},
         "property": copy.deepcopy(node.get("property") or canonical_property(node)),
@@ -226,6 +228,14 @@ def _node_meta(node: dict, *, parent: str | None = None, child: list[str] | None
         "current_location": current_location,
         "runtime": copy.deepcopy(node.get("runtime") or {}),
     }
+    image_spec = get_object_spec(str(semantic_type or ""))
+    image_path = node.get("image_path") or image_spec.get("image_path")
+    if image_path:
+        meta["image_path"] = image_path
+        meta["image_url"] = node.get("image_url") or image_spec.get("image_url")
+        meta["image_source_url"] = node.get("image_source_url") or image_spec.get("image_source_url")
+        meta["image_license"] = node.get("image_license") or image_spec.get("image_license")
+    return meta
 
 
 def _node_family(node: dict) -> str:
@@ -987,6 +997,21 @@ class SceneStore:
     def get_replay_step(self, replay_id: str, step_index: int) -> dict | None:
         return self.replays.get_replay_step(replay_id, step_index)
 
+    def get_replay_telemetry(self, replay_id: str) -> dict | None:
+        payload = self.replays.get_replay_summary(replay_id)
+        if not payload:
+            return None
+        summary = payload.get("summary") or {}
+        return {
+            "replay_id": str(payload.get("replay_id") or replay_id),
+            "scene_id": str(payload.get("scene_id") or ""),
+            "run_name": str(summary.get("run_name") or ""),
+            "tensorboard_log_dir": str(summary.get("tensorboard_log_dir") or ""),
+            "experiment_type": str(summary.get("experiment_type") or ""),
+            "experiment_label": str(summary.get("experiment_label") or ""),
+            "step_count": int(summary.get("step_count") or 0),
+        }
+
     def run_replay(
         self,
         scene_id: str,
@@ -997,7 +1022,7 @@ class SceneStore:
         timeout: int = 30,
         enable_search: bool = False,
         image_path: str | None = None,
-        max_days: int = 7,
+        max_days: float = 1.5,
         experiment_type: str | None = None,
     ) -> dict | None:
         item = self.scenes.get(scene_id)
@@ -1030,6 +1055,21 @@ class SceneStore:
 
     def get_human_session(self, session_id: str) -> dict | None:
         return self.human_sessions.get_session(session_id)
+
+    def get_human_session_scene_view(self, session_id: str) -> dict | None:
+        payload = self.human_sessions.get_session(session_id)
+        if not payload:
+            return None
+        current_step = payload.get("current_step") or {}
+        scene_view = current_step.get("memory_scene") or current_step.get("scene")
+        if not isinstance(scene_view, dict):
+            return None
+        return {
+            "session_id": str(payload.get("session_id") or session_id),
+            "scene_id": str(payload.get("scene_id") or ""),
+            "episode_step": int((current_step.get("episode_step") or 0)),
+            "scene_view": copy.deepcopy(scene_view),
+        }
 
     def apply_human_action(self, session_id: str, action: dict) -> dict | None:
         return self.human_sessions.apply_action(session_id, action)
