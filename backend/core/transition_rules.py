@@ -20,7 +20,8 @@ APPLIANCE_CYCLE_STEPS: dict[str, int] = {
     "coffee_maker": 2,
 }
 
-DRYING_RACK_STEPS = 3
+DRYING_RACK_STEPS = 5
+CLOTH_SEMANTICS = {"clothes", "towel", "blanket"}
 
 
 @dataclass(frozen=True)
@@ -77,6 +78,33 @@ class TransitionScoringRule:
     description: str
 
 
+@dataclass(frozen=True)
+class DumpRule:
+    container_semantic: str
+    target_semantics: tuple[str, ...]
+    requires_non_empty: bool
+    effect: str
+
+
+TRASHABLE_SEMANTICS = frozenset({"food", "milk", "juice", "vegetable", "fruit", "raw_food", "cooked_food"})
+
+
+DUMP_RULES: dict[str, DumpRule] = {
+    "trash_bin": DumpRule(
+        container_semantic="trash_bin",
+        target_semantics=("garbage_station",),
+        requires_non_empty=True,
+        effect="empty_trash_bin",
+    ),
+    "cup": DumpRule(
+        container_semantic="cup",
+        target_semantics=("sink",),
+        requires_non_empty=True,
+        effect="empty_fill_level",
+    ),
+}
+
+
 def _semantic(node: dict[str, Any]) -> str:
     return str(node.get("semantic_type") or node.get("object_type") or "").strip().lower()
 
@@ -93,8 +121,55 @@ def _parent_of(state: dict[str, Any], node_id: str) -> str:
     return str(state.get("parent_of", {}).get(node_id) or _node(state, node_id).get("parent") or "")
 
 
+def _children_of(state: dict[str, Any], parent_id: str) -> list[str]:
+    return [node_id for node_id, current_parent in state.get("parent_of", {}).items() if current_parent == parent_id]
+
+
+def _held_by(state: dict[str, Any], actor_id: str) -> str:
+    parent_of = state.get("parent_of", {})
+    relation_of = state.get("relation_of", {})
+    for node_id, parent_id in parent_of.items():
+        if parent_id == actor_id and relation_of.get(node_id) == "held_by":
+            return node_id
+    return ""
+
+
+def _move_node(state: dict[str, Any], node_id: str, parent_id: str, relation: str) -> None:
+    node = _node(state, node_id)
+    if not node:
+        return
+    node["parent"] = parent_id
+    node["runtime_relation"] = relation
+    state.setdefault("parent_of", {})[node_id] = parent_id
+    state.setdefault("relation_of", {})[node_id] = relation
+    parent = _node(state, parent_id)
+    state.setdefault("room_of", {})[node_id] = parent_id if str(parent.get("node_type") or "") == "room" else str(state.get("room_of", {}).get(parent_id) or "")
+
+
 def _is_open(node: dict[str, Any]) -> bool:
     return bool((node.get("states") or {}).get(DiscreteState.IS_OPEN.value, False))
+
+
+def _is_containment_container(node: dict[str, Any]) -> bool:
+    semantic = _semantic(node)
+    return bool(node.get("blocks_containment")) or semantic in {
+        "fridge",
+        "refrigerator",
+        "microwave",
+        "washer",
+        "washing_machine",
+        "dishwasher",
+        "cabinet",
+        "drawer",
+    }
+
+
+def _is_container_door(state: dict[str, Any], door_id: str) -> bool:
+    door = _node(state, door_id)
+    if _semantic(door) != "door":
+        return False
+    parent = _node(state, _parent_of(state, door_id))
+    return bool(parent and _is_containment_container(parent))
 
 
 def _same_room(state: dict[str, Any], a: str, b: str) -> bool:
@@ -131,15 +206,13 @@ def require_same_room(ctx: RuleContext) -> str | None:
 
 def require_container_open_for_pick(ctx: RuleContext) -> str | None:
     parent = _node(ctx.state, _parent_of(ctx.state, ctx.object_id or ctx.target_id))
-    parent_semantic = _semantic(parent)
-    if bool(parent.get("blocks_containment")) or parent_semantic in {"fridge", "refrigerator", "microwave", "washer", "washing_machine", "dishwasher", "cabinet", "drawer"}:
+    if _is_containment_container(parent):
         return None if _is_open(parent) else f"container is closed: {_parent_of(ctx.state, ctx.object_id or ctx.target_id)}"
     return None
 
 
 def require_container_open_for_place(ctx: RuleContext) -> str | None:
-    target_semantic = _semantic(ctx.target)
-    if bool(ctx.target.get("blocks_containment")) or target_semantic in {"fridge", "refrigerator", "microwave", "washer", "washing_machine", "dishwasher", "cabinet", "drawer"}:
+    if _is_containment_container(ctx.target):
         return None if _is_open(ctx.target) else f"container is closed: {ctx.target_id}"
     return None
 
@@ -160,11 +233,36 @@ def require_device_doors_closed_for_press(ctx: RuleContext) -> str | None:
     return None
 
 
+def dump_failures(ctx: RuleContext) -> list[str]:
+    held_id = _held_by(ctx.state, ctx.actor_id)
+    if not held_id:
+        return ["agent must hold a dumpable container"]
+    held_semantic = _semantic(_node(ctx.state, held_id))
+    target_semantic = _semantic(ctx.target)
+    rule = DUMP_RULES.get(held_semantic)
+    if not rule:
+        return [f"held object is not dumpable: {held_id}"]
+    if target_semantic not in rule.target_semantics:
+        return [f"cannot dump {held_semantic} into {target_semantic}"]
+    if held_semantic == "trash_bin" and not _children_of(ctx.state, held_id):
+        return ["trash bin is empty"]
+    if held_semantic == "cup":
+        states = _states(_node(ctx.state, held_id))
+        if float(states.get("fill_level") or 0.0) <= 0.0 and not bool(states.get("is_full", False)):
+            return ["cup is empty"]
+    return []
+
+
+def require_dumpable(ctx: RuleContext) -> str | None:
+    failures = dump_failures(ctx)
+    return "; ".join(failures) if failures else None
+
+
 def effect_open(ctx: RuleContext) -> None:
     ctx.target_states[DiscreteState.IS_OPEN.value] = True
     parent_id = _parent_of(ctx.state, ctx.target_id)
     parent = _node(ctx.state, parent_id)
-    if str(ctx.target.get("door_kind") or "") == "device" and parent:
+    if parent and (str(ctx.target.get("door_kind") or "").lower() == "device" or _is_container_door(ctx.state, ctx.target_id)):
         _states(parent)[DiscreteState.IS_OPEN.value] = True
     for node_id, node_parent_id in ctx.state.get("parent_of", {}).items():
         if node_parent_id != ctx.target_id:
@@ -178,7 +276,7 @@ def effect_close(ctx: RuleContext) -> None:
     ctx.target_states[DiscreteState.IS_OPEN.value] = False
     parent_id = _parent_of(ctx.state, ctx.target_id)
     parent = _node(ctx.state, parent_id)
-    if str(ctx.target.get("door_kind") or "") == "device" and parent:
+    if parent and (str(ctx.target.get("door_kind") or "").lower() == "device" or _is_container_door(ctx.state, ctx.target_id)):
         _states(parent)[DiscreteState.IS_OPEN.value] = False
     for node_id, node_parent_id in ctx.state.get("parent_of", {}).items():
         if node_parent_id != ctx.target_id:
@@ -210,6 +308,8 @@ def effect_press(ctx: RuleContext) -> None:
 
 
 def effect_brush(ctx: RuleContext) -> None:
+    if _semantic(ctx.target) in CLOTH_SEMANTICS:
+        return
     ctx.target_states[DiscreteState.IS_DIRTY.value] = False
     if "is_clean" in ctx.target_states:
         ctx.target_states["is_clean"] = True
@@ -225,15 +325,54 @@ def effect_brush(ctx: RuleContext) -> None:
 
 
 def require_foldable_and_dry(ctx: RuleContext) -> str | None:
-    if _semantic(ctx.target) not in {"clothes", "towel", "blanket"}:
+    if _semantic(ctx.target) not in CLOTH_SEMANTICS:
         return "target is not foldable cloth"
     if bool(ctx.target_states.get(DiscreteState.IS_WET.value, False)):
         return "wet cloth cannot be folded"
     return None
 
 
+def require_not_cloth_for_brush(ctx: RuleContext) -> str | None:
+    if _semantic(ctx.target) in CLOTH_SEMANTICS:
+        return "cloth must be washed in washer"
+    return None
+
+
 def effect_fold(ctx: RuleContext) -> None:
     ctx.target_states[DiscreteState.FOLDED.value] = True
+
+
+def effect_dump(ctx: RuleContext) -> None:
+    held_id = _held_by(ctx.state, ctx.actor_id)
+    held = _node(ctx.state, held_id)
+    rule = DUMP_RULES.get(_semantic(held))
+    if not rule:
+        return
+    if rule.effect == "empty_trash_bin":
+        for child_id in list(_children_of(ctx.state, held_id)):
+            child = _node(ctx.state, child_id)
+            states = _states(child)
+            states["is_rotten"] = False
+            states["is_burnt"] = False
+            if "freshness" in states:
+                states["freshness"] = 1.0
+            if _semantic(child) == "food":
+                fridge_id = next(
+                    (
+                        node_id
+                        for node_id, item in ctx.state.get("nodes", {}).items()
+                        if _semantic(item) in {"refrigerator", "fridge"}
+                    ),
+                    "",
+                )
+                _move_node(ctx.state, child_id, fridge_id or ctx.target_id, "in")
+            else:
+                _move_node(ctx.state, child_id, ctx.target_id, "in")
+        _states(held)[DiscreteState.IS_DIRTY.value] = False
+    elif rule.effect == "empty_fill_level":
+        states = _states(held)
+        states[DiscreteState.FILL_LEVEL.value] = 0.0
+        states[DiscreteState.IS_FULL.value] = False
 
 
 ACTION_TRANSITION_RULES: dict[ActionType, TransitionRule] = {
@@ -261,7 +400,7 @@ ACTION_TRANSITION_RULES: dict[ActionType, TransitionRule] = {
     ActionType.BRUSH: TransitionRule(
         name="brush_clean",
         action=ActionType.BRUSH,
-        preconditions=(require_target_exists, require_same_room),
+        preconditions=(require_target_exists, require_same_room, require_not_cloth_for_brush),
         effects=(effect_brush,),
         description="Clean a brushable target.",
     ),
@@ -271,6 +410,13 @@ ACTION_TRANSITION_RULES: dict[ActionType, TransitionRule] = {
         preconditions=(require_target_exists, require_same_room, require_foldable_and_dry),
         effects=(effect_fold,),
         description="Fold dry clothes, towels, or blankets.",
+    ),
+    ActionType.DUMP: TransitionRule(
+        name="dump_container",
+        action=ActionType.DUMP,
+        preconditions=(require_target_exists, require_same_room, require_dumpable),
+        effects=(effect_dump,),
+        description="Dump a held container into a compatible target.",
     ),
 }
 
@@ -407,6 +553,7 @@ def apply_timed_transitions(state: dict[str, Any], step: int = 0) -> list[str]:
 __all__ = [
     "ACTION_TRANSITION_RULES",
     "APPLIANCE_CYCLE_STEPS",
+    "DUMP_RULES",
     "DRYING_RACK_STEPS",
     "STATE_INFLUENCES",
     "TRANSITION_SCORING_RULES",
@@ -414,6 +561,8 @@ __all__ = [
     "StateInfluence",
     "TransitionRule",
     "TransitionScoringRule",
+    "TRASHABLE_SEMANTICS",
     "apply_action_transition",
     "apply_timed_transitions",
+    "dump_failures",
 ]

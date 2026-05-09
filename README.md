@@ -1,1003 +1,215 @@
+# GraphWorld
+
+## 快速记录
+
+```bash
 tensorboard --logdir backend/data/tensorboard --host 0.0.0.0 --port 6006
-
-
-# GraphWorld 内部同步文档
-
-本文档用于同步当前 GraphWorld 的实现状态、运行机制、评分机制，以及后续讨论的需求清单。
-
-## 核心定义
-
-GraphWorld 的核心定义按四类组织:
-
-```text
-Nodes
-Edges
-Actions
-States
-```
-### Nodes
-
-当前世界用 Scene Graph 表示:
-
-```text
-Graph = Nodes + Edges + world_state
-```
-
-节点包含:
-
-```text
-room
-furniture
-movable_object
-device
-human
-robot
-```
-
-Node 是世界里的实体。当前主要包括:
-
-```text
-room
-    房间或空间区域，例如 bedroom / bathroom / kitchen / living_room
-
-furniture
-    固定家具或容器，例如 bed / wardrobe / sink / coffee_table / shoe_rack
-
-movable_object
-    可移动物体，例如 clothes / shoes / cup / bowl / toothbrush
-
-device
-    可交互设备，例如 washer / dishwasher / microwave / light / door
-
-human
-    人类节点，当前用于模拟 resident 的日程事件
-
-robot
-    机器人节点，用于执行动作和感知
-```
-
-Node 上的关键字段:
-
-```text
-id
-node_type 
-semantic_type
-states
-parent
-child
-interactive_actions
-```
-
-其中:
-
-```text
-node_type
-    决定节点在图里的大类
-
-semantic_type
-    决定节点的语义类别，例如 clothes / shoes / cup / food
-
-states
-    当前状态字典，例如 is_dirty / is_open / folded / fill_level
-
-parent / child
-    当前层级关系，用于快速表达物体挂在哪个父节点下
-```
-
-### Edges
-
-Edges 用于描述节点之间的关系，尤其是空间关系和父子关系。
-
-定义文件:
-
-```text
-backend/core/edges.py
-```
-
-当前主要关系:
-
-```text
-parent / child
-source_id / target_id / relation_type
-```
-
-relation:
-
-```text
-in
-on
-near
-at
-held_by
-worn_by
-connected_to
-controls
-part_of
-```
-
-
-当前 runtime 会维护:
-
-```text
-parent_of
-relation_of
-room_of
-children_of
-```
-
-这些索引用于动作合法性校验、移动节点、感知和矩阵评分。
-
-### Actions
-
-Action 表示机器人可以执行的动作。
-
-定义文件:
-
-```text
-backend/core/actions.py
-```
-
-当前动作空间主要包括:
-
-```text
-move
-pick
-place
-open
-close
-press
-brush
-fold
-```
-
-我们把技能定义为:
-
-```text
-技能 = 动作 + 物体
-```
-
-例如:
-
-```text
-brush + cup
-pick + clothes
-place + shoes
-press + washer_button
-```
-
-技能需要有:
-
-```text
-前置条件
-后置效果
-合法性校验
-状态/关系更新
-```
-
-### States
-
-State 是节点上的状态字段，用于表达当前世界的好坏、设备状态、物体状态等。
-
-定义文件:
-
-```text
-backend/core/states.py
-```
-
-当前状态空间包括18种:
-
-```text
-is_dirty
-is_open
-is_on
-is_wet
-folded
-fill_level
-cycle_remaining
-is_full
-is_rotten
-is_cooked
-is_frozen
-is_burnt
-is_broken
-is_blocked
-is_pressed
-is_wilted
-temperature
-vitality
-```
-
-状态进入状态矩阵 `S_t`的列维度，用于计算状态分。
-
-状态扩展必须满足:
-
-```text
-可枚举
-可比较
-可被动作改变
-可被环境时间流逝改变
-可被人类事件扰动
-```
-
-## 库定义
-
-当前 assets 库只按场景资产组织，主要分为三类:
-
-```text
-物体库
-房间库
-NPC库
-```
-
-`actions / states / edges` 不放在库定义里重复说明，它们分别属于前面的核心定义章节。
-
-### 物体库
-
-```text
-1. 定义物体模板
-2. 定义物体默认 states
-3. 定义物体支持哪些 interactive_actions
-4. 定义物体能力 capabilities
-5. 根据模板构造 object node
-```
-
-物体库里有一层抽象 `Capability`:
-
-```python
-@dataclass(frozen=True)
-class Capability:
-    name: str
-    states: Dict[str, Any] = field(default_factory=dict)
-    actions: tuple[str, ...] = ()
-    properties: Dict[str, Any] = field(default_factory=dict)
-```
-
-Capability 表示一种物体能力，自动给物体补充:
-
-```text
-1. 默认状态 states
-2. 支持动作 actions
-3. 结构属性 properties
-```
-
-当前capability:
-
-```text
-PICKABLE
-    actions = pick / place
-
-CLEANABLE
-    states = is_dirty: False
-    actions = brush
-
-SWITCHABLE
-    states = is_on: False
-    actions = press
-
-OPENABLE
-    states = is_open: False
-    actions = open / close
-
-FILLABLE
-    states = fill_level: 0.0, is_full: False
-
-PERISHABLE
-    states = is_rotten: False
-
-PLANT_LIFE
-    states = is_wilted: False, is_wet: True, vitality: 1.0
-
-STRUCTURAL_DOOR
-    states = is_open: False
-    actions = open / close
-    properties = door_kind / blocks_visibility / blocks_navigation
-
-CONTAINMENT_BLOCKER
-    properties = blocks_containment
-
-START_REQUIRES_CLOSED
-    properties = requires_closed_to_start
-```
-
-`ObjectTemplate` 初始化时会合并 capability:
-
-```text
-default_states = capabilities.states + template.default_states
-interactive_actions = capabilities.actions + template.interactive_actions
-structural properties = capabilities.properties + explicit properties
-```
-
-物体是通过 capability 组合出来的
-
-例子:
-
-```python
-"door": ObjectTemplate(
-        "door",
-        "door",
-        "门",
-        NodeType.CONTROL_OBJECT,
-        {"is_dirty": False},
-        ["move"],
-        "wall",
-        **commons_image("door", "Door, 120 rue du Bac, Paris 10 December 2016.jpg", "CC BY 2.0"),
-        capabilities=(STRUCTURAL_DOOR,),
-    ),
-    "button": ObjectTemplate(
-        "button",
-        "button",
-        "按钮",
-        NodeType.CONTROL_OBJECT,
-        {"is_pressed": False},
-        ["move"],
-        "wall",
-        **commons_image("button", "SparkFun push-button-33mm---pink 16094491018 o.jpg", "CC BY 2.0"),
-        capabilities=(SWITCHABLE,),
-	    ),
-```
-
-这里:
-
-```text
-door 有 STRUCTURAL_DOOR，所以自动获得 is_open、open/close、阻挡视野/导航等属性
-button 有 SWITCHABLE，所以自动获得 is_on 和 press 动作
-```
-
-后续新增物体时，优先复用 capability，而不是在每个物体上重复写 states/actions。
-
-### 房间库
-
-房间库定义在:
-
-```text
-backend/core/assets/room_library.py
-```
-
-房间库负责定义 room type 和 floorplan template:
-
-```text
-1. 房间类型，例如 entrance / living_room / bedroom / bathroom / kitchen / balcony
-2. 房间功能角色，例如 entry_buffer / public_hub / private_rest / sanitary_room
-3. 面积范围和长宽比范围
-4. 房间之间允许/必须/禁止相邻的关系
-5. 默认固定物体 default_fixture_templates
-6. 默认可移动物体 default_movable_templates
-7. 默认人类活动 default_human_activities
-```
-
-例子:
-
-```text
-entrance:
-    required_neighbors = living_room
-    default_fixture_templates = door / button / room_light / rack / seat
-    default_movable_templates = shoes
-    default_human_activities = entry / exit / shoe_change
-
-living_room:
-    can_be_central_hub = True
-    allowed_neighbors = entrance / bedroom / bathroom / kitchen / balcony
-    default_fixture_templates = door / light / seat / table / television
-    default_movable_templates = remote / book / mug / plant
-```
-
-房间库用于生成或约束场景结构，不直接负责 runtime 中的动作执行。
-
-### NPC库
-
-NPC 库定义在:
-
-```text
-backend/core/assets/npc_library.py
-```
-
-NPC 库负责:
-
-```text
-1. 定义人类角色
-2. 定义人类日程
-3. 定义每个人类事件的前置条件
-4. 定义每个人类事件成功/失败后的 effect 模板
-```
-
-不直接执行图更新，而是由 runtime 中的 `HumanEventSystem` 解释执行。
-
-现在的 workday 日程是:
-
-```text
-waking_up
-getting_dressed
-washing_up_morning
-breakfast
-leaving_home
-returning_home
-dinner
-washing_up_night
-```
-
-当前 8 个核心事件的前置条件和 effect:
-
-| 事件 | 前置条件 | 成功 effects |
-|---|---|---|
-| `waking_up` | 无 | `move_actor(parent=bed_bedroom, relation=at)` |
-| `getting_dressed` | `has_node(semantic_type=clothes, room=bedroom, states={is_dirty: False, is_wet: False, folded: True}, relation_not=worn_by)` | `move_actor(parent=wardrobe_bedroom, relation=near)`；`move_matching_node(semantic_type=clothes, room=bedroom, match_states={is_dirty: False, is_wet: False, folded: True}, relation_not=worn_by, parent=human, relation=worn_by)` |
-| `washing_up_morning` | `has_semantics(semantic_types=[toothbrush, toothpaste, cup], room=bathroom)` | `move_actor(parent=sink_bathroom, relation=near)`；`move_matching_node(target=toothbrush_bathroom, parent_options=[sink_bathroom, faucet_bathroom, sink_bathroom, toilet_bathroom], parent_index_offset=1, relation=on)`；`move_matching_node(target=cup_bathroom, parent_options=[sink_bathroom, faucet_bathroom, sink_bathroom], parent_index_offset=3, relation=on)`；`set_state(target=sink_bathroom, states={is_full: True})`；`increment_state(target=toilet_bathroom, state=cleanliness, amount=-0.18, min_value=0.0, threshold=is_dirty <= 0.45)`；`set_state(target=human, states={is_dirty: False})` |
-| `breakfast` | `has_node(semantic_type=food)` | `move_actor(parent=coffee_table_living_room, relation=near)`；`move_matching_node(target=bowls_dishwasher_kitchen, parent=coffee_table_living_room, relation=on, states={is_clean: False, is_dirty: True})`；`set_state(target=plate_living_room, states={is_dirty: True})`；`set_state(target=cup_living_room, states={is_dirty: True})`；`increment_state(target=trash_bin_living_room, state=fill_level, amount=0.22, max_value=1.0, threshold=is_full >= 0.75)` |
-| `leaving_home` | `has_node(semantic_type=shoes, room=entrance, states={is_dirty: False, is_wet: False}, relation_not=worn_by)` | `move_matching_node(semantic_type=shoes, room=entrance, match_states={is_dirty: False, is_wet: False}, relation_not=worn_by, parent=human, relation=worn_by, states={scattered: False})`；`set_state(target=door_entrance, states={is_open: True})`；`move_actor(parent=outside_home, relation=at)` |
-| `returning_home` | 无 | `set_state(target=door_entrance, states={is_open: True})`；`move_actor(parent=shoe_rack_entrance, relation=near)`；`move_worn_node(semantic_type=shoes, parent_options=[shoe_rack_entrance, living_room], parent_index_mode=day, relation_options=[on, in], states={is_dirty: True}, states_by_parent={shoe_rack_entrance: {scattered: False}, living_room: {scattered: True}})`；`move_actor(parent=sofa_living_room, relation=near)` |
-| `dinner` | `has_node(semantic_type=food)` | 当前代码中对应 `eating`。effects 与 `breakfast` 相同: 人到 `coffee_table_living_room` 附近；碗移动到茶几并变脏；`plate_living_room/cup_living_room` 变脏；`trash_bin_living_room.fill_level += 0.22`，超过阈值后 `is_full=True` |
-| `washing_up_night` | `has_semantics(semantic_types=[toothbrush, toothpaste, cup], room=bathroom)` | 与 `washing_up_morning` 相同的洗漱扰动；额外执行 `move_worn_node(semantic_type=clothes, parent=bathroom, relation=in, states={is_dirty: True, folded: False})`，表示把身上衣服脱下并丢到浴室/洗衣区域 |
-
-说明:
-
-```text
-1. `dinner` 是讨论中的核心事件名，当前代码事件名仍是 `eating`。
-2. `washing_up_morning/night` 中 toothbrush/cup 的 parent_options 用于复现旧扰动模型。
-3. `returning_home` 中鞋子按 day 周期在 shoe_rack_entrance 和 living_room 之间选择目标，用于模拟有时收好、有时乱丢。
-```
-
-## Runtime 运行机制
-
-主 runtime 文件:
-
-```text
-backend/runtime/engine/runtime.py
-```
-
-当前结构:
-
-```text
-SceneGraph
-    节点和边的增删改查
-    parent/child 维护
-    room_of / parent_of / relation_of 等索引
-    move_node / set_node_states / to_scene
-
-System
-    系统基类
-
-RobotActionSystem
-    机器人 apply_action
-    动作合法性校验
-    根据动作更新图和状态
-
-HumanEventSystem
-    人类事件解释器
-    读取 npc_library.py 中的 EventSpec
-    检查前置条件
-    执行通用 effect，例如 move_actor / move_matching_node / set_state / increment_state
-
-EnvironmentSystem
-    时间流逝
-    设备运行
-    自然状态变化
-
-Perception
-    机器人视野计算
-    visible_room_ids
-    robot_view
-
-Orchestrator
-    调度 facade
-    一步内先执行 robot action，再执行 human event，再执行 environment transition
-```
-
-一个 step 的顺序:
-
-```text
-1. run_experiment 根据当前时间生成 human_events
-2. 如果有机器人，则计算 perception / candidates / action
-3. Orchestrator.step()
-4. RobotActionSystem.apply_action()
-5. HumanEventSystem.apply_human_event()
-6. EnvironmentSystem.advance_time()
-7. 输出 scene、metrics、replay、TensorBoard scalar
-```
-
-注意: `HumanEventSystem` 的目标是通用解释器，业务语义尽量写在 `npc_library.py` 中。但重构不能改变扰动模型；事件模板调整后需要重新跑 no-robot baseline。
-
-## 评分机制
-
-当前世界分由三类分数组成:
-
-```text
-state_score
-spatial_score
-human_event_score
-```
-
-最终分:
-
-```text
-final_score = 0.45 * state_score + 0.35 * spatial_score + 0.20 * human_event_score
-```
-
-当前 no-robot baseline 的一组 600 步分数曲线:
-
-![no_robot_600_scores](docs/images/no_robot_600_scores.png)
-
-对应实验:
-
-```text
-backend/data/experiments/scene_simple_home_1f__exp_home_matrix__steps_600__robots_0__humans_1/20260504T130702Z_25f20154/no_robot/metrics.csv
-```
-
-最终值:
-
-```text
-final_score       = 0.8403
-state_score       = 0.9062
-spatial_score     = 0.7556
-human_event_score = 0.8400
-```
-
-当前 with-robot 的一组 600 步分数曲线:
-
-![with_robot_600_scores](docs/images/with_robot_600_scores.png)
-
-对应实验:
-
-```text
-backend/data/experiments/scene_simple_home_1f__exp_home_matrix__steps_600__robots_1__humans_1/20260505T141553Z_834ebc76/with_robot/metrics.csv
-```
-
-配置:
-
-```text
-ROBOTS=1
-HUMANS=1
-LLM=1
-AGENT_MODEL=vllm-qwen3.5-4b
-```
-
-最终值:
-
-```text
-final_score       = 0.8463
-state_score       = 0.9197
-spatial_score     = 0.7556
-human_event_score = 0.8400
-```
-
-### 状态矩阵
-
-状态矩阵:
-
-```text
-S_t
-横轴: 状态空间
-纵轴: 节点
-```
-
-用于表征当前世界状态，包括:
-
-```text
-清洁
-腐烂
-能源
-电器开关
-是否打开
-是否湿
-是否折叠
-垃圾桶容量
-植物活力
-```
-
-稳态状态矩阵:
-
-```text
-S_w
-```
-
-表示世界处于“好状态”时，节点状态应该是什么。
-
-当前实现中先计算单步状态相似度:
-
-```text
-Instant_s(t) = Sim(S_t, S_w)
-```
-
-然后输出累计状态分:
-
-```text
-Score_s(t) = Σ_{k=1..t} Instant_s(k) / t
-```
-
-含义:
-
-```text
-到当前为止，每一步状态相似度的平均值。
-坏状态持续越久，累计状态分越低。
-后面如果状态变好，累计分会回升，但会被前期低分拖住。
-```
-
-### 关系矩阵
-
-关系矩阵:
-
-```text
-R_t
-方阵，横纵轴是需要参与空间评分的节点
-格子表示关系是否存在
-```
-
-README 原始讨论中，关系矩阵应包含:
-
-```text
-所有可移动物体节点
-人类节点
-机器人节点
-```
-
-当前代码实现里主要按 `movable_object` 参与空间评分，human/robot 是否纳入还需要后续统一。
-
-稳态关系矩阵:
-
-```text
-R_w
-```
-
-表示世界处于“好关系”时，物品、人、机器人应该处于什么关系。
-
-当前实现中先计算单步关系相似度:
-
-```text
-Instant_r(t) = Sim(R_t, R_w)
-```
-
-再输出累计关系分:
-
-```text
-Score_r(t) = Σ_{k=1..t} Instant_r(k) / t
 ```
 
-含义:
+待确认问题：
 
-```text
-到当前为止，每一步 instant_spatial 的平均值。
-不作为会让低空间状态长期累积，分数慢慢下降。
-如果后面空间关系变好，累计分会涨，但会被前期不作为留下的历史低分拖住。
-```
-
-### 人类价值矩阵
-
-人类价值矩阵:
-
-```text
-横轴: 人类日程事件
-纵轴: 人类个体
-具体值: 完成 / 失败
-```
+1. 场景逻辑是否通顺：执行操作是否有正确反馈，例如开门后门是否真的被打开；每类物体是否都有动作能让状态合理变化，例如垃圾桶是否存在恢复路径。
+2. 当前 prompt 给人看时，人是否能做出正确决策。
+3. 如果实际把坏状态修好，例如衣服洗好、碗洗好、鞋子放好、垃圾倒掉，分数是否会回升。
+4. 当前分数是否合理，尤其是空间分。
 
-人类价值分使用胜率机制:
-
-```text
-Score_h(t) = 成功事件数 / 已发生事件总数
-```
+GraphWorld 是一个面向长时程具身任务规划的持续运行符号图仿真框架。它不把场景图当作一次性任务的静态快照，而是把图作为运行时世界状态：房间、物体、设备、人和机器人都在同一张图中，状态会随机器人动作、NPC 日程、环境规则和时间推进持续变化。
 
-分子:
+当前项目主要回答一个问题：机器人如何在一个不断被人使用、不断变乱、不断产生新任务的环境里，长期维持世界状态和人类服务质量，而不是只完成一条给定指令。
 
-```text
-截至 t 步所有人类日程事件中成功完成的数量
-```
+## 数据定义
 
-分母:
+GraphWorld 的世界状态由四类基础数据组成：
 
 ```text
-截至 t 步当前一共走过/触发的人类事件数量
+GraphWorld_t = Nodes + Edges + States_t + WorldState_t
 ```
 
-如果 t 步还没有触发任何人类事件，可以先记为 1，或不计入总分，等第一个事件发生后再开始统计。
-
-多个人类时，可以先把所有人的事件合并统计一个总体胜率；如果后面需要区分个体权重，再写成加权平均:
-
-```text
-Score_h(t)=Σ_j w_j * completed_j(t)/triggered_j(t)
-```
+`Nodes` 是世界中的实体，主要包括：
 
-这个机制的性质:
+- `room`：房间或区域，例如 bedroom、bathroom、kitchen、living_room。
+- `fixed_object`：固定家具、容器和设备，例如 bed、wardrobe、sink、washer、trash_bin。
+- `movable_object`：可移动物体，例如 clothes、shoes、cup、bowl、food。
+- `control_object`：控制件或门，例如 button、knob、door。
+- `agent`：人类 NPC 和机器人。
 
-```text
-早期失败会留下历史债
-后期变好可以涨分
-但越晚开始补救，涨得越慢
-```
+每个节点保留统一字段：`id`、`node_type`、`semantic_type`、`states`、`parent`、`interactive_actions`。其中 `semantic_type` 决定物体语义，`states` 记录动态状态，`parent` 表示当前挂载位置，`interactive_actions` 给出可执行动作。
 
-## 稳态状态和稳态空间
+`Edges` 描述节点关系，分为三类：
 
-当前最重要的讨论点:
+- 结构关系：房间邻接、包含、part-of 等稳定结构。
+- 控制关系：button/knob/door 与设备之间的 `controls`。
+- 动态关系：`in`、`on`、`at`、`near`、`held_by`、`worn_by` 等运行时位置关系。
 
-```text
-S_w / R_w 不应该只是一个静态初始照片
-它应该和人类活动阶段有关
-```
+运行时不会把所有动态边硬写死，而是维护 `parent_of`、`relation_of`、`room_of`、`children_of` 索引，再按需重建动态边。这使结构拓扑和临时位置变化保持解耦。
 
-更合理的定义:
+`States` 是图世界可演化的核心。当前关键状态包括：
 
 ```text
-S_w(t) = S_w(activity_t)
-R_w(t) = R_w(activity_t)
+is_dirty, is_clean, is_open, is_on, is_pressed,
+is_wet, is_dry, folded, scattered, misplaced_near,
+fill_level, is_full, cycle_remaining, dry_remaining,
+is_rotten, is_burnt, freshness, temperature,
+vitality, is_wilted, mood, current_activity, is_home
 ```
 
-也就是:
+状态可以被动作改变，也可以被设备周期、晾干过程、NPC 事件和环境时间改变。例如洗衣机完成后会把衣物从 dirty 变为 clean/wet/unfolded，晾衣架会随时间把 wet 变为 dry。
 
-```text
-当前世界: S_t, R_t
-当前活动: activity_t
-当前好状态: S_w(activity_t), R_w(activity_t)
-```
+## 场景资产
 
-例子:
+场景资产按库组织：
 
-```text
-getting_dressed:
-    一件干净衣服 worn_by human 是合理状态
-    不能简单按“所有衣服都在衣柜”扣分
-
-breakfast:
-    餐具在桌上是合理活动状态
-    但早餐结束后，脏餐具长期留在桌上就应该扣分
-
-leaving_home:
-    鞋 worn_by human、人 outside_home 是合理状态
-
-returning_home:
-    鞋应该回 shoe_rack
-    如果鞋丢到 living_room，则是坏空间状态
-```
+- `backend/core/assets/object_library.py`：物体模板、默认状态、交互动作、能力属性。
+- `backend/core/assets/room_library.py`：房间类型、邻接约束、默认家具和默认可移动物。
+- `backend/core/assets/npc_library.py`：人类角色、日程事件、事件前置条件和扰动效果。
+- `backend/core/assets/task_library.py`：机器人可复用维护技能。
 
-因此第一版可以采用:
+物体通过 capability 组合生成。比如 openable 物体自动获得 `is_open` 与 open/close 动作，switchable 物体自动获得 press 相关行为，fillable/perishable/plant-life 等能力会补齐对应状态。新增物体时优先复用 capability，而不是在每个模板里重复写状态和动作。
 
-```text
-Global steady state + Activity override
-```
+## 运行机制
 
-Global steady state 描述家在默认好状态下应该是什么样:
+主运行时在 `backend/runtime/engine/runtime.py`。每一步大致如下：
 
-```text
-衣服在衣柜，干净、干燥、折好
-鞋在鞋架，干净、干燥
-餐具干净并收纳
-牙刷、牙膏、杯子在浴室正确位置
-门关着
-电器关着
-垃圾桶不满
-植物不枯萎
-```
+1. 根据当前时间生成 NPC/human event。
+2. 机器人获得局部观察、合法动作候选和当前 active goal。
+3. `RobotActionSystem` 校验并执行机器人动作。
+4. `HumanEventSystem` 解释 NPC 事件模板并改写图状态。
+5. `EnvironmentSystem` 推进设备周期、自然过程和世界时钟。
+6. 输出 scene、metrics、replay 和 TensorBoard scalar。
 
-Activity override 描述当前活动中允许的临时偏离:
+动作合法性由 `backend/runtime/engine/validator.py` 检查，状态转移由 `backend/core/transition_rules.py` 执行。当前动作空间为：
 
 ```text
-吃饭时餐具允许在桌上
-穿衣时一件衣服允许在人身上
-出门时鞋允许在人身上
-洗漱时牙刷/杯子允许在 sink/faucet 附近
+move, pick, place, press, open, close, brush, fold, dump
 ```
 
-事件进行中，活动需要的偏离不应该被视为坏状态；事件结束后，应切换到下一阶段的稳态目标。
+重要规则包括：关闭的容器不能直接取放；设备门未关不能启动；布类物体不能用 brush 直接洗干净，必须进入洗衣流程；trash_bin 只接收腐烂或烧焦食物，并需要在 garbage_station 执行 dump；装水的 cup 需要在 sink 执行 dump。
 
-### 当前实验暴露的问题
+## Agent 方法
 
-600 步、1 robot、1 human、Qwen3.5-4B 的实验里，`spatial_score` 的变化说明当前稳态定义还有问题:
-
-```text
-穿衣服:
-    衣服从卧室/衣柜稳态位置变成 worn_by human
-    当前静态 R_w 会把这视为破坏卧室稳态
-
-穿鞋子:
-    鞋从玄关/鞋架稳态位置变成 worn_by human
-    当前静态 R_w 会把这视为破坏玄关稳态
-
-吃饭:
-    bowls 从 dishwasher/kitchen 移到 coffee_table/living_room
-    当前静态 R_w 会把吃饭活动本身视为 bowls 空间破坏
-
-离家后:
-    人类活动不再继续整理空间
-    当前 instant_spatial 维持在较低水平，累计 spatial_score 被前期低分拉低
-
-回家时:
-    鞋从 worn_by human 被脱下
-    如果回到 shoe_rack 或更接近默认稳态，错位数减少，spatial_score 后续会上升
-```
+当前 Agent 已从“单步反应式选动作”更新为“高层任务 + 技能阶段 + 低层合法动作”的结构。
 
-这说明“稳态关系矩阵”不能只是一张固定的默认好状态照片。它至少要区分:
+核心入口在 `backend/runtime/agent/decision.py` 与 `backend/runtime/agent/planning.py`。流程是：
 
 ```text
-活动中合理偏离:
-    穿衣时衣服在人身上
-    出门时鞋在人身上
-    吃饭时餐具在桌上
-
-活动结束后的待恢复目标:
-    衣服应回衣柜/洗衣流程
-    鞋应回鞋架
-    餐具应进入清洗/收纳流程
+Observation
+-> compact world context
+-> high-level options
+-> active goal / relevant skills
+-> legal action candidates
+-> LLM 选择 high_level_task + action_index
+-> rule-based ranker 校正明显偏离目标的选择
+-> engine 执行动作并反馈
 ```
 
-待讨论:
+Prompt 中会给模型五类信息：
 
-```text
-1. R_w 是否应该写成 R_w(activity_t)，即跟当前人类活动绑定。
-2. 是否需要区分 active steady state 和 home-restored steady state。
-3. human/robot 是否应该纳入关系矩阵，否则 worn_by human 这类关系只通过 movable 的 parent vector 间接体现。
-4. 当前看到的 spatial 曲线有时像一个尖峰，需要同时看 instant_spatial 和 cumulative_spatial 才能解释。
-```
+- 机器人状态：所在位置、可见房间、是否持有物体。
+- 房屋规则：哪些动作能改变哪些状态，哪些捷径不允许。
+- `active_goal`：上一阶段未完成的长期目标。
+- 相关技能：只放当前状态需要的技能，避免塞完整手册。
+- 合法动作候选：每个候选已经过引擎校验，并带简短 hint。
 
-### 当前 Agent 暴露的问题
+当前技能库包含三类家庭维护流程：
 
-600 步、1 robot 实验里，机器人主要执行 `brush / press / move`，几乎没有完成有效的空间修复:
+- `laundry_clothes`：脏/湿/未折叠衣物进入洗衣机、启动洗涤、晾干、折叠、收纳到 wardrobe。
+- `dispose_food`：腐烂或烧焦食物先进入 trash_bin，再由机器人拿 trash_bin 到 garbage_station 倒掉。
+- `empty_cup`：有液体的 cup 被拿到 sink 并执行 dump。
 
-```text
-robot_spatial_improvements = 0
-```
+这些技能不是硬编码完整规划器，而是可读的常识流程。LLM 仍负责语义选择，但系统会根据 active goal 的 phase 对候选动作排序。例如 `laundry_clothes` 的 phase 会在 `wash_load -> start_washer -> dry -> fold -> store` 之间随图状态变化；如果模型在 active goal 下选了明显偏离阶段的动作，ranker 会把选择拉回更能推进当前阶段的合法动作。
 
-当前观察:
+这个改动解决的是长期任务语义和局部动作候选之间的错配：衣服不能靠 brush 直接恢复，垃圾桶不能永远满着无解，杯子有液体时也不能只靠普通清洁动作跳过倒水步骤。
 
-```text
-1. agent 会做状态修复，例如 brush 脏物体。
-2. agent 会反复 press button，说明动作选择里存在低价值循环。
-3. agent 基本没有 pick/place 把物体放回稳态父节点。
-4. 这可能不是单纯 LLM 能力问题，而是技能表达、候选动作、目标提示不够清楚。
-```
+## 多场景设想
 
-待讨论:
+下一阶段不应只扩大家庭物品数量，而是扩展到多种持续运行的服务场景。每个场景都要保留同一个核心问题：NPC 会持续活动、消耗资源、制造副作用，机器人需要长期维持秩序，而不是完成一次性指令。
 
-```text
-1. 是否需要显式给 agent 一个 skill library，例如 put_away(object, target_parent)。
-2. pick/place 是否应该被包装成一个高层技能，而不是让 LLM 连续两步自己组合。
-3. 候选动作里是否要标出该动作对 state_score / spatial_score / human_event_score 的预期影响。
-4. prompt 里是否要告诉 agent 当前最主要的空间错位物体，以及它们的稳态 parent。
-5. 是否需要在调度层把“修状态”和“修空间”分成不同 task。
-```
+候选场景：
 
-## 8 个核心人类事件讨论
+- 医院：病人挂号、候诊、看诊、取药、输液、离开；护士巡房、送药、换床单、补耗材；医生叫号、检查、开处方。机器人任务包括病床复位、脏床单送洗、药品配送、医疗垃圾分类、轮椅归位、候诊区清洁。这个场景适合强调流程约束和错误代价，例如药不能送错人，医疗垃圾不能混入普通垃圾。
+- 超市：顾客进店、拿购物车、选货、结账、离开；店员补货、整理货架、处理退货；收银员扫码、收款、打包。机器人任务包括货架补货、购物车回收、生鲜过期处理、冷柜门关闭、地面清洁、错放商品归位。这个场景扰动密度高，特别适合制造无限任务流。
+- 办公室：员工上班、开会、打印、喝咖啡、午餐、下班；前台接待访客、收快递、分发物品；清洁人员整理会议室和倒垃圾。机器人任务包括会议室复位、杯子回茶水间、打印纸补充、快递送到工位、白板擦除、垃圾桶清空。这个场景风险低但高频，适合作为稳定 baseline。
+- 工厂：工人取料、操作机器、质检、打包、搬运；质检员标记缺陷品；维修员巡检和修机器。机器人任务包括物料补给、成品搬运、缺陷品隔离、工具归位、机器状态维护、安全通道清理。这个场景流程链条长，适合后期展示多机器人协作。
 
-| 事件 | 前置条件 | 成功后扰动 | 影响物品 |
-|---|---|---|---|
-| `waking_up` 起床 | 床可用；卧室可达 | 人从床附近开始活动；床可能变乱 | bed |
-| `getting_dressed` 穿衣 | 有干净、干燥、折好的衣服 | 一件干净衣服变成 `worn_by human`；衣柜门可能打开 | clothes, wardrobe_door |
-| `washing_up_morning` 早洗漱 | 浴室有牙刷、牙膏、杯子；洗手池可用 | 牙刷/杯子位置变乱；洗手池变湿/满；厕所清洁度下降一点 | toothbrush, toothpaste, cup, sink, toilet |
-| `breakfast` 早餐 | 有可食用食物；有干净餐具 | 食物被消耗；碗/盘/杯变脏并移动到餐桌/茶几；垃圾桶变满 | food, bowl, plate, cup, trash_bin, table |
-| `leaving_home` 出门 | 有干净、干燥、可穿的鞋；玄关门可用 | 鞋变成 `worn_by human`；玄关门打开；人离家 | shoes, entrance_door |
-| `returning_home` 回家 | 玄关门可用 | 人回家；鞋脱下，可能回鞋架，也可能乱丢；鞋变脏；玄关门打开 | shoes, shoe_rack, entrance_door |
-| `dinner` 晚饭 | 有可食用食物；有干净餐具 | 和早餐类似，但扰动更大；更多餐具变脏；垃圾桶更满 | food, bowl, plate, cup, trash_bin, table |
-| `washing_up_night` 晚洗漱/换洗 | 浴室用品可用；身上有衣服 | 牙刷/杯子位置变乱；洗手池/厕所变脏；身上衣服脱下，变脏、未折叠，进入浴室/洗衣区域 | toothbrush, toothpaste, cup, sink, toilet, clothes, washer/laundry_area |
+扩展优先级暂定为：超市 -> 医院 -> 办公室 -> 工厂。超市最容易做出高频扰动和可解释任务；医院论文动机最强；办公室适合做稳态对照；工厂复杂度最高，留到多机器人机制稳定后再做。
 
-## 需求清单
+## 多 Agent 与多机器人
 
-### 曾龙
+当前引擎已经有一部分多 Agent 外壳，但还不能认为完整支持多机器人协作。
 
-```text
-技能 = 动作 + 物体
-任务 = Σ 技能_i
-```
+已经能接住的部分：
 
-1. 每个物体可以定义一个清洁度等什么度，整个场景的清洁度是场景中物体的函数
-2. 每个技能即动作+物体，有一个难度函数衡量难度
-3. 每个任务通过大量人工两两比较获得排序
+- 场景初始化支持多个 human 和多个 robot。`run_experiment.py` 会生成 `human_resident`, `human_resident_02`, ... 和 `robot_01`, `robot_02`, ...。
+- 每个机器人有独立的 `memory` 和 `active_goal` 字典。
+- 每一步会为每个机器人分别感知、生成候选动作、调用 LLM 或 fallback，再把多个 `robot_actions` 一起交给 `Orchestrator.step()`。
+- `RobotActionSystem` 和 validator 的动作字段支持 `agent`，理论上可以执行不同机器人动作。
+- `HumanEventSystem` 的 event payload 支持 `actor`，多 NPC 可以各自执行同一日程事件。
 
-### 谢庆红冰
+主要缺口：
 
-不要单独定义各种“度”，用三个矩阵表示世界分数:
+- 机器人动作目前在 `Orchestrator.step()` 里按列表顺序执行，不是并发解析；两个机器人抢同一个物体、同时打开/关闭同一设备、同时向同一容器放东西时，还缺少冲突检测和事务式提交。
+- `backend/runtime/agent/decision.py` 里还有多处 `robot_01` 硬编码。多机器人跑起来时，prompt 内的 holding、空间问题过滤、高层选项都可能误以为当前机器人是 `robot_01`。
+- `global_restore_goal()` 是每个机器人独立选目标，但没有全局任务分配。多个机器人可能同时追同一个 cup、同一个 trash_bin 或同一扇门。
+- 评分和 TensorBoard 轨迹目前主要记录 primary robot；多机器人需要记录每个机器人的房间、动作、active goal、成功率和冲突率。
+- 多 human 现在更像同一日程模板复制给多个人，缺少角色差异、资源竞争和队列机制。例如医院的病人、护士、医生不应共享同一套事件流。
 
-```text
-状态矩阵
-空间/关系矩阵
-人类价值矩阵
-```
+因此，多机器人路线建议分三步：
 
-状态矩阵:
+1. 先修单机器人泛化：把 `decision.py` 和相关 prompt 组装中的 `robot_01` 全部改成当前 `agent_id`，确保 `robot_02` 单独跑也行为正确。
+2. 再做集中式任务分配：每步先枚举全局问题池，再给每个机器人分配不同 active goal，避免重复抢任务。早期可以用简单规则：已被某个机器人认领的 object/target 暂时不再分给其他机器人。
+3. 最后做动作冲突处理：在执行前检查多个 action 是否争用同一 object、container、device 或 door；无冲突的一起执行，有冲突的按优先级执行或让后者失败并反馈给 agent。
 
-```text
-S_t: 当前时刻世界状态
-S_w: 世界处于好状态时的稳态状态矩阵
-```
+多 NPC 路线也应分阶段做：
 
-关系矩阵:
+1. 先支持不同 NPC role 的日程模板，例如 patient、doctor、nurse、customer、cashier、worker。
+2. 再支持共享资源和队列，例如收银台、诊室、病床、机器工位。
+3. 最后支持 NPC 之间的依赖事件，例如医生看完病人才生成处方，护士拿到处方后才能送药。
 
-```text
-R_t: 当前时刻世界关系
-R_w: 世界处于好状态时的稳态关系矩阵
-```
+## 评分
 
-人类价值矩阵:
+GraphWorld 当前用三类分数评估长期表现：
 
 ```text
-横轴: 人类日程时间表
-纵轴: 人类个体
-具体值: 完成 / 失败
+final_score = 0.45 * state_score
+            + 0.35 * spatial_score
+            + 0.20 * human_event_score
 ```
 
-### 郑子杰
-
-需求:
-
-```text
-擦桌子，可乐倒了要用湿毛巾擦一遍再用干毛巾擦一遍
-```
+`state_score` 比较当前状态矩阵 `S_t` 与稳态目标 `S_w`，衡量清洁、开关、湿度、腐烂、垃圾容量、植物活力等状态是否健康。
 
-实现思路:
+`spatial_score` 比较当前关系矩阵 `R_t` 与稳态关系 `R_w`，衡量物品是否在合理位置，例如衣服是否收纳、鞋是否回鞋架、餐具是否回到清洗/收纳路径。
 
-```text
-饮料加甜度状态字段
-桌子脏状态增加前置条件分支
-如果是带糖饮料，需要擦两遍
-非糖饮料擦一遍
-```
+`human_event_score` 统计人类日程事件的成功率，衡量机器人是否支持了人的正常活动。
 
-### 王一喆
+分数是累计平均：坏状态持续越久，历史债越重；如果后面真的把衣服洗好、餐具处理好、鞋子归位、垃圾倒掉，单步 instant score 会改善，累计分也会回升，但会受到前期低分拖累。
 
-调度器输入:
+当前仍需继续细化的是稳态定义。`S_w` / `R_w` 不应只是初始照片，而应支持 activity override：吃饭时餐具在桌上、出门时鞋在人身上、穿衣时衣服在人身上都应被视为活动中的合理偏离；活动结束后才切回恢复目标。
 
-1. 图 = node + edge + 置信度，大图
-2. skill 库，也可以理解为任务库模板
-3. 状态转移规则，动作前置和后置
-4. 其他 robot 状态，除了自己
-5. 历史动作轨迹、上一步
+## 运行
 
-调度器输出:
+后端实验：
 
-```text
-每个子 agent(i) 的当前高层决策 Task_i
+```bash
+python -m backend.run_experiment
 ```
 
-伪代码:
-
-```python
-for subagent in Subagents:
-    Submap = 图剪枝函数(大图, i)
-    技能 = llm_query(Submap, Task_i, systemprompt)
-    新图 = 引擎(技能)
-    反思
-```
+查看 TensorBoard：
 
-引擎:
-
-```python
-def engine(skill):
-    合法性校验(skill)
-    更新状态阵
-    更新关系阵
-    更新人类
-    return 新图, 合法性反馈
+```bash
+tensorboard --logdir backend/data/tensorboard --host 0.0.0.0 --port 6006
 ```
 
-### 崔书博
+前端：
 
-待补充。
-
-### 梁子健
-
-完善物体类定义、状态转移规则:
-
-```text
-多少种物体
-多少种状态
-多少种动作
-状态改变前置条件
-状态改变后续影响
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
-runtime 重构目标:
+## 文档
 
-```text
-1. SceneGraph
-    节点和边的增删改查
-    父子关系维护
-    图的遍历索引
-
-2. System
-    RobotActionSystem
-    HumanEventSystem
-    EnvironmentSystem
-
-3. Perception
-    visible_room_ids
-    robot_view
-
-4. Orchestrator
-    内部持有上述模块实例
-    先让动作系统跑，再让事件系统跑，最后让环境和感知输出结果
-```
+- `docs/README.md`：开题报告和研究主线底稿。
+- `docs/GraphWorld.md`：当前方法、相关工作和实现说明。
+- `paper/main.tex`：论文草稿，包含 Infinite Task Problem、图世界定义和技能条件化 Agent。
+- `backend/core/assets/task_library.md`：家庭维护技能模板说明。

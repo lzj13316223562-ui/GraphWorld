@@ -105,6 +105,16 @@ SUPPORTED_AGENTS = {
         "base_url_env": "VLLM_BASE_URL",
         "multimodal": False,
     },
+        "vllm-qwen3.6-27b": {
+        "type": "openai",
+        "model": "qwen36-27b",
+        "model_env": "VLLM_MODEL",
+        "api_key": "EMPTY",
+        "api_key_env": "VLLM_API_KEY",
+        "base_url": "http://127.0.0.1:8000/v1",
+        "base_url_env": "VLLM_BASE_URL",
+        "multimodal": True,
+    },
     "vllm-qwen2.5-3b": {
         "type": "openai",
         "model": "qwen25-3b-instruct",

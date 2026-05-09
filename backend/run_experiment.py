@@ -6,7 +6,6 @@ import copy
 import csv
 import io
 import json
-import re
 import shutil
 import sys
 import time
@@ -27,23 +26,51 @@ from tqdm import tqdm
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from backend.core.actions import ActionType
-from backend.core.assets.npc_library import get_event_spec, planned_activity
-from backend.runtime.agent import perceive, reflect, remember
+from backend.core.assets.npc_library import get_default_npcs, get_event_spec, planned_activity
+from backend.runtime.agent import candidate_actions, fallback_choose_action, held_object, llm_choose_action, perceive, reflect, remember
 from backend.runtime.engine import Orchestrator
 from backend.runtime.eval import build_matrix_snapshot, matrix_score
-from backend.tools.agent import llm_query, resolved_agent_config
+from backend.tools.agent import resolved_agent_config
 
 
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
-SCENE_PATH = DATA_DIR / "sg_output" / "simple_graph" / "simple_home_1f.json"
+SCENE_DIR = DATA_DIR / "sg_output" / "simple_graph"
+SCENE_PATH = SCENE_DIR / "simple_home_1f.json"
 LEGACY_REPLAY_DIR = DATA_DIR / "replay_logs"
 TENSORBOARD_DIR = DATA_DIR / "tensorboard"
 EXPERIMENT_DIR = DATA_DIR / "experiments"
 
 SCORE_KEYS = ("final_score", "state_score", "spatial_score", "human_event_score")
-ROBOT_ACTIONS = tuple(action.value for action in ActionType)
+CLOTH_SEMANTICS = {"clothes", "towel", "blanket"}
+HOSPITAL_RETURN_SKILLS = {
+    "replenish_prescription_sheet",
+    "replenish_medicine_box",
+    "return_refrigerated_medicine",
+    "clean_medical_waste",
+    "collect_dirty_linen",
+    "restock_clean_sheet",
+    "return_wheelchair",
+}
+HOSPITAL_CLEAN_SKILLS = {"clean_waiting_area", "clean_exam_bed"}
+HOSPITAL_SKILL_BY_SEMANTIC = {
+    "prescription_sheet": "replenish_prescription_sheet",
+    "medicine_box": "replenish_medicine_box",
+    "refrigerated_medicine": "return_refrigerated_medicine",
+    "medical_waste": "clean_medical_waste",
+    "wheelchair": "return_wheelchair",
+}
+HOSPITAL_SKILL_PRIORITY = {
+    "replenish_prescription_sheet": 0,
+    "return_refrigerated_medicine": 1,
+    "replenish_medicine_box": 2,
+    "restock_clean_sheet": 3,
+    "clean_medical_waste": 4,
+    "collect_dirty_linen": 5,
+    "return_wheelchair": 6,
+    "clean_waiting_area": 7,
+    "clean_exam_bed": 8,
+}
 ACTION_CODES = {
     "move": 1,
     "pick": 2,
@@ -53,6 +80,7 @@ ACTION_CODES = {
     "press": 6,
     "brush": 7,
     "fold": 8,
+    "dump": 9,
 }
 
 
@@ -129,7 +157,6 @@ def canonical_run_group(
 ) -> str:
     return "__".join(
         (
-            f"scene_{_slug(scene_id)}",
             f"exp_{_slug(experiment_type)}",
             f"steps_{int(steps)}",
             f"robots_{int(robots)}",
@@ -139,14 +166,13 @@ def canonical_run_group(
     )
 
 
-def canonical_experiment_group(scene_id: str, steps: int, robots: int, humans: int) -> str:
+def canonical_experiment_group(scene_id: str, steps: int, robots: int, humans: int, agent_model: str | None) -> str:
     return "__".join(
         (
-            f"scene_{_slug(scene_id)}",
-            "exp_home_matrix",
             f"steps_{int(steps)}",
             f"robots_{int(robots)}",
             f"humans_{int(humans)}",
+            f"model_{canonical_model_label(agent_model)}",
         )
     )
 
@@ -227,29 +253,61 @@ def human_ids(human_count: int) -> tuple[str, ...]:
     return tuple("human_resident" if index == 1 else f"human_resident_{index:02d}" for index in range(1, count + 1))
 
 
-def prepare_home_scene(raw_scene: dict[str, Any], robot_count: int, human_count: int) -> dict[str, Any]:
+def scene_type(scene: dict[str, Any]) -> str:
+    name = str(scene.get("scene_name") or "")
+    if "hospital" in name:
+        return "hospital"
+    return "home"
+
+
+def actor_specs_for_scene(scene: dict[str, Any], human_count: int) -> list[dict[str, str]]:
+    if scene_type(scene) == "hospital":
+        defaults = get_default_npcs("hospital")
+        return defaults[: max(0, int(human_count))]
+    return [
+        {
+            "id": human_id,
+            "name": "resident",
+            "name_cn": "resident",
+            "role": "resident",
+            "parent": "bed_bedroom",
+            "room": "bedroom",
+            "activity": "sleeping",
+            "persona": "weekday_office_worker",
+        }
+        for human_id in human_ids(human_count)
+    ]
+
+
+def prepare_scene(raw_scene: dict[str, Any], robot_count: int, human_count: int) -> dict[str, Any]:
     scene = copy.deepcopy(raw_scene)
     scene.setdefault("world_state", {}).setdefault("step", 0)
     scene["world_state"].setdefault("time_min", 360)
     scene["world_state"].setdefault("minutes_per_step", 10)
     scene["world_state"].setdefault("day", 1)
-    for human_id in human_ids(human_count):
-        ensure_node(
-            scene,
-            {
-                "id": human_id,
-                "name": "resident",
-                "name_cn": "resident",
-                "node_type": "human",
-                "semantic_type": "human",
-                "states": {"current_activity": "sleeping"},
-                "parent": "bed_bedroom",
-                "child": [],
-                "interactive_actions": [],
-            },
-        )
-        ensure_edge(scene, "bed_bedroom", human_id, "at")
+    if scene_type(scene) == "home":
+        for spec in actor_specs_for_scene(scene, human_count):
+            human_id = str(spec["id"])
+            parent_id = str(spec.get("parent") or "outside_home")
+            ensure_node(
+                scene,
+                {
+                    "id": human_id,
+                    "name": spec.get("name", "human"),
+                    "name_cn": spec.get("name_cn", spec.get("name", "human")),
+                    "node_type": "human",
+                    "semantic_type": "human",
+                    "role": spec.get("role", "resident"),
+                    "persona": spec.get("persona", ""),
+                    "states": {"current_activity": spec.get("activity", "")},
+                    "parent": parent_id,
+                    "child": [],
+                    "interactive_actions": [],
+                },
+            )
+            ensure_edge(scene, parent_id, human_id, "at")
     for robot_id in robot_ids(robot_count):
+        robot_parent = "lobby" if scene_type(scene) == "hospital" else "living_room"
         ensure_node(
             scene,
             {
@@ -259,13 +317,38 @@ def prepare_home_scene(raw_scene: dict[str, Any], robot_count: int, human_count:
                 "node_type": "robot",
                 "semantic_type": "robot",
                 "states": {},
-                "parent": "living_room",
+                "parent": robot_parent,
                 "child": [],
                 "interactive_actions": [],
             },
         )
-        ensure_edge(scene, "living_room", robot_id, "at")
-    support_nodes = [
+        ensure_edge(scene, robot_parent, robot_id, "at")
+    support_nodes = []
+    if scene_type(scene) == "home":
+        support_nodes.extend([
+        {
+            "id": "garbage_station_outside_home",
+            "name": "garbage station",
+            "name_cn": "垃圾处理站",
+            "node_type": "fixed_object",
+            "semantic_type": "garbage_station",
+            "states": {},
+            "parent": "outside_home",
+            "child": [],
+            "interactive_actions": ["move", "dump"],
+        },
+        {
+            "id": "trash_bin_living_room",
+            "name": "trash bin",
+            "name_cn": "trash bin",
+            "node_type": "movable_object",
+            "semantic_type": "trash_bin",
+            "states": {"is_dirty": False},
+            "parent": "living_room",
+            "child": [],
+            "interactive_actions": ["pick", "place"],
+            "max_capacity": 3,
+        },
         {
             "id": "food_living_room",
             "name": "food",
@@ -273,7 +356,7 @@ def prepare_home_scene(raw_scene: dict[str, Any], robot_count: int, human_count:
             "node_type": "movable_object",
             "semantic_type": "food",
             "states": {"is_cooked": True, "is_rotten": False},
-            "parent": "coffee_table_living_room",
+            "parent": "fridge_kitchen",
             "child": [],
             "interactive_actions": ["pick", "place"],
         },
@@ -284,7 +367,7 @@ def prepare_home_scene(raw_scene: dict[str, Any], robot_count: int, human_count:
             "node_type": "movable_object",
             "semantic_type": "plate",
             "states": {"is_dirty": False},
-            "parent": "coffee_table_living_room",
+            "parent": "dishwasher_kitchen",
             "child": [],
             "interactive_actions": ["pick", "place", "brush"],
         },
@@ -295,23 +378,62 @@ def prepare_home_scene(raw_scene: dict[str, Any], robot_count: int, human_count:
             "node_type": "movable_object",
             "semantic_type": "cup",
             "states": {"is_dirty": False, "is_wet": False},
-            "parent": "coffee_table_living_room",
+            "parent": "dishwasher_kitchen",
             "child": [],
             "interactive_actions": ["pick", "place", "brush"],
         },
-    ]
+        ])
     for item in support_nodes:
         ensure_node(scene, item)
-        ensure_edge(scene, str(item["parent"]), str(item["id"]), "on")
+        ensure_edge(scene, str(item["parent"]), str(item["id"]), "in")
+    for item in scene.get("nodes") or []:
+        if str(item.get("semantic_type") or "") == "sink":
+            actions = item.setdefault("interactive_actions", [])
+            if "dump" not in actions:
+                actions.append("dump")
     return scene
 
 
-def planned_event_for_step(scene: dict[str, Any], step: int) -> str:
+def prepare_home_scene(raw_scene: dict[str, Any], robot_count: int, human_count: int) -> dict[str, Any]:
+    return prepare_scene(raw_scene, robot_count=robot_count, human_count=human_count)
+
+
+def planned_event_for_actor(scene: dict[str, Any], actor: dict[str, Any], step: int) -> str:
     world = scene.get("world_state") or {}
     minute = int(world.get("time_min") or 0) + step * int(world.get("minutes_per_step") or 10)
     day = int(world.get("day") or 1)
-    _, _, activity = planned_activity("resident", minute, day)
+    role = str(actor.get("role") or (actor.get("states") or {}).get("role") or "resident")
+    _, _, activity = planned_activity(role, minute, day)
     return activity
+
+
+def planned_event_for_step(scene: dict[str, Any], step: int) -> str:
+    actors = [node for node in scene.get("nodes") or [] if str(node.get("node_type") or "") == "human"]
+    if not actors:
+        return ""
+    return planned_event_for_actor(scene, actors[0], step)
+
+
+def planned_events_for_step(scene: dict[str, Any], step: int) -> list[dict[str, Any]]:
+    events: list[dict[str, Any]] = []
+    for actor in scene.get("nodes") or []:
+        if str(actor.get("node_type") or "") != "human":
+            continue
+        actor_id = str(actor.get("id") or "")
+        if not actor_id:
+            continue
+        event_id = planned_event_for_actor(scene, actor, step)
+        previous_id = planned_event_for_actor(scene, actor, step - 1) if step > 0 else ""
+        next_id = planned_event_for_actor(scene, actor, step + 1)
+        events.append(
+            {
+                "event": event_id,
+                "actor": actor_id,
+                "period_start": step == 0 or previous_id != event_id,
+                "period_end": next_id != event_id,
+            }
+        )
+    return events
 
 
 def expected_events(scene: dict[str, Any], steps: int) -> tuple[str, ...]:
@@ -319,9 +441,10 @@ def expected_events(scene: dict[str, Any], steps: int) -> tuple[str, ...]:
         return ()
     events = []
     for step in range(steps):
-        event_id = planned_event_for_step(scene, step)
-        if event_id not in events:
-            events.append(event_id)
+        for event in planned_events_for_step(scene, step):
+            event_id = str(event.get("event") or "")
+            if event_id and event_id not in events:
+                events.append(event_id)
     return tuple(events)
 
 
@@ -350,15 +473,6 @@ def write_json_array(path: Path, rows: list[dict[str, Any]], *, desc: str) -> No
         handle.write("\n]\n")
 
 
-def is_same_room(orchestrator: Orchestrator, a: str, b: str) -> bool:
-    graph = orchestrator.graph
-    return bool(graph.room_of.get(a) and graph.room_of.get(a) == graph.room_of.get(b))
-
-
-def held_object(orchestrator: Orchestrator, agent_id: str = "robot_01") -> str:
-    return orchestrator.graph.held_by(agent_id)
-
-
 def room_of(scene: dict[str, Any], node_id: str) -> str:
     current_id = str(node_id or "")
     visited: set[str] = set()
@@ -374,87 +488,734 @@ def room_of(scene: dict[str, Any], node_id: str) -> str:
     return ""
 
 
-def candidate_payload(
-    orchestrator: Orchestrator,
-    action: dict[str, Any],
-    *,
-    reason: str,
-) -> dict[str, Any]:
-    validation = orchestrator.robot_actions.validate(action)
+def visible_restore_goal(observation: dict[str, Any], baseline: dict[str, Any], step: int) -> dict[str, Any] | None:
+    baseline_nodes = {str(item.get("id") or ""): item for item in baseline.get("nodes") or [] if item.get("id")}
+    current_nodes = {str(item.get("id") or ""): item for item in observation.get("nodes") or [] if item.get("id")}
+    for node_id, current in sorted(current_nodes.items()):
+        initial = baseline_nodes.get(node_id) or {}
+        if str(initial.get("node_type") or "") != "movable_object":
+            continue
+        current_parent = str(current.get("parent") or "")
+        initial_parent = str(initial.get("parent") or "")
+        if not current_parent or not initial_parent or current_parent == initial_parent:
+            continue
+        current_parent_node = current_nodes.get(current_parent) or {}
+        if str(current_parent_node.get("node_type") or "") == "human":
+            parent_states = current_parent_node.get("states") or {}
+            if parent_states.get("checked_out") is not True:
+                continue
+        hospital_skill = hospital_skill_for_return_issue(node_id, current, initial)
+        if hospital_skill:
+            goal = make_hospital_return_goal(
+                node_id,
+                hospital_return_target(observation, baseline, node_id, hospital_skill) or initial_parent,
+                hospital_skill,
+                step,
+                source="visible_hospital_supply_issue",
+            )
+            if goal:
+                return goal
+        return make_restore_goal(node_id, initial_parent, step, source="visible_spatial_issue")
+    return None
+
+
+def make_restore_goal(object_id: str, target_id: str, step: int, *, source: str) -> dict[str, Any]:
+    task = f"restore_initial_position {object_id} -> {target_id}"
     return {
-        **action,
-        "reason": reason,
-        "legal": validation.ok,
-        "validation_failures": list(validation.failures),
+        "type": "restore_initial_position",
+        "task": task,
+        "object": object_id,
+        "target": target_id,
+        "started_step": step,
+        "last_progress_step": step,
+        "steps_without_progress": 0,
+        "source": source,
     }
 
 
-def candidate_actions(orchestrator: Orchestrator, observation: dict[str, Any], agent_id: str = "robot_01") -> list[dict[str, Any]]:
-    graph = orchestrator.graph
-    candidates: list[dict[str, Any]] = []
-    visible_nodes = [graph.nodes.get(str(item.get("id") or "")) or {} for item in observation.get("nodes") or []]
-    visible_ids = {str(node.get("id") or "") for node in visible_nodes if node.get("id")}
-    holding = held_object(orchestrator, agent_id)
-    for room_id in sorted((observation.get("world_state") or {}).get("visible_rooms") or []):
-        if room_id and room_id != graph.room_of.get(agent_id):
-            candidate = candidate_payload(
-                orchestrator,
-                {"agent": agent_id, "action": "move", "target": room_id},
-                reason="move to visible room",
-            )
-            if candidate["legal"]:
-                candidates.append(candidate)
-    for node_id in sorted(visible_ids):
-        item = graph.nodes.get(node_id) or {}
-        if not item or node_id == agent_id:
+def first_node_by_semantic(scene: dict[str, Any], semantics: set[str], *, room: str = "") -> str:
+    for item in scene.get("nodes") or []:
+        if str(item.get("semantic_type") or "") not in semantics:
+            continue
+        if room and room_of(scene, str(item.get("id") or "")) != room:
+            continue
+        return str(item.get("id") or "")
+    return ""
+
+
+def first_node_by_semantic_near(scene: dict[str, Any], semantics: set[str], *, preferred_room: str = "") -> str:
+    if preferred_room:
+        near = first_node_by_semantic(scene, semantics, room=preferred_room)
+        if near:
+            return near
+    return first_node_by_semantic(scene, semantics)
+
+
+def dispose_food_phase(
+    scene: dict[str, Any],
+    object_id: str,
+    trash_bin_id: str = "",
+    robot_id: str = "robot_01",
+    trash_bin_home: str = "",
+) -> str:
+    item = node(scene, object_id) or {}
+    states = item.get("states") or {}
+    if not (states.get("is_rotten") is True or states.get("is_burnt") is True):
+        if trash_bin_id and trash_bin_home and str((node(scene, trash_bin_id) or {}).get("parent") or "") != trash_bin_home:
+            return "return_bin"
+        return "done"
+    if trash_bin_id and str(item.get("parent") or "") == trash_bin_id:
+        return "dump_bin" if str((node(scene, trash_bin_id) or {}).get("parent") or "") == robot_id else "take_bin"
+    if trash_bin_id and str((node(scene, trash_bin_id) or {}).get("parent") or "") == robot_id:
+        return "dump_bin"
+    return "collect_food"
+
+
+def make_dispose_food_goal(
+    object_id: str,
+    step: int,
+    *,
+    source: str,
+    scene: dict[str, Any],
+    robot_id: str = "robot_01",
+    baseline: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
+    object_room = room_of(scene, object_id)
+    trash_bin = first_node_by_semantic_near(scene, {"trash_bin"}, preferred_room=object_room)
+    garbage_station = first_node_by_semantic(scene, {"garbage_station"})
+    if not trash_bin or not garbage_station:
+        return None
+    baseline_bin = node(baseline or {}, trash_bin) or {}
+    baseline_food = node(baseline or {}, object_id) or {}
+    trash_bin_home = str(baseline_bin.get("parent") or (node(scene, trash_bin) or {}).get("parent") or "")
+    food_home = str(baseline_food.get("parent") or first_node_by_semantic(scene, {"refrigerator", "fridge"}))
+    phase = dispose_food_phase(scene, object_id, trash_bin, robot_id, trash_bin_home)
+    if phase == "done":
+        return None
+    return {
+        "type": "skill",
+        "skill": "dispose_food",
+        "task": f"dispose_food {object_id} -> {garbage_station}",
+        "object": object_id,
+        "target": garbage_station,
+        "food_home": food_home,
+        "trash_bin": trash_bin,
+        "trash_bin_home": trash_bin_home,
+        "garbage_station": garbage_station,
+        "phase": phase,
+        "started_step": step,
+        "last_progress_step": step,
+        "steps_without_progress": 0,
+        "source": source,
+    }
+
+
+def visible_dispose_food_goal(
+    observation: dict[str, Any],
+    scene: dict[str, Any],
+    step: int,
+    robot_id: str = "robot_01",
+    baseline: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
+    for item in sorted(observation.get("nodes") or [], key=lambda node_item: str(node_item.get("id") or "")):
+        if str(item.get("semantic_type") or "") != "food":
             continue
         states = item.get("states") or {}
-        actions = {str(action).lower() for action in item.get("interactive_actions") or []}
-        if str(item.get("node_type") or "") in {"fixed_object", "control_object"}:
-            candidate = candidate_payload(
-                orchestrator,
-                {"agent": agent_id, "action": "move", "target": node_id},
-                reason="move near visible object",
+        if states.get("is_rotten") is True or states.get("is_burnt") is True:
+            return make_dispose_food_goal(
+                str(item.get("id") or ""),
+                step,
+                source="visible_bad_food",
+                scene=scene,
+                robot_id=robot_id,
+                baseline=baseline,
             )
-            if candidate["legal"]:
-                candidates.append(candidate)
-        for action_name in ROBOT_ACTIONS:
-            if action_name == "move":
+    return None
+
+
+def empty_cup_phase(scene: dict[str, Any], object_id: str) -> str:
+    item = node(scene, object_id) or {}
+    states = item.get("states") or {}
+    if float(states.get("fill_level") or 0.0) <= 0.0 and states.get("is_full") is not True:
+        return "done"
+    return "dump_cup"
+
+
+def make_empty_cup_goal(object_id: str, step: int, *, source: str, scene: dict[str, Any]) -> dict[str, Any] | None:
+    object_room = room_of(scene, object_id)
+    sink = first_node_by_semantic_near(scene, {"sink"}, preferred_room=object_room)
+    if not sink:
+        return None
+    phase = empty_cup_phase(scene, object_id)
+    if phase == "done":
+        return None
+    return {
+        "type": "skill",
+        "skill": "empty_cup",
+        "task": f"empty_cup {object_id} -> {sink}",
+        "object": object_id,
+        "target": sink,
+        "sink": sink,
+        "phase": phase,
+        "started_step": step,
+        "last_progress_step": step,
+        "steps_without_progress": 0,
+        "source": source,
+    }
+
+
+def visible_empty_cup_goal(observation: dict[str, Any], scene: dict[str, Any], step: int) -> dict[str, Any] | None:
+    for item in sorted(observation.get("nodes") or [], key=lambda node_item: str(node_item.get("id") or "")):
+        if str(item.get("semantic_type") or "") != "cup":
+            continue
+        states = item.get("states") or {}
+        if float(states.get("fill_level") or 0.0) > 0.0 or states.get("is_full") is True:
+            return make_empty_cup_goal(str(item.get("id") or ""), step, source="visible_full_cup", scene=scene)
+    return None
+
+
+def laundry_phase(scene: dict[str, Any], object_id: str, washer_id: str = "", wardrobe_id: str = "") -> str:
+    item = node(scene, object_id) or {}
+    states = item.get("states") or {}
+    parent = str(item.get("parent") or "")
+    if states.get("is_dirty") is True:
+        if washer_id and parent == washer_id:
+            washer = node(scene, washer_id) or {}
+            return "washing_wait" if bool((washer.get("states") or {}).get("is_on", False)) else "start_washer"
+        return "wash_load"
+    if states.get("is_wet") is True:
+        return "dry"
+    if states.get("folded") is False:
+        return "fold"
+    if wardrobe_id and parent != wardrobe_id:
+        return "store"
+    return "done"
+
+
+def make_laundry_goal(object_id: str, step: int, *, source: str, scene: dict[str, Any]) -> dict[str, Any] | None:
+    washer = first_node_by_semantic(scene, {"washer", "washing_machine"})
+    drying_rack = first_node_by_semantic(scene, {"drying_rack"})
+    wardrobe = first_node_by_semantic(scene, {"cabinet"}, room="bedroom") or first_node_by_semantic(scene, {"wardrobe"}, room="bedroom")
+    if not washer or not drying_rack or not wardrobe:
+        return None
+    phase = laundry_phase(scene, object_id, washer, wardrobe)
+    if phase == "done":
+        return None
+    return {
+        "type": "skill",
+        "skill": "laundry_clothes",
+        "task": f"laundry_clothes {object_id} -> {wardrobe}",
+        "object": object_id,
+        "target": wardrobe,
+        "washer": washer,
+        "washer_button": f"{washer}_button",
+        "drying_rack": drying_rack,
+        "wardrobe": wardrobe,
+        "phase": phase,
+        "started_step": step,
+        "last_progress_step": step,
+        "steps_without_progress": 0,
+        "source": source,
+    }
+
+
+def visible_laundry_goal(observation: dict[str, Any], scene: dict[str, Any], step: int) -> dict[str, Any] | None:
+    for item in sorted(observation.get("nodes") or [], key=lambda node_item: str(node_item.get("id") or "")):
+        if str(item.get("semantic_type") or "") not in CLOTH_SEMANTICS:
+            continue
+        states = item.get("states") or {}
+        if states.get("is_dirty") is True or states.get("is_wet") is True or states.get("folded") is False:
+            return make_laundry_goal(str(item.get("id") or ""), step, source="visible_laundry_issue", scene=scene)
+    return None
+
+
+def hospital_skill_for_return_issue(node_id: str, current: dict[str, Any], initial: dict[str, Any]) -> str:
+    semantic = str(current.get("semantic_type") or initial.get("semantic_type") or "")
+    if semantic == "bed_sheet":
+        states = current.get("states") or {}
+        if states.get("is_dirty") is True:
+            return "collect_dirty_linen"
+        if node_id == "clean_sheet_storage" or states.get("is_clean") is True:
+            return "restock_clean_sheet"
+        return ""
+    return HOSPITAL_SKILL_BY_SEMANTIC.get(semantic, "")
+
+
+def hospital_return_target(scene: dict[str, Any], baseline: dict[str, Any], object_id: str, skill: str) -> str:
+    initial = node(baseline, object_id) or {}
+    if skill == "clean_medical_waste":
+        return first_node_by_semantic(scene, {"medical_waste_bin"}) or str(initial.get("parent") or "")
+    if skill == "collect_dirty_linen":
+        return first_node_by_semantic(scene, {"dirty_linen_bin", "linen_bin"}) or str(initial.get("parent") or "")
+    if skill == "restock_clean_sheet":
+        return first_node_by_semantic(scene, {"supply_cabinet"}) or str(initial.get("parent") or "")
+    return str(initial.get("parent") or "")
+
+
+def make_hospital_return_goal(
+    object_id: str,
+    target_id: str,
+    skill: str,
+    step: int,
+    *,
+    source: str,
+) -> dict[str, Any] | None:
+    if not object_id or not target_id or skill not in HOSPITAL_RETURN_SKILLS:
+        return None
+    return {
+        "type": "skill",
+        "skill": skill,
+        "task": f"{skill} {object_id} -> {target_id}",
+        "object": object_id,
+        "target": target_id,
+        "phase": "return_item",
+        "started_step": step,
+        "last_progress_step": step,
+        "steps_without_progress": 0,
+        "source": source,
+    }
+
+
+def make_hospital_clean_goal(target_id: str, skill: str, step: int, *, source: str) -> dict[str, Any] | None:
+    if not target_id or skill not in HOSPITAL_CLEAN_SKILLS:
+        return None
+    return {
+        "type": "skill",
+        "skill": skill,
+        "task": f"{skill} {target_id}",
+        "object": target_id,
+        "target": target_id,
+        "phase": "clean_surface",
+        "started_step": step,
+        "last_progress_step": step,
+        "steps_without_progress": 0,
+        "source": source,
+    }
+
+
+def hospital_issue_goal(scene: dict[str, Any], baseline: dict[str, Any], robot_id: str, step: int) -> dict[str, Any] | None:
+    if scene_type(scene) != "hospital":
+        return None
+    baseline_nodes = {str(item.get("id") or ""): item for item in baseline.get("nodes") or [] if item.get("id")}
+    current_nodes = {str(item.get("id") or ""): item for item in scene.get("nodes") or [] if item.get("id")}
+    robot_room = room_of(scene, robot_id)
+    candidates: list[tuple[int, int, str, dict[str, Any]]] = []
+    for node_id, current in sorted(current_nodes.items()):
+        states = current.get("states") or {}
+        semantic = str(current.get("semantic_type") or "")
+        if node_id == "seats_waiting_area" and states.get("is_dirty") is True:
+            priority = 5 if room_of(scene, node_id) == robot_room else 25
+            goal = make_hospital_clean_goal(node_id, "clean_waiting_area", step, source="global_hospital_dirty_surface")
+            if goal:
+                candidates.append((priority, HOSPITAL_SKILL_PRIORITY["clean_waiting_area"], node_id, goal))
+        if semantic == "bed" and (states.get("is_dirty") is True or states.get("needs_cleaning") is True):
+            priority = 5 if room_of(scene, node_id) == robot_room else 25
+            goal = make_hospital_clean_goal(node_id, "clean_exam_bed", step, source="global_hospital_dirty_bed")
+            if goal:
+                candidates.append((priority, HOSPITAL_SKILL_PRIORITY["clean_exam_bed"], node_id, goal))
+        initial = baseline_nodes.get(node_id) or {}
+        skill = hospital_skill_for_return_issue(node_id, current, initial)
+        if not skill:
+            continue
+        current_parent = str(current.get("parent") or "")
+        initial_parent = str(initial.get("parent") or "")
+        target_id = hospital_return_target(scene, baseline, node_id, skill) or initial_parent
+        if not current_parent or not target_id or current_parent == target_id:
+            continue
+        current_parent_node = node(scene, current_parent) or {}
+        if str(current_parent_node.get("node_type") or "") == "human":
+            parent_states = current_parent_node.get("states") or {}
+            if parent_states.get("checked_out") is not True:
                 continue
-            if action_name == "place":
-                if not holding:
-                    continue
-                action = {"agent": agent_id, "action": "place", "target": node_id, "object": holding}
-            elif action_name == "pick":
-                action = {"agent": agent_id, "action": "pick", "target": node_id, "object": node_id}
-            else:
-                action = {"agent": agent_id, "action": action_name, "target": node_id}
-            reason = f"{action_name} visible object"
-            if action_name in actions or action_name in {"move", "place"}:
-                if states.get("is_dirty") is True and action_name == "brush":
-                    reason = "restore dirty object"
-                elif states.get("is_open") is True and action_name == "close":
-                    reason = "close open object"
-                candidate = candidate_payload(orchestrator, action, reason=reason)
-                if candidate["legal"]:
-                    candidates.append(candidate)
-    deduped: dict[tuple[str, str, str], dict[str, Any]] = {}
-    for candidate in candidates:
-        key = (
-            str(candidate.get("action") or ""),
-            str(candidate.get("target") or ""),
-            str(candidate.get("object") or ""),
+        current_room = room_of(scene, current_parent)
+        initial_room = room_of(scene, target_id) or room_of(baseline, initial_parent)
+        priority = 40
+        if current_parent == robot_id:
+            priority = 0
+        elif current_room == robot_room:
+            priority = 10
+        elif initial_room == robot_room:
+            priority = 20
+        elif current_room:
+            priority = 30
+        goal = make_hospital_return_goal(node_id, target_id, skill, step, source="global_hospital_supply_issue")
+        if goal:
+            candidates.append((priority, HOSPITAL_SKILL_PRIORITY.get(skill, 99), node_id, goal))
+    if not candidates:
+        return None
+    _, _, _, goal = min(candidates, key=lambda item: (item[0], item[1], item[2]))
+    return goal
+
+
+def global_restore_goal(scene: dict[str, Any], baseline: dict[str, Any], robot_id: str, step: int) -> dict[str, Any] | None:
+    baseline_nodes = {str(item.get("id") or ""): item for item in baseline.get("nodes") or [] if item.get("id")}
+    current_nodes = {str(item.get("id") or ""): item for item in scene.get("nodes") or [] if item.get("id")}
+    robot_room = room_of(scene, robot_id)
+    hospital_goal = hospital_issue_goal(scene, baseline, robot_id, step)
+    if hospital_goal:
+        return hospital_goal
+    dispose_candidates: list[tuple[int, str]] = []
+    for node_id, current in sorted(current_nodes.items()):
+        if str(current.get("semantic_type") or "") != "food":
+            continue
+        states = current.get("states") or {}
+        if not (states.get("is_rotten") is True or states.get("is_burnt") is True):
+            continue
+        current_parent = str(current.get("parent") or "")
+        current_parent_node = node(scene, current_parent) or {}
+        if str(current_parent_node.get("node_type") or "") == "human":
+            continue
+        current_room = room_of(scene, current_parent)
+        priority = 10 if current_room == robot_room else 30
+        if current_parent == robot_id:
+            priority = 0
+        dispose_candidates.append((priority, node_id))
+    if dispose_candidates:
+        _, object_id = min(dispose_candidates)
+        goal = make_dispose_food_goal(object_id, step, source="global_bad_food", scene=scene, robot_id=robot_id, baseline=baseline)
+        if goal:
+            return goal
+    cup_candidates: list[tuple[int, str]] = []
+    for node_id, current in sorted(current_nodes.items()):
+        if str(current.get("semantic_type") or "") != "cup":
+            continue
+        states = current.get("states") or {}
+        if not (float(states.get("fill_level") or 0.0) > 0.0 or states.get("is_full") is True):
+            continue
+        current_parent = str(current.get("parent") or "")
+        current_room = room_of(scene, current_parent)
+        priority = 10 if current_room == robot_room else 30
+        if current_parent == robot_id:
+            priority = 0
+        cup_candidates.append((priority, node_id))
+    if cup_candidates:
+        _, object_id = min(cup_candidates)
+        goal = make_empty_cup_goal(object_id, step, source="global_full_cup", scene=scene)
+        if goal:
+            return goal
+    laundry_candidates: list[tuple[int, str]] = []
+    for node_id, current in sorted(current_nodes.items()):
+        if str(current.get("semantic_type") or "") not in CLOTH_SEMANTICS:
+            continue
+        states = current.get("states") or {}
+        if not (states.get("is_dirty") is True or states.get("is_wet") is True or states.get("folded") is False):
+            continue
+        current_parent = str(current.get("parent") or "")
+        current_parent_node = node(scene, current_parent) or {}
+        if str(current_parent_node.get("node_type") or "") == "human":
+            continue
+        current_room = room_of(scene, current_parent)
+        priority = 10 if current_room == robot_room else 30
+        if current_parent == robot_id:
+            priority = 0
+        laundry_candidates.append((priority, node_id))
+    if laundry_candidates:
+        _, object_id = min(laundry_candidates)
+        goal = make_laundry_goal(object_id, step, source="global_laundry_issue", scene=scene)
+        if goal:
+            return goal
+    candidates: list[tuple[int, str, str]] = []
+    for node_id, current in sorted(current_nodes.items()):
+        initial = baseline_nodes.get(node_id) or {}
+        if str(initial.get("node_type") or "") != "movable_object":
+            continue
+        current_parent = str(current.get("parent") or "")
+        initial_parent = str(initial.get("parent") or "")
+        if not current_parent or not initial_parent or current_parent == initial_parent:
+            continue
+        current_parent_node = node(scene, current_parent) or {}
+        if str(current_parent_node.get("node_type") or "") == "human":
+            continue
+        current_room = room_of(scene, current_parent)
+        initial_room = room_of(baseline, initial_parent)
+        priority = 50
+        if current_parent == robot_id:
+            priority = 0
+        elif current_room == robot_room:
+            priority = 10
+        elif initial_room == robot_room:
+            priority = 20
+        elif current_room:
+            priority = 30
+        candidates.append((priority, node_id, initial_parent))
+    if not candidates:
+        return None
+    _, object_id, target_id = min(candidates)
+    return make_restore_goal(object_id, target_id, step, source="global_spatial_issue")
+
+
+def next_room_toward(scene: dict[str, Any], start_room: str, target_room: str) -> str:
+    if not start_room or not target_room or start_room == target_room:
+        return ""
+    graph: dict[str, set[str]] = {}
+    for edge in scene.get("edges") or []:
+        relation = str(edge.get("relation") or "").lower()
+        if relation not in {"connected", "connected_to", "next_to", "neighbour"}:
+            continue
+        source = str(edge.get("source_id") or "")
+        target = str(edge.get("target_id") or "")
+        if source and target:
+            graph.setdefault(source, set()).add(target)
+            graph.setdefault(target, set()).add(source)
+    queue: list[tuple[str, list[str]]] = [(start_room, [start_room])]
+    seen = {start_room}
+    while queue:
+        room_id, path = queue.pop(0)
+        for neighbor in sorted(graph.get(room_id, ())):
+            if neighbor in seen:
+                continue
+            next_path = [*path, neighbor]
+            if neighbor == target_room:
+                return next_path[1] if len(next_path) > 1 else ""
+            seen.add(neighbor)
+            queue.append((neighbor, next_path))
+    return ""
+
+
+def refresh_active_goal_snapshot(goal: dict[str, Any], scene: dict[str, Any], robot_id: str) -> dict[str, Any]:
+    updated = copy.deepcopy(goal)
+    object_id = str(updated.get("object") or "")
+    object_node = node(scene, object_id) or {}
+    robot_node = node(scene, robot_id) or {}
+    target_id = str(updated.get("target") or "")
+    skill = str(updated.get("skill") or "")
+    destination_room_override = ""
+    if str(updated.get("type") or "") == "skill" and skill == "dispose_food":
+        trash_bin = str(updated.get("trash_bin") or first_node_by_semantic_near(scene, {"trash_bin"}, preferred_room=room_of(scene, object_id)))
+        garbage_station = str(updated.get("garbage_station") or first_node_by_semantic(scene, {"garbage_station"}))
+        updated["trash_bin"] = trash_bin
+        updated["garbage_station"] = garbage_station
+        updated["target"] = garbage_station
+        trash_bin_home = str(updated.get("trash_bin_home") or (node(scene, trash_bin) or {}).get("parent") or "")
+        updated["trash_bin_home"] = trash_bin_home
+        updated["phase"] = dispose_food_phase(scene, object_id, trash_bin, robot_id, trash_bin_home)
+        phase = str(updated.get("phase") or "")
+        target_by_phase = {
+            "collect_food": trash_bin,
+            "take_bin": trash_bin,
+            "dump_bin": garbage_station,
+            "return_bin": trash_bin_home,
+        }
+        target_id = target_by_phase.get(phase, garbage_station)
+        if phase == "collect_food":
+            destination_room_override = room_of(scene, trash_bin) if str(object_node.get("parent") or "") == robot_id else room_of(scene, object_id)
+        elif phase == "take_bin":
+            destination_room_override = room_of(scene, trash_bin)
+        elif phase == "dump_bin":
+            destination_room_override = room_of(scene, garbage_station)
+        elif phase == "return_bin":
+            destination_room_override = room_of(scene, trash_bin_home)
+    if str(updated.get("type") or "") == "skill" and skill == "empty_cup":
+        sink = str(updated.get("sink") or first_node_by_semantic_near(scene, {"sink"}, preferred_room=room_of(scene, object_id)))
+        updated["sink"] = sink
+        updated["target"] = sink
+        updated["phase"] = empty_cup_phase(scene, object_id)
+        target_id = sink
+        if str(object_node.get("parent") or "") == robot_id:
+            destination_room_override = room_of(scene, sink)
+    if str(updated.get("type") or "") == "skill" and skill == "laundry_clothes":
+        washer = str(updated.get("washer") or first_node_by_semantic(scene, {"washer", "washing_machine"}))
+        drying_rack = str(updated.get("drying_rack") or first_node_by_semantic(scene, {"drying_rack"}))
+        wardrobe = str(updated.get("wardrobe") or first_node_by_semantic(scene, {"cabinet"}, room="bedroom") or first_node_by_semantic(scene, {"wardrobe"}, room="bedroom"))
+        updated["washer"] = washer
+        updated["washer_button"] = str(updated.get("washer_button") or f"{washer}_button")
+        updated["drying_rack"] = drying_rack
+        updated["wardrobe"] = wardrobe
+        updated["target"] = wardrobe
+        updated["phase"] = laundry_phase(scene, object_id, washer, wardrobe)
+        target_by_phase = {
+            "wash_load": washer,
+            "start_washer": washer,
+            "washing_wait": washer,
+            "dry": drying_rack,
+            "fold": object_id,
+            "store": wardrobe,
+        }
+        target_id = target_by_phase.get(str(updated.get("phase") or ""), wardrobe)
+    if str(updated.get("type") or "") == "skill" and skill in HOSPITAL_RETURN_SKILLS:
+        target_id = str(updated.get("target") or "")
+        updated["phase"] = "done" if object_node and str(object_node.get("parent") or "") == target_id else "return_item"
+        if str(object_node.get("parent") or "") == robot_id:
+            destination_room_override = room_of(scene, target_id)
+    if str(updated.get("type") or "") == "skill" and skill in HOSPITAL_CLEAN_SKILLS:
+        target_id = str(updated.get("target") or object_id)
+        target_node = node(scene, target_id) or {}
+        target_states = target_node.get("states") or {}
+        updated["phase"] = (
+            "clean_surface"
+            if target_states.get("is_dirty") is True or target_states.get("needs_cleaning") is True
+            else "done"
         )
-        deduped[key] = candidate
-    ordered = sorted(
-        deduped.values(),
-        key=lambda item: (
-            not bool(item.get("legal")),
-            list(ACTION_CODES).index(str(item.get("action") or "")) if str(item.get("action") or "") in ACTION_CODES else 99,
-            str(item.get("target") or ""),
-        ),
+        destination_room_override = room_of(scene, target_id)
+    updated["object_parent"] = str(object_node.get("parent") or "")
+    updated["object_room"] = room_of(scene, object_id)
+    updated["target_room"] = room_of(scene, target_id)
+    updated["robot_parent"] = str(robot_node.get("parent") or "")
+    updated["robot_room"] = room_of(scene, robot_id)
+    destination_room = destination_room_override or (updated["target_room"] if updated["object_parent"] == robot_id else updated["object_room"])
+    updated["next_room"] = next_room_toward(scene, updated["robot_room"], destination_room)
+    return updated
+
+
+def active_goal_ids_valid(goal: dict[str, Any] | None, scene: dict[str, Any]) -> bool:
+    if not goal:
+        return False
+    node_ids = {str(item.get("id") or "") for item in scene.get("nodes") or [] if item.get("id")}
+    fields = ("object", "target", "food_home", "trash_bin", "trash_bin_home", "garbage_station", "sink", "washer", "drying_rack", "wardrobe")
+    return all(str(goal.get(field) or "") in node_ids for field in fields if goal.get(field))
+
+
+def active_goal_completed(goal: dict[str, Any] | None, scene: dict[str, Any]) -> bool:
+    if not goal:
+        return False
+    if not active_goal_ids_valid(goal, scene):
+        return True
+    object_node = node(scene, str(goal.get("object") or "")) or {}
+    if str(goal.get("type") or "") == "skill" and str(goal.get("skill") or "") == "laundry_clothes":
+        states = object_node.get("states") or {}
+        return bool(
+            object_node
+            and str(object_node.get("parent") or "") == str(goal.get("wardrobe") or goal.get("target") or "")
+            and states.get("is_dirty") is False
+            and states.get("is_wet") is False
+            and states.get("folded") is True
+        )
+    if str(goal.get("type") or "") == "skill" and str(goal.get("skill") or "") == "dispose_food":
+        states = object_node.get("states") or {}
+        trash_bin_node = node(scene, str(goal.get("trash_bin") or "")) or {}
+        return bool(
+            object_node
+            and str(object_node.get("parent") or "") == str(goal.get("food_home") or "")
+            and str(trash_bin_node.get("parent") or "") == str(goal.get("trash_bin_home") or "")
+            and states.get("is_rotten") is False
+            and states.get("is_burnt") is False
+        )
+    if str(goal.get("type") or "") == "skill" and str(goal.get("skill") or "") == "empty_cup":
+        states = object_node.get("states") or {}
+        return bool(object_node and float(states.get("fill_level") or 0.0) <= 0.0 and states.get("is_full") is not True)
+    if str(goal.get("type") or "") == "skill" and str(goal.get("skill") or "") in HOSPITAL_RETURN_SKILLS:
+        return bool(object_node and str(object_node.get("parent") or "") == str(goal.get("target") or ""))
+    if str(goal.get("type") or "") == "skill" and str(goal.get("skill") or "") in HOSPITAL_CLEAN_SKILLS:
+        target_node = node(scene, str(goal.get("target") or goal.get("object") or "")) or {}
+        states = target_node.get("states") or {}
+        return bool(target_node and states.get("is_dirty") is not True and states.get("needs_cleaning") is not True)
+    return bool(object_node and str(object_node.get("parent") or "") == str(goal.get("target") or ""))
+
+
+def active_goal_claims(goal: dict[str, Any] | None) -> set[str]:
+    if not goal:
+        return set()
+    claims = {str(goal.get("object") or "")}
+    skill = str(goal.get("skill") or "")
+    if skill == "dispose_food":
+        claims.add(str(goal.get("trash_bin") or ""))
+    if skill == "empty_cup":
+        claims.add(str(goal.get("sink") or goal.get("target") or ""))
+    if skill == "laundry_clothes":
+        claims.add(str(goal.get("washer") or ""))
+        claims.add(str(goal.get("drying_rack") or ""))
+        claims.add(str(goal.get("wardrobe") or goal.get("target") or ""))
+    if skill in HOSPITAL_RETURN_SKILLS | HOSPITAL_CLEAN_SKILLS:
+        claims.add(str(goal.get("target") or ""))
+    if str(goal.get("type") or "") == "restore_initial_position":
+        claims.add(str(goal.get("target") or ""))
+    return {claim for claim in claims if claim}
+
+
+def goal_conflicts_with_claims(goal: dict[str, Any] | None, claimed: set[str]) -> bool:
+    if not goal:
+        return False
+    return bool(active_goal_claims(goal) & claimed)
+
+
+def action_conflict_key(action: dict[str, Any]) -> tuple[str, str]:
+    action_name = str(action.get("action") or "")
+    target_id = str(action.get("target") or "")
+    object_id = str(action.get("object") or "")
+    if action_name == "pick" and object_id:
+        return ("object", object_id)
+    if action_name == "place" and object_id:
+        return ("object", object_id)
+    if action_name in {"brush", "fold", "dump", "open", "close", "press"} and target_id:
+        return ("target", target_id)
+    return ("", "")
+
+
+def choose_non_conflicting_action(candidates: list[dict[str, Any]], blocked_keys: set[tuple[str, str]]) -> dict[str, Any] | None:
+    for preferred_action in ("move", "open", "close"):
+        for candidate in candidates:
+            if str(candidate.get("action") or "") != preferred_action:
+                continue
+            key = action_conflict_key(candidate)
+            if not key[0] or key not in blocked_keys:
+                replacement = copy.deepcopy(candidate)
+                replacement["reason"] = f"conflict fallback: choose non-conflicting {preferred_action}"
+                return replacement
+    for candidate in candidates:
+        key = action_conflict_key(candidate)
+        if not key[0] or key not in blocked_keys:
+            replacement = copy.deepcopy(candidate)
+            replacement["reason"] = "conflict fallback: choose non-conflicting action"
+            return replacement
+    return None
+
+
+def resolve_robot_action_conflicts(
+    actions: list[dict[str, Any]],
+    candidates_by_robot: dict[str, list[dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    used_keys: set[tuple[str, str]] = set()
+    resolved: list[dict[str, Any]] = []
+    for action in actions:
+        robot_id = str(action.get("agent") or "")
+        key = action_conflict_key(action)
+        if key[0] and key in used_keys:
+            replacement = choose_non_conflicting_action(candidates_by_robot.get(robot_id) or [], used_keys)
+            if replacement:
+                action = replacement
+                key = action_conflict_key(action)
+        resolved.append(action)
+        if key[0]:
+            used_keys.add(key)
+    return resolved
+
+
+def update_active_goal(
+    goal: dict[str, Any] | None,
+    scene: dict[str, Any],
+    robot_id: str,
+    action: dict[str, Any],
+    action_result: dict[str, Any],
+    step: int,
+    *,
+    max_stale_steps: int = 12,
+) -> dict[str, Any] | None:
+    if not goal:
+        return None
+    if active_goal_completed(goal, scene):
+        return None
+    before_object_parent = str(goal.get("object_parent") or "")
+    before_robot_parent = str(goal.get("robot_parent") or "")
+    before_robot_room = str(goal.get("robot_room") or "")
+    updated = refresh_active_goal_snapshot(goal, scene, robot_id)
+    if not active_goal_ids_valid(updated, scene):
+        return None
+    meaningful_action = str(action.get("action") or "") in {"pick", "place", "brush", "dump", "fold", "press"}
+    action_ok = bool(action_result.get("ok", action.get("legal", True)))
+    progressed = (
+        str(updated.get("object_parent") or "") != before_object_parent
+        or str(updated.get("robot_parent") or "") != before_robot_parent
+        or str(updated.get("robot_room") or "") != before_robot_room
+        or (action_ok and meaningful_action)
     )
-    return ordered
+    if progressed:
+        updated["last_progress_step"] = step
+        updated["steps_without_progress"] = 0
+    else:
+        updated["steps_without_progress"] = int(updated.get("steps_without_progress") or 0) + 1
+    if int(updated.get("steps_without_progress") or 0) >= max_stale_steps:
+        return None
+    return updated
 
 
 def matrix_figure(scene: dict[str, Any], expected: tuple[str, ...], *, kind: str) -> plt.Figure:
@@ -546,68 +1307,6 @@ def require_llm_agent(agent_model: str) -> str:
     return model_status
 
 
-def parse_action_index(text: str, fallback: int = 0) -> int:
-    try:
-        payload = json.loads(text)
-        return int(payload.get("action_index", fallback))
-    except Exception:
-        match = re.search(r"\{.*\}", text, re.S)
-        if match:
-            try:
-                payload = json.loads(match.group(0))
-                return int(payload.get("action_index", fallback))
-            except Exception:
-                pass
-    return fallback
-
-
-def llm_choose_action(candidates: list[dict[str, Any]], observation: dict[str, Any], agent_model: str) -> tuple[dict[str, Any], str]:
-    if not candidates:
-        raise ValueError("no legal action candidates")
-    if len(candidates) <= 1:
-        return candidates[0], "single_candidate"
-    compact_nodes = []
-    for item in observation.get("nodes") or []:
-        states = item.get("states") or {}
-        if states.get("is_dirty") is True or states.get("is_open") is True or item.get("id") == "robot_01":
-            compact_nodes.append(
-                {
-                    "id": item.get("id"),
-                    "semantic_type": item.get("semantic_type"),
-                    "node_type": item.get("node_type"),
-                    "states": states,
-                    "parent": item.get("parent"),
-                }
-            )
-    prompt = {
-        "task": "Maintain order in the home. Choose one legal action.",
-        "visible_nodes": compact_nodes,
-        "candidates": [{"action_index": idx, **candidate} for idx, candidate in enumerate(candidates)],
-        "response_format": {"action_index": 0},
-    }
-    answer = llm_query(
-        system_prompt=(
-            "Return only compact JSON with exactly one field: "
-            '{"action_index": <integer>}. '
-            "Do not include markdown, explanations, or thinking."
-        ),
-        user_query=json.dumps(prompt, ensure_ascii=True),
-        agent=agent_model,
-        timeout=180,
-    )
-    index = parse_action_index(answer, 0)
-    if index < 0 or index >= len(candidates):
-        index = 0
-    return candidates[index], answer
-
-def fallback_choose_action(candidates: list[dict[str, Any]]) -> dict[str, Any]:
-    for action_name in ("brush", "close"):
-        for candidate in candidates:
-            if candidate.get("action") == action_name:
-                return candidate
-    return candidates[0]
-
-
 def build_room_index(scene: dict[str, Any]) -> dict[str, int]:
     rooms = sorted(
         str(item.get("id") or "")
@@ -668,11 +1367,12 @@ def run_episode(
     replay_scene_interval: int = 1,
     metric_log_interval: int = 1,
 ) -> dict[str, Any]:
-    scene = prepare_home_scene(raw_scene, robot_count=robot_count, human_count=human_count)
+    scene = prepare_scene(raw_scene, robot_count=robot_count, human_count=human_count)
     baseline = copy.deepcopy(scene)
     room_index_map = build_room_index(scene)
     orchestrator = Orchestrator(scene)
     memories: dict[str, dict[str, Any] | None] = {robot_id: None for robot_id in robot_ids(robot_count)}
+    active_goals: dict[str, dict[str, Any] | None] = {robot_id: None for robot_id in robot_ids(robot_count)}
     records: list[dict[str, Any]] = []
     replay_steps: list[dict[str, Any]] = []
     cumulative_state_score = 0.0
@@ -682,7 +1382,7 @@ def run_episode(
     experiment_output_dir.mkdir(parents=True, exist_ok=True)
     matrix_output_dir = experiment_output_dir / "matrices"
     model_name = agent_model if robot_count else "npc_only_baseline"
-    tb_dir = TENSORBOARD_DIR / canonical_run_group(
+    tb_dir = TENSORBOARD_DIR / _slug(scene_id) / canonical_run_group(
         scene_id,
         experiment_name,
         model_name,
@@ -701,29 +1401,70 @@ def run_episode(
     replay_scene_interval = max(0, int(replay_scene_interval))
     metric_log_interval = max(1, int(metric_log_interval))
     for step in tqdm(range(steps), desc=experiment_name, unit="step", dynamic_ncols=True):
-        schedule_scene = {"world_state": orchestrator.graph.world_state}
+        schedule_scene = orchestrator.graph.to_scene()
         event_id = planned_event_for_step(schedule_scene, step)
-        event_period_end = step + 1 >= steps or planned_event_for_step(schedule_scene, step + 1) != event_id
-        human_events = [
-            {"event": event_id, "actor": human_id, "period_end": event_period_end}
-            for human_id in human_ids(human_count)
-        ]
+        human_events = planned_events_for_step(schedule_scene, step)
         actions: list[dict[str, Any]] = []
+        candidates_by_robot: dict[str, list[dict[str, Any]]] = {}
         llm_answers: dict[str, str] = {}
         observations: dict[str, dict[str, Any]] = {}
+        claimed_goal_nodes: set[str] = set()
         for robot_id in robot_ids(robot_count):
+            claimed_goal_nodes.update(
+                claim
+                for other_robot_id, goal in active_goals.items()
+                if other_robot_id != robot_id
+                for claim in active_goal_claims(goal)
+            )
+            if active_goals.get(robot_id) is None:
+                proposed_goal = global_restore_goal(orchestrator.graph.to_scene(), baseline, robot_id, step)
+                if proposed_goal and not goal_conflicts_with_claims(proposed_goal, claimed_goal_nodes):
+                    active_goals[robot_id] = refresh_active_goal_snapshot(proposed_goal, orchestrator.graph.to_scene(), robot_id)
             observation = perceive(orchestrator, robot_id)
             observations[robot_id] = observation
             memories[robot_id] = remember(memories.get(robot_id), observation)
+            if active_goals.get(robot_id) is None:
+                proposed_goal = visible_dispose_food_goal(observation, orchestrator.graph.to_scene(), step, robot_id, baseline)
+                if proposed_goal and goal_conflicts_with_claims(proposed_goal, claimed_goal_nodes):
+                    proposed_goal = None
+                if not proposed_goal:
+                    proposed_goal = visible_empty_cup_goal(observation, orchestrator.graph.to_scene(), step)
+                    if proposed_goal and goal_conflicts_with_claims(proposed_goal, claimed_goal_nodes):
+                        proposed_goal = None
+                if not proposed_goal:
+                    proposed_goal = visible_laundry_goal(observation, orchestrator.graph.to_scene(), step)
+                    if proposed_goal and goal_conflicts_with_claims(proposed_goal, claimed_goal_nodes):
+                        proposed_goal = None
+                if not proposed_goal:
+                    proposed_goal = visible_restore_goal(observation, baseline, step)
+                    if proposed_goal and goal_conflicts_with_claims(proposed_goal, claimed_goal_nodes):
+                        proposed_goal = None
+                if proposed_goal:
+                    active_goals[robot_id] = refresh_active_goal_snapshot(proposed_goal, orchestrator.graph.to_scene(), robot_id)
+            claimed_goal_nodes.update(active_goal_claims(active_goals.get(robot_id)))
             candidates = candidate_actions(orchestrator, observation, robot_id)
             if not candidates:
-                continue
+                raise RuntimeError(
+                    f"no legal candidates for {robot_id} at step {step}; "
+                    f"room={orchestrator.graph.room_of.get(robot_id)}; "
+                    f"parent={orchestrator.graph.parent_of.get(robot_id)}; "
+                    f"visible={len(observation.get('nodes') or [])}"
+                )
+            candidates_by_robot[robot_id] = candidates
             if use_llm:
-                action, llm_answer = llm_choose_action(candidates, observation, agent_model)
+                action, llm_answer = llm_choose_action(
+                    candidates,
+                    observation,
+                    agent_model,
+                    baseline,
+                    active_goal=active_goals.get(robot_id),
+                    agent_id=robot_id,
+                )
                 llm_answers[robot_id] = llm_answer
             else:
                 action = fallback_choose_action(candidates)
             actions.append(action)
+        actions = resolve_robot_action_conflicts(actions, candidates_by_robot)
         result = orchestrator.step(
             robot_actions=actions,
             human_events=human_events,
@@ -733,6 +1474,20 @@ def run_episode(
         for robot_id in robot_ids(robot_count):
             memories[robot_id] = reflect(memories.get(robot_id), result)
         current = orchestrator.graph.to_scene()
+        action_results = {
+            robot_id: copy.deepcopy(action_result)
+            for robot_id, action_result in zip(robot_ids(robot_count), result.get("robot_actions") or [])
+        }
+        actions_by_robot = {str(action.get("agent") or ""): action for action in actions}
+        for robot_id in robot_ids(robot_count):
+            active_goals[robot_id] = update_active_goal(
+                active_goals.get(robot_id),
+                current,
+                robot_id,
+                actions_by_robot.get(robot_id, {}),
+                action_results.get(robot_id, {}),
+                step,
+            )
         current_snapshot = build_matrix_snapshot(current, expected)
         robot_snapshot = build_matrix_snapshot(result["robot_scene"], expected) if robot_count else current_snapshot
         metrics = matrix_score(current_snapshot, baseline_snapshot, previous_snapshot, robot_snapshot)
@@ -775,6 +1530,7 @@ def run_episode(
                 ensure_ascii=False,
             ),
             "llm_answer": json.dumps(llm_answers, ensure_ascii=False),
+            "active_goal": json.dumps(active_goals, ensure_ascii=False),
             **metrics,
         }
         records.append(row)
@@ -802,6 +1558,7 @@ def run_episode(
                 "observation": copy.deepcopy(observations),
                 "memory_before": {},
                 "memory_after": copy.deepcopy(memories),
+                "active_goals": copy.deepcopy(active_goals),
                 "event_log": copy.deepcopy(human_events),
                 "scene_metrics": {
                     "world_metrics": {
@@ -855,6 +1612,7 @@ def run_episode(
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--scene", default="simple_home_1f")
     parser.add_argument("--steps", type=int, default=100)
     parser.add_argument("--agent-model", default="vllm-qwen3.5-4b")
     parser.add_argument("--robots", type=int, default=1)
@@ -868,14 +1626,22 @@ def main() -> None:
     args = parser.parse_args()
     robots = max(0, int(args.robots))
     humans = max(0, int(args.humans))
+    group_robots = 0 if args.only == "no_robot" else robots
     if not args.no_clean:
         clean_old_outputs()
     run_id = utc_run_id()
-    scene_id = "simple_home_1f"
-    output_dir = EXPERIMENT_DIR / canonical_experiment_group(scene_id, args.steps, robots, humans) / run_id
+    scene_id = str(args.scene or "simple_home_1f").removesuffix(".json")
+    experiment_model = (
+        "npc_only_baseline"
+        if group_robots == 0
+        else ("heuristic" if args.no_llm else args.agent_model)
+    )
+    experiment_group = canonical_experiment_group(scene_id, args.steps, group_robots, humans, experiment_model)
+    output_dir = EXPERIMENT_DIR / _slug(scene_id) / experiment_group / run_id
     output_dir.mkdir(parents=True, exist_ok=True)
-    raw_scene = json.loads(SCENE_PATH.read_text(encoding="utf-8"))
-    expected = expected_events(prepare_home_scene(raw_scene, robot_count=robots, human_count=humans), args.steps)
+    scene_path = SCENE_DIR / f"{scene_id}.json"
+    raw_scene = json.loads(scene_path.read_text(encoding="utf-8"))
+    expected = expected_events(prepare_scene(raw_scene, robot_count=robots, human_count=humans), args.steps)
     results = []
     if args.only in {"both", "no_robot"}:
         results.append(
@@ -916,10 +1682,10 @@ def main() -> None:
     summary = {
         "run_id": run_id,
         "scene": scene_id,
-        "experiment_group": canonical_experiment_group(scene_id, args.steps, robots, humans),
+        "experiment_group": experiment_group,
         "steps": args.steps,
         "agent_model": args.agent_model,
-        "robots": robots,
+        "robots": group_robots,
         "humans": humans,
         "expected_events": expected,
         "created_at": time.time(),

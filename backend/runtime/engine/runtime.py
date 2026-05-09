@@ -181,6 +181,8 @@ class SceneGraph:
             )
 
     def to_scene(self) -> dict[str, Any]:
+        self.refresh_indices()
+        self.sync_runtime_edges()
         return {
             "scene_name": self.scene_name,
             "world_state": copy.deepcopy(self.world_state),
@@ -209,7 +211,7 @@ class RobotActionSystem(System):
         if not validation.ok:
             self.graph.log("robot_action_failed", validation.reason, action=copy.deepcopy(action))
             return {"ok": False, "reason": validation.reason}
-        if action_name in {ActionType.OPEN.value, ActionType.CLOSE.value, ActionType.PRESS.value, ActionType.BRUSH.value, ActionType.FOLD.value}:
+        if action_name in {ActionType.OPEN.value, ActionType.CLOSE.value, ActionType.PRESS.value, ActionType.BRUSH.value, ActionType.FOLD.value, ActionType.DUMP.value}:
             failures = apply_action_transition(
                 self.graph.state_for_rules(),
                 action_name,
@@ -247,6 +249,9 @@ class RobotActionSystem(System):
                 held_states["scattered"] = False
             if target_id in {"sink_bathroom", "sink_kitchen"} or target_semantic == "sink":
                 held_states.pop("misplaced_near", None)
+            if target_semantic == "trash_bin":
+                target_states = self.graph.node(target_id).setdefault("states", {})
+                target_states["is_dirty"] = True
             self.graph.log("robot_action", f"{agent_id} placed {held} {relation} {target_id}", action=copy.deepcopy(action))
             return {"ok": True}
         return {"ok": False, "reason": f"unsupported action: {action_name}"}
@@ -258,11 +263,32 @@ class HumanEventSystem(System):
         return all(states.get(key) == value for key, value in expected.items())
 
     def matching_nodes(self, query: Any, actor_id: str = "", *, states_are_match: bool = False) -> list[str]:
+        is_precondition = query.__class__.__name__ == "EventPrecondition"
         target_id = str(getattr(query, "target", "") or "")
+        match_parent = str(getattr(query, "match_parent", "") or "")
         if target_id and target_id != "human":
-            return [target_id] if target_id in self.graph.nodes else []
+            if target_id not in self.graph.nodes:
+                return []
+            parent = str(getattr(query, "parent", "") or "")
+            source_parent = parent if is_precondition else match_parent
+            if source_parent and self.graph.parent_of.get(target_id) != source_parent:
+                return []
+            room = str(getattr(query, "room", "") or "")
+            if is_precondition and room and self.graph.room_of.get(target_id) != room:
+                return []
+            relation_not = str(getattr(query, "relation_not", "") or "")
+            if is_precondition and relation_not and self.graph.relation_of.get(target_id) == relation_not:
+                return []
+            match_states = dict(getattr(query, "match_states", {}) or {})
+            if states_are_match and not match_states:
+                match_states = dict(getattr(query, "states", {}) or {})
+            if match_states and not self._matches_states(target_id, match_states):
+                return []
+            return [target_id]
         semantic_type = str(getattr(query, "semantic_type", "") or "")
         room = str(getattr(query, "room", "") or "")
+        parent = str(getattr(query, "parent", "") or "")
+        source_parent = parent if is_precondition else match_parent
         relation_not = str(getattr(query, "relation_not", "") or "")
         match_states = dict(getattr(query, "match_states", {}) or {})
         if states_are_match and not match_states:
@@ -270,6 +296,8 @@ class HumanEventSystem(System):
         matches: list[str] = []
         for node_id, node in self.graph.nodes.items():
             if semantic_type and str(node.get("semantic_type") or "") != semantic_type:
+                continue
+            if source_parent and self.graph.parent_of.get(node_id) != source_parent:
                 continue
             if room and self.graph.room_of.get(node_id) != room:
                 continue
@@ -347,6 +375,8 @@ class HumanEventSystem(System):
         if not node_ids:
             return
         node_id = node_ids[0]
+        if self.graph.relation_of.get(node_id) == "held_by" and self.graph.parent_of.get(node_id) != actor_id:
+            return
         parent_id, relation = self._resolved_parent(effect, actor_id)
         if parent_id:
             self.graph.move_node(node_id, parent_id, relation)
@@ -417,6 +447,14 @@ class HumanEventSystem(System):
         if handler:
             handler()
 
+    def should_apply_effect(self, effect: Any, payload: dict[str, Any]) -> bool:
+        timing = str(getattr(effect, "timing", "every_step") or "every_step")
+        if timing == "period_start":
+            return bool(payload.get("period_start", False))
+        if timing == "period_end":
+            return bool(payload.get("period_end", False))
+        return True
+
     def apply_human_event(self, event: str | dict[str, Any]) -> dict[str, Any]:
         payload = {"event": event} if isinstance(event, str) else copy.deepcopy(event)
         event_id = str(payload.get("event") or payload.get("activity") or "")
@@ -429,7 +467,8 @@ class HumanEventSystem(System):
         if spec:
             effects = spec.effects_on_failure if failures else spec.effects_on_success
             for effect in effects:
-                self.apply_effect(effect, actor_id)
+                if self.should_apply_effect(effect, payload):
+                    self.apply_effect(effect, actor_id)
         self.graph.log(
             "human_event",
             f"{actor_id} event {event_id}",
@@ -437,6 +476,7 @@ class HumanEventSystem(System):
             actor=actor_id,
             ok=not failures,
             failures=failures,
+            period_start=bool(payload.get("period_start", False)),
             period_end=bool(payload.get("period_end", False)),
         )
         return {"ok": not failures, "failures": failures}

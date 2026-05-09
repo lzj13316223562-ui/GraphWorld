@@ -5,7 +5,7 @@
 标准动作：
 
 ```text
-move / pick / place / press / open / close / brush / fold
+move / pick / place / press / open / close / brush / fold / dump
 ```
 
 通用原则：
@@ -157,17 +157,18 @@ place -> misplaced_shoes, shoe_rack
 - 鞋子在其他房间，先移动到鞋子所在房间
 - 鞋架不在同一房间，拿起鞋后再 `move` 到鞋架
 
-## 收拾垃圾
+## 处理垃圾
 
 目标：
 
-把散落垃圾放入垃圾桶；如果垃圾桶脏，则刷洗垃圾桶表面。
+把腐烂或烧焦的可丢弃食品放入垃圾桶；垃圾桶最多容纳 3 个垃圾。垃圾桶装有垃圾后，机器人需要拿起垃圾桶，移动到屋外垃圾处理站执行 `dump`，垃圾桶随后回到原位，垃圾被复原为好状态并回到默认收纳位置。
 
 触发条件：
 
-- 散落物体应被归入 `trash_bin`
 - 垃圾桶 `semantic_type=trash_bin`
-- 垃圾桶 `is_dirty=true` 或周围存在错位垃圾
+- 垃圾桶 `max_capacity=3`
+- 目标物体属于允许丢弃类型，例如 `food/milk/juice/vegetable/fruit`
+- 目标物体 `is_rotten=true` 或 `is_burnt=true`
 
 动作序列：
 
@@ -176,25 +177,26 @@ move -> trash_item
 pick -> trash_item
 move -> trash_bin
 place -> trash_item, trash_bin
-```
-
-清洁垃圾桶序列：
-
-```text
-move -> trash_bin
-brush -> trash_bin
+pick -> trash_bin
+move -> garbage_station
+dump -> garbage_station
 ```
 
 成功状态：
 
-- 垃圾物位于 `trash_bin`
-- 垃圾桶 `is_dirty=false`
-- 垃圾桶周围没有散落物
+```text
+trash_item.is_rotten=false
+trash_item.is_burnt=false
+trash_item 位于 home_parent，例如 fridge
+trash_bin 位于 home_parent，例如 living_room
+```
 
 常见阻塞：
 
-- 垃圾桶满了时不要继续塞垃圾，优先避免让空间分继续下降
-- 目标物不是可移动物体时不能 `pick`
+- 垃圾桶超过 3 个物体时不能继续 `place`
+- 非食品类不能放入垃圾桶
+- 食品没有腐烂/烧焦时不能放入垃圾桶
+- `dump` 必须在拿着垃圾桶且目标为 `garbage_station` 时执行
 
 ## 收拾书本
 

@@ -51,11 +51,21 @@ Embodied AI, scene graphs, world models, long-horizon planning, symbolic simulat
 \end{IEEEkeywords}
 
 \section{Introduction}
-Most scene graph and semantic map formulations in embodied AI describe the environment as a structured but largely static snapshot. They are highly useful for grounding, navigation, and task planning, yet they usually stop at representing the current world state for a bounded episode. In contrast, long-lived service environments do not remain static: humans move, objects are displaced, cleanliness changes over time, food spoils, and new task opportunities or conflicts keep emerging.
+当前 embodied AI 的一个根本假设很少被正面讨论：任务通常被定义为有限的。无论是导航、搬运、开关物体，还是更复杂的语言条件任务，benchmark 往往给定一个起点、一个目标和一个 episode 终止条件。Agent 的成功被理解为在有限步内完成这个目标。然而，真实服务机器人面对的并不是有限任务，而是一个不会停止的任务流。房间不会因为机器人完成一次整理而永久保持整洁，衣服会再次变脏，垃圾会再次产生，餐具会再次被使用，人会不断改变物体位置，环境也会随时间自然退化。换言之，家庭、医院、超市和办公室这类真实场景中的核心挑战不是 solving a task，而是 living with an endless stream of tasks. 我们将这一被忽视的设定称为 \emph{the Infinite Task Problem}。
+
+这一差异带来一个被当前研究低估的问题：如果任务没有自然终点，我们应该如何定义世界状态、任务生成、agent 行为和评价指标？在有限 episode 中，环境可以被看作一张静态地图加少量可变状态；但在无限任务流中，环境本身必须成为一个持续运行的世界。任务不再只是外部标注给 agent 的指令，而是由人类活动、物体状态、时间推进和机器人干预共同生成。一个机器人今天把房间恢复到好状态，并不意味着问题结束；它只是把世界推向一个暂时更好的状态，随后新的扰动会继续出现。
+
+GraphWorld 正是从这个视角出发：我们不把 embodied environment 看作一次性任务容器，而把它看作一个 persistent, self-evolving world substrate。我们的目标不是再构造一个固定任务集合，而是研究一种能够持续产生任务、持续积累状态、持续被人和机器人共同改变的图世界。这样的设定使 embodied agent 的研究对象从“完成给定任务”转向“长期维护一个活的世界”。
+
+Most scene graph and semantic map formulations in embodied AI describe the environment as a structured but largely static snapshot. They are highly useful for grounding, navigation, and task planning, yet they usually stop at representing the current world state for a bounded episode. In contrast, the Infinite Task Problem requires a world model whose state continues to evolve before, during, and after robot intervention. Humans move, objects are displaced, cleanliness changes over time, food spoils, and new task opportunities or conflicts keep emerging.
 
 GraphWorld is motivated by the need for a symbolic world model that remains active over time. Our central premise is that a sufficiently expressive graph can serve not only as an environment representation, but also as a persistent world substrate for task generation, symbolic simulation, and long-horizon decision-making. To this end, GraphWorld combines three ingredients: 1) a hierarchical graph engine that represents floors, rooms, objects, tools, and agents together with typed relations; 2) a runtime evolution mechanism that updates graph state through time, human routines, and exogenous effects; and 3) a planning and benchmark pipeline that links graph worlds to symbolic execution and downstream evaluation.
 
 The main contribution of this paper is a practical system perspective on self-evolving symbolic graph worlds. Rather than focusing solely on perception or one-shot task execution, we ask how to build a reusable world substrate that continuously changes and remains suitable for embodied planning research.
+
+在当前实现中，我们进一步关注一个更具体的问题：当世界持续演化、任务不断被 NPC 行为打断或重新生成时，机器人不能只依赖单步反应式决策。许多家庭任务并不是一个原子动作，而是由常识流程约束的长程程序，例如洗衣需要经历放入洗衣机、启动洗涤、晾干、折叠和收纳等阶段。如果仅把每一步都交给语言模型重新从候选动作中选择，模型容易被局部可见动作吸引，出现重复开关门、过早收纳、错误清洁方式或目标切换等问题。因此，GraphWorld 也提供了一个用于研究长期机器人行为的中间层：把高层任务、结构化技能和低层可执行动作连接起来。
+
+本文的主要动机和贡献可概括为三点。第一，我们提出一种可持续演化的符号图世界模型，使场景图从静态表示扩展为可运行的世界状态。第二，我们将人类日程、环境时间和机器人动作统一纳入同一图状态演化过程，从而形成长期任务扰动和恢复任务。第三，我们探索一种轻量级的技能条件化 agent 机制，使语言模型负责高层意图选择，而由图状态和技能阶段约束低层动作偏置，以提高长程任务的稳定性和可解释性。
 
 \section{Related Work}
 \subsection{Scene Graphs and Semantic World Representations}
@@ -118,6 +128,26 @@ GraphWorld 的构建采用“先拓扑、后填充、再运行时化”的三阶
 更重要的是，NPC 的行为会改变世界状态。例如起床和穿衣会改变衣物与房间状态，洗漱会引入清洁度扰动，离家与回家会改变人物位置和事件日志，用餐会触发食物状态变化，夜间活动还可能影响洗衣、垃圾和卫生相关状态。也就是说，NPC 不只是图中的一个节点，而是时间驱动图演化的内部生成器。
 
 我们引入 NPC agent 的目的有三点。第一，它为世界提供非机器人触发的变化来源，使世界具备持续性而非 episode 式静止。第二，它让任务产生具有上下文，例如因为有人活动而出现清洁、整理、补给、照护等任务。第三，它为后续研究长期角色型 agent 提供参照系：机器人面对的不再是空世界，而是一个包含常驻角色、规律活动和突发扰动的活世界。
+
+\subsection{技能条件化的机器人 Agent}
+在持续演化环境中，机器人 agent 面临的核心困难不是单步动作空间本身，而是长期任务语义与局部动作候选之间的错配。以家庭整理为例，``把物品放回原位'' 可以通过当前父节点和初始父节点的差异直接定义；但洗衣、倒垃圾、清洗餐具等任务包含隐含流程，不能简单地等价为某个物体的空间还原。如果把所有任务都压缩为一步一步的候选动作选择，语言模型容易选择局部看起来合法但长期无效的动作。例如，脏衣服不能通过普通清洁动作恢复，而必须经过洗衣机、晾衣架、折叠和衣柜收纳这一过程。
+
+为了解决这一问题，我们在机器人 agent 中引入轻量级的技能库。技能库不是端到端策略，也不是完整的符号规划器，而是一组可被图状态触发的结构化常识流程。每个技能包含触发条件、完成目标和阶段化子流程：
+\[
+\text{skill}=(\text{name},\text{trigger},\text{goal},\{\text{phase}_i\}_{i=1}^{n}).
+\]
+例如，洗衣技能的触发条件是布类物体处于脏、湿或未折叠状态；完成目标是该物体位于衣柜中，并满足干净、干燥和已折叠；阶段依次包括装入洗衣机、启动洗衣机、晾干、折叠和收纳。这样的技能表示保留了语言模型可理解的自然语义，同时又能被图状态直接检验和更新。
+
+机器人每一步接收的输入由五类信息组成。第一是当前机器人状态，包括所在房间、可见房间和是否持有物体。第二是全局规则，例如哪些动作会改变清洁度、哪些容器具有容量限制、哪些物体不能用错误方式恢复。第三是 active goal，即上一阶段尚未完成的长期目标。第四是当前相关技能；系统只把与当前图状态或 active goal 有关的技能放入提示词中，避免把完整操作手册全部塞给模型。第五是候选低层动作列表，每个动作都已经由引擎验证为合法动作。
+
+在决策上，我们采用高层选择和低层执行分离的方式。语言模型仍然需要输出一个 high-level task 和一个 low-level action index，但系统维护 active goal，并根据图状态刷新其 phase。例如，当衣服仍然是脏的且不在洗衣机中时，active goal 的阶段为 \texttt{wash\_load}；当衣服位于洗衣机且洗衣机未运行时，阶段变为 \texttt{start\_washer}；当衣服变湿时，阶段变为 \texttt{dry}；干燥但未折叠时进入 \texttt{fold}；折叠后若不在衣柜中则进入 \texttt{store}。低层候选动作不会被硬编码为唯一动作，但会根据当前阶段获得排序偏置，例如 \texttt{wash\_load} 阶段优先选择 pick、open washer 和 place into washer，而不是普通的 restore 或 clean 动作。
+
+这一设计的动机是把语言模型最擅长的语义判断与图引擎最擅长的状态约束结合起来。语言模型负责在当前上下文中判断应继续探索、恢复物体位置还是执行某个常识技能；图引擎负责保证动作合法、阶段可验证、目标可持续跟踪。相比纯反应式 agent，该机制减少了每一步重新选择大目标导致的局部循环；相比传统完整任务规划器，它又保持了较低的工程复杂度，并允许技能以可读、可扩展的方式逐步加入。
+
+\subsection{当前原型中的观察}
+从当前家庭场景实验可以看到，机器人性能的瓶颈主要来自两个方面。第一类是世界规则与评分逻辑问题：如果引擎允许不符合常识的状态转移，例如用普通清洁动作直接恢复衣服清洁度，则 agent 可能获得表面上较高的分数，但该行为并不符合真实任务语义。第二类是 agent 的长期任务选择问题：当规则修正后，模型必须把一个异常状态展开为多阶段流程，否则容易停留在局部整理或错误还原上。
+
+因此，当前工作不仅是提高实验分数，更重要的是暴露了持久图世界中评价与 agent 设计的耦合关系。一个合理的基准需要同时满足两点：如果机器人真的完成了任务，评分应能反映收益；如果机器人通过错误捷径完成状态恢复，规则系统应阻止这种捷径。技能条件化 agent 正是在这个背景下提出的：它不是替代世界规则，而是在规则正确之后，为模型提供可执行的长期任务脚手架。
 
 \section{Current Scope and Limitations}
 The current system already implements the graph substrate, topology-based scene generation, runtime evolution in representative home-like settings, and symbolic benchmark integration. However, several broader goals remain partially realized, including persistent task arrival, full social-rule modeling, and a complete reinforcement learning training loop. We present GraphWorld as an infrastructure prototype and research direction rather than a fully closed-loop learning system.

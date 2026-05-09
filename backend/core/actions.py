@@ -13,6 +13,7 @@ class ActionType(str, Enum):
     CLOSE = "close"
     BRUSH = "brush"
     FOLD = "fold"
+    DUMP = "dump"
 
 @dataclass(frozen=True)
 class ActionSpec:
@@ -96,6 +97,15 @@ ACTION_SPECS: dict[ActionType, ActionSpec] = {
         mutates_edges=False,
         mutates_states=True,
         effect_summary=("require is_wet = False", "set folded = True"),
+    ),
+    ActionType.DUMP: ActionSpec(
+        action_type=ActionType.DUMP,
+        category="manipulation",
+        params=("agent", "target"),
+        description="Empty a held dumpable container into a compatible target.",
+        mutates_edges=True,
+        mutates_states=True,
+        effect_summary=("require agent holds dumpable container", "apply container-specific dump rule"),
     ),
 }
 

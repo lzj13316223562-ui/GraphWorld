@@ -206,6 +206,7 @@
       "child": [
         "button_balcony",
         "chair_balcony",
+        "drying_rack_balcony",
         "door_balcony",
         "light_balcony",
         "plant_balcony"
@@ -514,7 +515,7 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 4,
+      "affordance_count": 3,
       "parent": "kitchen",
       "child": [
         "door_fridge_kitchen",
@@ -855,8 +856,7 @@
       "interactive_actions": [
         "fold",
         "pick",
-        "place",
-        "brush"
+        "place"
       ]
     },
     {
@@ -877,14 +877,13 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 4,
+      "affordance_count": 3,
       "parent": "wardrobe_bedroom",
       "child": [],
       "interactive_actions": [
         "fold",
         "pick",
-        "place",
-        "brush"
+        "place"
       ]
     },
     {
@@ -905,14 +904,13 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 4,
+      "affordance_count": 3,
       "parent": "wardrobe_bedroom",
       "child": [],
       "interactive_actions": [
         "fold",
         "pick",
-        "place",
-        "brush"
+        "place"
       ]
     },
     {
@@ -1213,6 +1211,29 @@
         "place",
         "move"
       ]
+    },
+    {
+      "id": "drying_rack_balcony",
+      "name": "drying rack",
+      "name_cn": "晾衣架",
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "drying_rack",
+      "mobility": "fixed",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 2,
+      "parent": "balcony",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "max_capacity": 3
     },
     {
       "id": "toothbrush_bathroom",
@@ -2473,6 +2494,14 @@
       "edge_type": "containment_edge",
       "relation": "in",
       "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "balcony",
+      "target_id": "drying_rack_balcony",
+      "edge_type": "structural_edge",
+      "relation": "inside_room",
+      "category": "structural",
       "properties": {}
     },
     {

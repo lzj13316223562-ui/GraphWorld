@@ -4,12 +4,13 @@ from dataclasses import dataclass
 from typing import Any
 
 from backend.core.actions import ActionType
+from backend.core.transition_rules import TRASHABLE_SEMANTICS, RuleContext, dump_failures
 
 
 MOVABLE_NODE_TYPES = {"movable_object"}
-PLACE_TARGET_TYPES = {"room", "fixed_object", "control_object"}
-
-
+PLACE_TARGET_TYPES = {"room", "fixed_object"}
+BLOCKED_PLACE_TARGET_SEMANTICS = {"button", "switch", "door", "light", "display", "tv", "faucet", "knob"}
+CLOTH_SEMANTICS = {"clothes", "towel", "blanket"}
 @dataclass(frozen=True)
 class ValidationResult:
     ok: bool
@@ -57,6 +58,41 @@ def _agent_holding(state: dict[str, Any], agent_id: str) -> str:
         if parent_id == agent_id and relation_of.get(node_id) == "held_by":
             return node_id
     return ""
+
+
+def _children_of(state: dict[str, Any], parent_id: str) -> list[str]:
+    return [node_id for node_id, current_parent in state.get("parent_of", {}).items() if current_parent == parent_id]
+
+
+def _trash_place_failures(state: dict[str, Any], held_id: str, target_id: str) -> list[str]:
+    target = _node(state, target_id)
+    if _semantic(target) != "trash_bin":
+        return []
+    held = _node(state, held_id)
+    held_states = _states(held)
+    failures = []
+    if _semantic(held) not in TRASHABLE_SEMANTICS:
+        failures.append("trash bin only accepts trashable food items")
+    if not (bool(held_states.get("is_rotten", False)) or bool(held_states.get("is_burnt", False))):
+        failures.append("food must be rotten or burnt before disposal")
+    capacity = int(target.get("max_capacity") or (target.get("states") or {}).get("max_capacity") or 3)
+    if len(_children_of(state, target_id)) >= capacity:
+        failures.append(f"trash bin capacity exceeded: {target_id}")
+    return failures
+
+
+def _capacity_place_failures(state: dict[str, Any], target_id: str) -> list[str]:
+    target = _node(state, target_id)
+    capacity_value = target.get("max_capacity") or (target.get("states") or {}).get("max_capacity")
+    if capacity_value in (None, ""):
+        return []
+    try:
+        capacity = int(capacity_value)
+    except (TypeError, ValueError):
+        return []
+    if len(_children_of(state, target_id)) >= capacity:
+        return [f"target capacity exceeded: {target_id}"]
+    return []
 
 
 def _is_open(node: dict[str, Any]) -> bool:
@@ -113,10 +149,23 @@ def _container_access_failure(state: dict[str, Any], container_id: str) -> str |
     return None
 
 
+def _place_target_failure(target: dict[str, Any]) -> str | None:
+    semantic = _semantic(target)
+    if semantic == "trash_bin":
+        return None
+    if semantic in BLOCKED_PLACE_TARGET_SEMANTICS:
+        return "place target should be a stable surface, container, room, or trash bin"
+    if _node_type(target) not in PLACE_TARGET_TYPES:
+        return "place target should be a room, fixed object, or trash bin"
+    return None
+
+
 def _move_failures(state: dict[str, Any], agent_id: str, target_id: str) -> list[str]:
     failures = []
     target = _node(state, target_id)
     current_room = _room_of(state, agent_id)
+    if str(state.get("parent_of", {}).get(agent_id) or "") == target_id:
+        return [f"agent already near target: {target_id}"]
     target_type = _node_type(target)
     if target_type == "room":
         if target_id == current_room:
@@ -164,7 +213,7 @@ def validate_action(state: dict[str, Any], action: dict[str, Any]) -> Validation
     if not agent:
         failures.append(f"unknown agent: {agent_id}")
 
-    if action_type in {ActionType.MOVE, ActionType.OPEN, ActionType.CLOSE, ActionType.PRESS, ActionType.BRUSH, ActionType.PLACE, ActionType.FOLD}:
+    if action_type in {ActionType.MOVE, ActionType.OPEN, ActionType.CLOSE, ActionType.PRESS, ActionType.BRUSH, ActionType.PLACE, ActionType.FOLD, ActionType.DUMP}:
         if not target_id or not _node(state, target_id):
             failures.append(f"unknown target: {target_id}")
 
@@ -198,27 +247,41 @@ def validate_action(state: dict[str, Any], action: dict[str, Any]) -> Validation
         elif state.get("parent_of", {}).get(held) != agent_id:
             failures.append(f"agent is not holding {held}")
         target = _node(state, target_id)
-        if _node_type(target) not in PLACE_TARGET_TYPES:
-            failures.append("place target should be a room, fixed object, or control object")
+        if failure := _place_target_failure(target):
+            failures.append(failure)
         if not _same_room(state, agent_id, target_id):
             failures.append("place target is not in the same room")
         failure = _container_access_failure(state, target_id)
         if failure:
             failures.append(failure)
+        failures.extend(_capacity_place_failures(state, target_id))
+        failures.extend(_trash_place_failures(state, held, target_id))
 
-    elif action_type in {ActionType.OPEN, ActionType.CLOSE, ActionType.PRESS, ActionType.BRUSH, ActionType.FOLD}:
+    elif action_type in {ActionType.OPEN, ActionType.CLOSE, ActionType.PRESS, ActionType.BRUSH, ActionType.FOLD, ActionType.DUMP}:
         if not _same_room(state, agent_id, target_id):
             failures.append("target is not in the same room")
         target = _node(state, target_id)
         actions = {str(item).lower() for item in target.get("interactive_actions") or []}
         if action_type.value not in actions:
             failures.append(f"target does not support {action_type.value}: {target_id}")
+        if action_type == ActionType.OPEN and _is_open(target):
+            failures.append(f"target is already open: {target_id}")
+        if action_type == ActionType.CLOSE and not _is_open(target):
+            failures.append(f"target is already closed: {target_id}")
+        if action_type == ActionType.BRUSH:
+            target_states = _states(target)
+            if _semantic(target) in CLOTH_SEMANTICS:
+                failures.append("cloth must be washed in washer")
+            if not (target_states.get("is_dirty") is True or target_states.get("scattered") is True):
+                failures.append(f"target does not need brushing: {target_id}")
+        if action_type == ActionType.DUMP:
+            failures.extend(dump_failures(RuleContext(state=state, actor_id=agent_id, target_id=target_id, object_id=object_id)))
         if action_type == ActionType.PRESS:
             if _requires_closed_to_start(target) and _is_open(target):
                 failures.append(f"device door must be closed before start: {target_id}")
             failures.extend(_device_door_failures(state, [target_id, *_controls_targets(state, target_id)]))
         if action_type == ActionType.FOLD:
-            if _semantic(target) not in {"clothes", "towel", "blanket"}:
+            if _semantic(target) not in CLOTH_SEMANTICS:
                 failures.append("target is not foldable cloth")
             if bool(_states(target).get("is_wet", False)):
                 failures.append("wet cloth cannot be folded")
