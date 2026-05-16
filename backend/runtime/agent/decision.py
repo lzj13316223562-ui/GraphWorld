@@ -19,8 +19,6 @@ BAD_STATE_KEYS = {
     "is_burnt",
     "is_wet",
     "is_full",
-    "scattered",
-    "misplaced_near",
     "fill_level",
     "folded",
 }
@@ -66,6 +64,34 @@ def parse_action_index(text: str, fallback: int = 0) -> int:
             except Exception:
                 pass
     return fallback
+
+
+def parse_goal_review(text: str, allowed_tasks: list[str], active_task: str = "") -> dict[str, str]:
+    allowed = set(allowed_tasks)
+    fallback_task = active_task if active_task in allowed else (allowed_tasks[0] if allowed_tasks else "maintain_order")
+    fallback = {"decision": "keep" if active_task else "switch", "high_level_task": fallback_task}
+    try:
+        payload = json.loads(text)
+    except Exception:
+        match = re.search(r"\{.*\}", text, re.S)
+        if not match:
+            return fallback
+        try:
+            payload = json.loads(match.group(0))
+        except Exception:
+            return fallback
+    decision = str(payload.get("decision") or "").strip().lower()
+    if decision not in {"keep", "switch", "finish", "drop"}:
+        decision = fallback["decision"]
+    task = str(payload.get("high_level_task") or "").strip()
+    if decision == "keep":
+        task = active_task or fallback_task
+    if decision in {"finish", "drop"}:
+        task = "maintain_order"
+    if task not in allowed:
+        task = fallback_task
+        decision = "keep" if task == active_task and active_task else "switch"
+    return {"decision": decision, "high_level_task": task}
 
 
 def _compact_states(states: dict[str, Any]) -> dict[str, Any]:
@@ -780,6 +806,53 @@ def _compact_candidates(
     return compact
 
 
+def llm_review_goal(
+    observation: dict[str, Any],
+    agent_model: str,
+    *,
+    initial_scene: dict[str, Any] | None = None,
+    active_goal: dict[str, Any] | None = None,
+    high_level_options: list[str] | None = None,
+    recent_history: list[dict[str, Any]] | None = None,
+    agent_id: str = "robot_01",
+) -> tuple[dict[str, str], str]:
+    nodes = _node_index(observation)
+    initial_nodes = _scene_node_index(initial_scene)
+    active_task = str((active_goal or {}).get("task") or "")
+    options = []
+    for task in [active_task, *(high_level_options or []), *_high_level_options(observation, nodes, initial_nodes, agent_id)]:
+        if task and task not in options:
+            options.append(task)
+    if "maintain_order" not in options:
+        options.insert(0, "maintain_order")
+    prompt = {
+        "task": "Review the active high-level goal before choosing an action. Decide whether to keep it, switch to another listed goal, finish it, or drop it.",
+        "robot_state": _robot_state(observation, nodes, agent_id),
+        "rules": [
+            "Choose high_level_task only from high_level_options or active_goal.task.",
+            "Use keep only if the active goal still matches the held object, object state, and recent progress.",
+            "Use switch if recent actions repeat without progress or the held object no longer matches the active goal.",
+            "Use finish or drop when the active goal is already satisfied, invalid, or no longer useful.",
+        ],
+        "active_goal": active_goal or {},
+        "recent_history": (recent_history or [])[-10:],
+        "high_level_options": options[:20],
+        "visible_nodes": _compact_nodes(nodes, initial_nodes, agent_id),
+        "response_format": {"decision": "keep|switch|finish|drop", "high_level_task": "exact listed option"},
+    }
+    answer = llm_query(
+        system_prompt=(
+            "Return only compact JSON with exactly two fields: "
+            '{"decision": <keep|switch|finish|drop>, "high_level_task": <string>}. '
+            "Do not include markdown, explanations, or thinking."
+        ),
+        user_query=json.dumps(prompt, ensure_ascii=True),
+        agent=agent_model,
+        timeout=180,
+    )
+    return parse_goal_review(answer, options[:20], active_task), answer
+
+
 def llm_choose_action(
     candidates: list[dict[str, Any]],
     observation: dict[str, Any],
@@ -824,6 +897,42 @@ def llm_choose_action(
         selected_score = score_by_index.get(index, -100)
         if (active_goal and best_score >= 110) or best_score - selected_score >= 20:
             index = best_index
+    return candidates[index], answer
+
+
+def llm_choose_reactive_action(
+    candidates: list[dict[str, Any]],
+    observation: dict[str, Any],
+    agent_model: str,
+    *,
+    recent_scores: list[dict[str, Any]] | None = None,
+    agent_id: str = "robot_01",
+) -> tuple[dict[str, Any], str]:
+    if not candidates:
+        raise ValueError("no legal action candidates")
+    nodes = _node_index(observation)
+    prompt = {
+        "role": "You are a maintenance robot in a changing human environment.",
+        "task": "Choose one legal action that is likely to improve or preserve the world score. Use only local visible graph information and recent score changes.",
+        "robot_state": _robot_state(observation, nodes, agent_id),
+        "recent_scores": (recent_scores or [])[-10:],
+        "visible_nodes": _compact_nodes(nodes, {}, agent_id),
+        "candidates": _compact_candidates(candidates, nodes, {}, None, agent_id),
+        "response_format": {"action_index": 0},
+    }
+    answer = llm_query(
+        system_prompt=(
+            "Return only compact JSON with exactly one field: "
+            '{"action_index": <integer>}. '
+            "Do not include markdown, explanations, or thinking."
+        ),
+        user_query=json.dumps(prompt, ensure_ascii=True),
+        agent=agent_model,
+        timeout=180,
+    )
+    index = parse_action_index(answer, 0)
+    if index < 0 or index >= len(candidates):
+        index = 0
     return candidates[index], answer
 
 

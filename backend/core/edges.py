@@ -18,15 +18,15 @@ class EdgeType(Enum):
     ROOM_EDGE = "room_edge"             # 房间-房间 (e.g., neighbour)
     ROOM_FLOOR_EDGE = "room_floor_edge" # 房间-楼层 (e.g., belongs_to)
     TRANSPORT_EDGE = "transport_edge"   # 交通工具-站点 (e.g., parked_at)
-    CONTROL_EDGE = "control_edge"       # 新增: 控制/逻辑关系 (e.g., controls)
+    CONTROL_EDGE = "control_edge"       # 控制/逻辑关系 (e.g., controls)
 
 
 class EdgeCategory(Enum):
     """
     边的大类：决定了可视化的连线方式和机器人的理解方式
     """
-    PHYSICAL = "physical"  # 【实线】物理连接
-    LOGICAL = "logical"    # 【虚线】逻辑连接
+    PHYSICAL = "physical"  # 物理连接
+    LOGICAL = "logical"    # 逻辑连接
 
 
 class SpatialRelation(Enum):
@@ -43,15 +43,15 @@ class SpatialRelation(Enum):
     NEAR = "near"
     HELD_BY = "held_by"
     FAR = "far"
-    NEIGHBOUR = "neighbour"      
-    CONTAINS = "contains"        
-    BELONGS_TO = "belongs_to"    
-    CONNECTED = "connected"      
-    
+    NEIGHBOUR = "neighbour"
+    CONTAINS = "contains"
+    BELONGS_TO = "belongs_to"
+    CONNECTED = "connected"
+
     # --- Logical Relations (What?) ---
-    CONTROLS = "controls"        
-    LINKED_TO = "linked_to"      
-    POWERED_BY = "powered_by"    
+    CONTROLS = "controls"
+    LINKED_TO = "linked_to"
+    POWERED_BY = "powered_by"
 
 
 CANONICAL_POSITION_RELATIONS = (
@@ -175,12 +175,12 @@ class BaseEdge(ABC):
     target_id: str
     edge_type: EdgeType
     relation: SpatialRelation
-    
+
     # 默认为 PHYSICAL
     category: EdgeCategory = field(default=EdgeCategory.PHYSICAL)
-    
+
     properties: Dict[str, Any] = field(default_factory=dict)
-    
+
     def __post_init__(self):
         if self.properties is None:
             self.properties = {}
@@ -192,7 +192,7 @@ class BaseEdge(ABC):
         # 自动推断 Category (防止手动漏写)
         if self.relation in {SpatialRelation.CONTROLS, SpatialRelation.LINKED_TO, SpatialRelation.POWERED_BY}:
             self.category = EdgeCategory.LOGICAL
-    
+
     @abstractmethod
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -203,29 +203,29 @@ class BaseEdge(ABC):
             "category": self.category.value,
             "properties": self.properties
         }
-    
+
     @classmethod
     @abstractmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'BaseEdge':
         pass
-    
+
     def update_property(self, key: str, value: Any) -> None:
         self.properties[key] = value
-    
+
     def get_property(self, key: str, default: Any = None) -> Any:
         return self.properties.get(key, default)
-    
+
     def __repr__(self) -> str:
         return f"[{self.category.value.upper()}] {self.source_id} --{self.relation.value}--> {self.target_id}"
-    
+
     def __hash__(self):
         return hash((self.source_id, self.target_id, self.relation.value))
-    
+
     def __eq__(self, other):
         if not isinstance(other, BaseEdge):
             return False
-        return (self.source_id == other.source_id and 
-                self.target_id == other.target_id and 
+        return (self.source_id == other.source_id and
+                self.target_id == other.target_id and
                 self.relation == other.relation)
 
 
@@ -233,18 +233,18 @@ class BaseEdge(ABC):
 class ObjectEdge(BaseEdge):
     """物体间的边"""
     distance: Optional[float] = None
-    
+
     def __post_init__(self):
         if self.edge_type not in {EdgeType.OBJECT_EDGE, EdgeType.CONTROL_EDGE}:
             self.edge_type = EdgeType.OBJECT_EDGE
         super().__post_init__()
-    
+
     def to_dict(self) -> Dict[str, Any]:
         base = super().to_dict()
         if self.distance is not None:
             base["distance"] = self.distance
         return base
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ObjectEdge':
         cat = EdgeCategory(data.get("category", "physical"))
@@ -269,7 +269,7 @@ class ObjectRoomEdge(BaseEdge):
 
     def to_dict(self) -> Dict[str, Any]:
         return super().to_dict()
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ObjectRoomEdge':
         cat = EdgeCategory(data.get("category", "physical"))
@@ -288,7 +288,7 @@ class RoomEdge(BaseEdge):
     """房间-房间边"""
     is_accessible: bool = True
     door_state: str = "open"
-    
+
     def __post_init__(self):
         if self.edge_type != EdgeType.ROOM_EDGE:
             self.edge_type = EdgeType.ROOM_EDGE
@@ -298,7 +298,7 @@ class RoomEdge(BaseEdge):
         base = super().to_dict()
         base.update({"is_accessible": self.is_accessible, "door_state": self.door_state})
         return base
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'RoomEdge':
         cat = EdgeCategory(data.get("category", "physical"))
@@ -324,7 +324,7 @@ class RoomFloorEdge(BaseEdge):
 
     def to_dict(self) -> Dict[str, Any]:
         return super().to_dict()
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'RoomFloorEdge':
         cat = EdgeCategory(data.get("category", "physical"))
@@ -360,7 +360,7 @@ class TransportEdge(BaseEdge):
 # --- 工厂函数 (Fix applied here) ---
 def create_edge(source_id: str, target_id: str, relation: SpatialRelation, **kwargs) -> BaseEdge:
     """工厂函数：自动根据 relation 决定类型"""
-    
+
     # 🔥 核心修复：防止 kwargs 里的 category/edge_type 与硬编码参数冲突
     # 如果 kwargs 里有 category，先弹出来，防止重复传参
     if "category" in kwargs:
@@ -373,7 +373,7 @@ def create_edge(source_id: str, target_id: str, relation: SpatialRelation, **kwa
         return ObjectEdge(
             source_id=source_id,
             target_id=target_id,
-            edge_type=EdgeType.CONTROL_EDGE, 
+            edge_type=EdgeType.CONTROL_EDGE,
             relation=relation,
             category=EdgeCategory.LOGICAL,   # 👈 这里硬编码了，所以必须 pop 掉 kwargs 里的
             **kwargs
@@ -383,8 +383,8 @@ def create_edge(source_id: str, target_id: str, relation: SpatialRelation, **kwa
     elif relation in {SpatialRelation.AT, SpatialRelation.IN, SpatialRelation.ON,
                       SpatialRelation.ONTOP, SpatialRelation.INSIDE,
                       SpatialRelation.UNDER, SpatialRelation.BESIDE,
-                      SpatialRelation.NEAR, SpatialRelation.HELD_BY, SpatialRelation.FAR, 
-                      SpatialRelation.CONTAINS}: 
+                      SpatialRelation.NEAR, SpatialRelation.HELD_BY, SpatialRelation.FAR,
+                      SpatialRelation.CONTAINS}:
         return ObjectEdge(
             source_id=source_id,
             target_id=target_id,
@@ -393,7 +393,7 @@ def create_edge(source_id: str, target_id: str, relation: SpatialRelation, **kwa
             category=EdgeCategory.PHYSICAL,
             **kwargs
         )
-    
+
     # 3. 房间邻接
     elif relation in {
         SpatialRelation.NEIGHBOUR,
@@ -408,7 +408,7 @@ def create_edge(source_id: str, target_id: str, relation: SpatialRelation, **kwa
             category=EdgeCategory.PHYSICAL,
             **kwargs
         )
-    
+
     # 默认兜底
     raise ValueError(f"Unknown or unmapped spatial relation: {relation}")
 

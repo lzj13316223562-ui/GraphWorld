@@ -1,6 +1,8 @@
 """Static core definitions for scene graph, actions, states, and rules."""
 
 from .actions import ACTION_SPECS, ActionSpec, ActionType, action_spec
+from .action_schemas import ACTION_SCHEMAS, ActionContext, ActionSchema, apply_action_schema, validate_action_schema
+from .domain_rules import APPLIANCE_CYCLE_STEPS, DRYING_RACK_STEPS, DUMP_RULES, TRASHABLE_SEMANTICS
 from .edges import EdgeCategory, EdgeType, SpatialRelation
 from .nodes import (
     CONTROL_OBJECT_TYPES,
@@ -43,21 +45,14 @@ from .assets.object_library import (
 )
 from .scenegraph import SceneGraph
 from .states import DISCRETE_STATE_SPACE, DiscreteState
-from .transition_rules import (
-    ACTION_TRANSITION_RULES,
-    APPLIANCE_CYCLE_STEPS,
-    STATE_INFLUENCES,
-    RuleContext,
-    StateInfluence,
-    TransitionRule,
-    apply_action_transition,
-    apply_timed_transitions,
-)
+from .timed_transitions import apply_timed_transitions
 
 __all__ = [
     "ACTION_SPECS",
-    "ACTION_TRANSITION_RULES",
+    "ACTION_SCHEMAS",
     "APPLIANCE_CYCLE_STEPS",
+    "ActionContext",
+    "ActionSchema",
     "ActionSpec",
     "ActionType",
     "CONTROL_OBJECT_TYPES",
@@ -65,7 +60,9 @@ __all__ = [
     "ControlObject",
     "DEFAULT_ROLE",
     "DISCRETE_STATE_SPACE",
+    "DRYING_RACK_STEPS",
     "DiscreteState",
+    "DUMP_RULES",
     "EdgeCategory",
     "EdgeType",
     "EventEffect",
@@ -83,15 +80,12 @@ __all__ = [
     "OBJECT_LIBRARY",
     "ObjectTemplate",
     "ROLE_SCHEDULES",
-    "RuleContext",
-    "STATE_INFLUENCES",
     "SceneGraph",
     "ScheduleEntry",
     "SpatialRelation",
-    "StateInfluence",
-    "TransitionRule",
+    "TRASHABLE_SEMANTICS",
     "action_spec",
-    "apply_action_transition",
+    "apply_action_schema",
     "apply_timed_transitions",
     "build_object_node",
     "get_default_npcs",
@@ -104,4 +98,5 @@ __all__ = [
     "node_type_from_legacy",
     "planned_activity",
     "schedule_for_role",
+    "validate_action_schema",
 ]

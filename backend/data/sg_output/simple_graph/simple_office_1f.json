@@ -24,7 +24,9 @@
       },
       "affordance_count": 0,
       "parent": null,
-      "child": [],
+      "child": [
+        "outside_home"
+      ],
       "interactive_actions": [
         "move",
         "scan"
@@ -257,7 +259,7 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 5,
+      "affordance_count": 4,
       "parent": "open_office",
       "child": [
         "computer_open_office_1",
@@ -266,7 +268,8 @@
       "interactive_actions": [
         "move",
         "place",
-        "scan"
+        "scan",
+        "brush"
       ]
     },
     {
@@ -336,7 +339,7 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 5,
+      "affordance_count": 4,
       "parent": "open_office",
       "child": [
         "computer_open_office_2",
@@ -345,7 +348,8 @@
       "interactive_actions": [
         "move",
         "place",
-        "scan"
+        "scan",
+        "brush"
       ]
     },
     {
@@ -447,7 +451,8 @@
       "interactive_actions": [
         "move",
         "place",
-        "scan"
+        "scan",
+        "brush"
       ]
     },
     {
@@ -488,13 +493,14 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 4,
       "parent": "meeting_room",
       "child": [],
       "interactive_actions": [
         "move",
         "place",
-        "scan"
+        "scan",
+        "brush"
       ]
     },
     {
@@ -560,9 +566,7 @@
       "mobility": "movable",
       "states": {
         "is_dirty": false,
-        "is_wet": false,
-        "is_dry": true,
-        "is_clean": true
+        "is_wet": false
       },
       "property": {
         "appearance": "",
@@ -626,13 +630,15 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 10,
+      "affordance_count": 5,
       "parent": "pantry",
       "child": [],
       "interactive_actions": [
         "move",
         "place",
-        "scan"
+        "scan",
+        "open",
+        "close"
       ]
     },
     {
@@ -677,7 +683,7 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 5,
+      "affordance_count": 4,
       "parent": "manager_office",
       "child": [
         "computer_manager_office",
@@ -686,7 +692,8 @@
       "interactive_actions": [
         "move",
         "place",
-        "scan"
+        "scan",
+        "brush"
       ]
     },
     {
@@ -756,13 +763,17 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 6,
+      "affordance_count": 8,
       "parent": "manager_office",
-      "child": [],
+      "child": [
+        "report_open_office"
+      ],
       "interactive_actions": [
         "move",
         "place",
         "scan",
+        "open",
+        "close",
         "pull",
         "push"
       ]
@@ -845,6 +856,52 @@
         "move",
         "scan",
         "brush"
+      ]
+    },
+    {
+      "id": "outside_home",
+      "name": "Outside",
+      "name_cn": "Outside",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 3,
+      "parent": "F1",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan"
+      ]
+    },
+    {
+      "id": "report_open_office",
+      "name": "report",
+      "name_cn": "report",
+      "node_type": "movable_object",
+      "semantic_class": "document",
+      "semantic_type": "report",
+      "mobility": "movable",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 3,
+      "parent": "cabinet_manager_office",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "place",
+        "scan"
       ]
     }
   ],
@@ -1135,6 +1192,30 @@
       "edge_type": "structural_edge",
       "relation": "inside_room",
       "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "outside_home",
+      "edge_type": "scene_edge",
+      "relation": "contains",
+      "category": "spatial",
+      "properties": {}
+    },
+    {
+      "source_id": "outside_home",
+      "target_id": "entrance",
+      "edge_type": "scene_edge",
+      "relation": "connected",
+      "category": "spatial",
+      "properties": {}
+    },
+    {
+      "source_id": "cabinet_manager_office",
+      "target_id": "report_open_office",
+      "edge_type": "object_edge",
+      "relation": "contains",
+      "category": "physical",
       "properties": {}
     }
   ]

@@ -11,24 +11,45 @@
 \usepackage{url}
 \usepackage{hyperref}
 
+\newcommand{\bestcell}[1]{\colorbox{green!12}{\strut #1}}
+\newcommand{\badcell}[1]{\colorbox{red!10}{\strut #1}}
+
 \hypersetup{
   hidelinks,
   colorlinks=false,
   pdfauthor={GraphWorld Authors},
-  pdftitle={GraphWorld: A Persistent Self-Evolving Graph World Model for Long-Horizon Embodied Agent Learning}
+  pdftitle={GraphWorld: 面向长时程具身智能的持续自演化图世界模型}
 }
 
-% 先支持中文写作，后续再统一收敛到英文投稿稿。
-\setmainfont{TeX Gyre Termes}
-\setsansfont{TeX Gyre Heros}
-\setmonofont{TeX Gyre Cursor}
+% 中文写作版本；后续英文投稿稿可在此基础上整体翻译和压缩。
+\setmainfont[
+  Extension=.otf,
+  UprightFont=*-regular,
+  BoldFont=*-bold,
+  ItalicFont=*-italic,
+  BoldItalicFont=*-bolditalic
+]{texgyretermes}
+\setsansfont[
+  Extension=.otf,
+  UprightFont=*-regular,
+  BoldFont=*-bold,
+  ItalicFont=*-italic,
+  BoldItalicFont=*-bolditalic
+]{texgyreheros}
+\setmonofont[
+  Extension=.otf,
+  UprightFont=*-regular,
+  BoldFont=*-bold,
+  ItalicFont=*-italic,
+  BoldItalicFont=*-bolditalic
+]{texgyrecursor}
 \setCJKmainfont{Noto Serif CJK SC}
 \setCJKsansfont{Noto Sans CJK SC}
 \setCJKmonofont{Noto Sans Mono CJK SC}
 
 \begin{document}
 
-\title{GraphWorld: A Persistent Self-Evolving Graph World Model for Long-Horizon Embodied Agent Learning}
+\title{GraphWorld: 面向长时程具身智能的持续自演化图世界模型}
 
 \author{Author~1,~\IEEEmembership{Member,~IEEE,}
         Author~2,~\IEEEmembership{Member,~IEEE,}
@@ -43,120 +64,184 @@
 \maketitle
 
 \begin{abstract}
-We present GraphWorld, a persistent self-evolving graph world model for long-horizon embodied agent learning. Instead of treating a scene graph as a static semantic snapshot used only for short-horizon planning, GraphWorld elevates the graph into a runtime world substrate that continuously evolves under temporal progression, human routines, exogenous disturbances, and agent actions. The system unifies building topology, room-level functionality, object affordances, interaction states, and control relations in a hierarchical symbolic graph, and connects this representation to a pipeline for scene generation, task synthesis, symbolic execution, and benchmark construction. This design allows the same world representation to support scene construction, state tracking, temporal simulation, and planning-oriented evaluation. We describe the architecture of GraphWorld, its graph engine and temporal evolution mechanisms, and its role as an infrastructure layer for studying persistent embodied environments beyond episodic task settings.
+现有具身智能基准大多采用有限 episode 设定：系统给定一个初始状态、一个任务目标和一个终止条件，智能体的能力由是否在有限步内完成任务来衡量。然而真实服务机器人面对的不是一次性任务，而是持续被人类活动、环境时间和外生事件扰动的开放世界。本文提出 GraphWorld，一种面向长时程具身智能研究的持续自演化符号图世界模型。GraphWorld 将场景图从静态语义快照扩展为可运行的世界状态：房间、物体、设备、人和机器人被统一组织在层次化图中，节点状态与动态关系会随 NPC 日程、设备周期、自然过程和机器人动作持续更新。系统进一步提供局部感知、合法动作验证、事件日志、矩阵化评分和可复现实验流水线，使同一图表示能够支撑场景构建、状态追踪、任务生成、符号执行和长期评价。针对长程任务中语言模型容易陷入局部动作选择的问题，我们实现了技能条件化机器人 agent，将高层任务、可读技能阶段与低层合法动作候选相结合。家庭、医院和超市场景的初步实验表明，相比无机器人基线，引入机器人维护行为能够显著改善空间恢复、人类事件成功率和综合得分。GraphWorld 的核心目标不是定义一个固定任务集，而是提供一种可持续产生任务、持续积累状态、并可用于研究长期维护行为的图世界基础设施。
 \end{abstract}
 
 \begin{IEEEkeywords}
-Embodied AI, scene graphs, world models, long-horizon planning, symbolic simulation, service robots.
+具身智能，场景图，世界模型，长时程规划，符号仿真，服务机器人。
 \end{IEEEkeywords}
 
-\section{Introduction}
-当前 embodied AI 的一个根本假设很少被正面讨论：任务通常被定义为有限的。无论是导航、搬运、开关物体，还是更复杂的语言条件任务，benchmark 往往给定一个起点、一个目标和一个 episode 终止条件。Agent 的成功被理解为在有限步内完成这个目标。然而，真实服务机器人面对的并不是有限任务，而是一个不会停止的任务流。房间不会因为机器人完成一次整理而永久保持整洁，衣服会再次变脏，垃圾会再次产生，餐具会再次被使用，人会不断改变物体位置，环境也会随时间自然退化。换言之，家庭、医院、超市和办公室这类真实场景中的核心挑战不是 solving a task，而是 living with an endless stream of tasks. 我们将这一被忽视的设定称为 \emph{the Infinite Task Problem}。
+\section{引言}
+当前 embodied AI 的一个基本假设常被默认接受：任务是有限的。导航、抓取、开关物体和语言条件任务通常被组织为一个 episode，环境给定起点和目标，智能体只需在终止前完成指定目标。这种设定便于评测，也推动了感知、导航和短程规划的发展。但真实家庭、医院、超市和办公室并不会在机器人完成一次任务后停止变化。衣服会再次变脏，垃圾会继续产生，杯子会被重新使用，药品和耗材会被消耗，顾客会移动商品，病人和护士会改变房间状态。机器人面对的不是 ``solving a task''，而是 ``living with an endless stream of tasks''。我们将这一设定称为无限任务问题。
 
-这一差异带来一个被当前研究低估的问题：如果任务没有自然终点，我们应该如何定义世界状态、任务生成、agent 行为和评价指标？在有限 episode 中，环境可以被看作一张静态地图加少量可变状态；但在无限任务流中，环境本身必须成为一个持续运行的世界。任务不再只是外部标注给 agent 的指令，而是由人类活动、物体状态、时间推进和机器人干预共同生成。一个机器人今天把房间恢复到好状态，并不意味着问题结束；它只是把世界推向一个暂时更好的状态，随后新的扰动会继续出现。
+无限任务问题改变了具身智能研究中的几个基本对象。首先，世界状态不能只被视为一张静态地图加少量临时变量，而必须是一个持续运行、持续被改写的状态过程。其次，任务不再只是外部标注的指令，而是由人类活动、物体状态、时间推进和机器人干预共同产生。再次，评价指标不能只关心一次任务是否成功，而要衡量机器人是否长期维持了世界的秩序、可用性和人类活动的顺畅程度。
 
-GraphWorld 正是从这个视角出发：我们不把 embodied environment 看作一次性任务容器，而把它看作一个 persistent, self-evolving world substrate。我们的目标不是再构造一个固定任务集合，而是研究一种能够持续产生任务、持续积累状态、持续被人和机器人共同改变的图世界。这样的设定使 embodied agent 的研究对象从“完成给定任务”转向“长期维护一个活的世界”。
+场景图和语义地图为这一方向提供了重要基础。已有研究证明，结构化图表示可以支持语义定位、任务 grounding 和大规模规划~\cite{hydrarss2022,sayplan2023,taskography2022}。但多数方法仍把图作为当前时刻的环境描述，服务于有限任务中的感知或规划。另一方面，持续社会仿真和生成式角色系统强调世界与角色可以长期运行~\cite{generativeagents2023}，但它们往往依赖自然语言记忆或行为轨迹，而不是可供机器人动作验证和状态评分的显式符号图。
 
-Most scene graph and semantic map formulations in embodied AI describe the environment as a structured but largely static snapshot. They are highly useful for grounding, navigation, and task planning, yet they usually stop at representing the current world state for a bounded episode. In contrast, the Infinite Task Problem requires a world model whose state continues to evolve before, during, and after robot intervention. Humans move, objects are displaced, cleanliness changes over time, food spoils, and new task opportunities or conflicts keep emerging.
+GraphWorld 试图连接这两个方向。我们的核心观点是：如果场景图足够明确地表达空间层次、物体可供性、控制关系、动态状态和时间上下文，它就不只是环境表示，而可以成为一个 persistent world substrate。GraphWorld 将图作为运行时世界模型，使同一套数据结构同时承担场景生成、状态演化、NPC 扰动、机器人动作执行和长期评价的职责。
 
-GraphWorld is motivated by the need for a symbolic world model that remains active over time. Our central premise is that a sufficiently expressive graph can serve not only as an environment representation, but also as a persistent world substrate for task generation, symbolic simulation, and long-horizon decision-making. To this end, GraphWorld combines three ingredients: 1) a hierarchical graph engine that represents floors, rooms, objects, tools, and agents together with typed relations; 2) a runtime evolution mechanism that updates graph state through time, human routines, and exogenous effects; and 3) a planning and benchmark pipeline that links graph worlds to symbolic execution and downstream evaluation.
+本文的贡献包括三点。第一，我们提出一种持续自演化图世界模型，将楼层、房间、物体、设备、人类 NPC 和机器人统一纳入层次化符号图，并显式建模时间上下文和动态图状态。第二，我们实现了一个运行时引擎，将人类日程事件、设备周期、环境过程和机器人动作纳入同一状态转移流程，并通过矩阵化状态距离、空间关系距离和人类事件成功率评价长期表现。第三，我们构建了技能条件化机器人 agent，使语言模型负责高层语义选择，图引擎负责合法动作验证和技能阶段约束，从而更稳定地处理洗衣、倒垃圾、补给和清洁等长程维护任务。
 
-The main contribution of this paper is a practical system perspective on self-evolving symbolic graph worlds. Rather than focusing solely on perception or one-shot task execution, we ask how to build a reusable world substrate that continuously changes and remains suitable for embodied planning research.
+\section{相关工作}
+\subsection{场景图与语义世界表示}
+场景图和语义地图已经成为具身智能中的重要中间表示。Hydra 等工作研究了实时 3D 场景图构建和优化~\cite{hydrarss2022}，SayPlan 将 3D 场景图用于大规模语言模型规划 grounding~\cite{sayplan2023}，Taskography 则从任务规划角度评价大规模 3D 场景图~\cite{taskography2022}。这些工作说明，图结构能够有效表达空间层次、对象关系和任务相关上下文。GraphWorld 继承这一结构化表示优势，但进一步强调图的运行时演化：节点状态和动态关系不是 episode 中的附属变量，而是世界持续变化的核心。
 
-在当前实现中，我们进一步关注一个更具体的问题：当世界持续演化、任务不断被 NPC 行为打断或重新生成时，机器人不能只依赖单步反应式决策。许多家庭任务并不是一个原子动作，而是由常识流程约束的长程程序，例如洗衣需要经历放入洗衣机、启动洗涤、晾干、折叠和收纳等阶段。如果仅把每一步都交给语言模型重新从候选动作中选择，模型容易被局部可见动作吸引，出现重复开关门、过早收纳、错误清洁方式或目标切换等问题。因此，GraphWorld 也提供了一个用于研究长期机器人行为的中间层：把高层任务、结构化技能和低层可执行动作连接起来。
+\subsection{长时程任务与语言模型规划}
+SayCan、Inner Monologue 等方法将语言模型与机器人可供性、环境反馈或中间推理结合，用于长程任务分解和动作选择~\cite{saycan2022,innermonologue2022}。这类方法通常仍以给定任务为中心，即先有一条指令，再将其分解为可执行动作。GraphWorld 关注的是更靠前的一层：任务如何在持续世界中不断出现，以及机器人如何在没有固定终点的环境里持续维护状态。因此，我们不只需要规划器，还需要一个能产生扰动、暴露问题并记录恢复效果的世界底座。
 
-本文的主要动机和贡献可概括为三点。第一，我们提出一种可持续演化的符号图世界模型，使场景图从静态表示扩展为可运行的世界状态。第二，我们将人类日程、环境时间和机器人动作统一纳入同一图状态演化过程，从而形成长期任务扰动和恢复任务。第三，我们探索一种轻量级的技能条件化 agent 机制，使语言模型负责高层意图选择，而由图状态和技能阶段约束低层动作偏置，以提高长程任务的稳定性和可解释性。
+\subsection{持续世界与社会仿真}
+Generative Agents 等系统展示了长期运行的角色、日程和社会行为~\cite{generativeagents2023}。这类系统启发我们将 NPC 视为世界动力学的一部分，而非简单背景对象。但对机器人研究而言，仅有自然语言记忆并不足够：机器人需要知道门是否打开、杯子是否有水、衣服是否干燥、药品是否在正确位置，以及某个动作是否合法。因此，GraphWorld 采用显式图状态和规则化转移，把社会活动产生的扰动转化为可验证、可评分、可恢复的符号变化。
 
-\section{Related Work}
-\subsection{Scene Graphs and Semantic World Representations}
-Scene graphs and semantic maps have become standard intermediate representations for embodied agents. Prior work has studied online semantic mapping, task-relevant scene graphs, and state-aware graph updates for planning and grounding~\cite{hydrarss2022,sayplan2023,taskography2022}.
-
-\subsection{Persistent Simulated Worlds}
-Recent work on persistent or socially active environments emphasizes worlds that remain active over time instead of terminating after a single task~\cite{generativeagents2023}. However, many such systems rely primarily on natural language memories or behavior traces rather than an explicit symbolic graph state suitable for robot planning.
-
-\subsection{Symbolic Planning and Long-Horizon Benchmarks}
-Planning-oriented embodied systems have increasingly adopted structured intermediate states and long-horizon decomposition, but most still operate in finite episode settings~\cite{saycan2022,innermonologue2022}. GraphWorld is aimed at the gap between structured symbolic planning and persistent world evolution.
-
-\section{Method}
-\subsection{自演化图世界模型定义}
-我们将 GraphWorld 定义为一个带有时间推进机制的层次化符号图世界模型。与传统 scene graph 相比，我们希望保留已有工作的主要优点，包括层次化空间表达、面向任务的状态更新、功能关系建模以及可用于规划的中间表示；在此基础上，进一步把时间作为世界的一等公民显式纳入图定义中，使图不再只是某一时刻的静态快照，而成为一个可持续演化的运行时世界状态。
-
-形式上，GraphWorld 可表示为
+\section{GraphWorld 模型}
+\subsection{持续图世界定义}
+我们将 GraphWorld 定义为带时间推进机制的层次化符号图：
 \[
-\mathcal{G}_t=(\mathcal{V}, \mathcal{E}, \mathcal{A}, \mathcal{S}_t, \mathcal{T}_t),
+\mathcal{G}_t=(\mathcal{V}, \mathcal{E}_s, \mathcal{E}_t, \mathcal{A}, \mathcal{S}_t, \mathcal{W}_t),
 \]
-其中 $\mathcal{V}$ 表示节点集合，$\mathcal{E}$ 表示关系集合，$\mathcal{A}$ 表示节点的静态属性与可供性，$\mathcal{S}_t$ 表示时刻 $t$ 下的动态状态，$\mathcal{T}_t$ 表示与时间相关的全局上下文，包括当前 step、分钟级时间、事件日志以及例行活动阶段等信息。
+其中 $\mathcal{V}$ 为节点集合，$\mathcal{E}_s$ 为相对稳定的结构边，$\mathcal{E}_t$ 为运行时动态边，$\mathcal{A}$ 为节点静态属性与可供性，$\mathcal{S}_t$ 为时刻 $t$ 下的节点状态，$\mathcal{W}_t$ 为全局世界上下文，包括 step、分钟级时间、日期、可见房间、事件日志和角色活动阶段。
 
-在节点层面，我们采用层次化建模方式，把楼宇、楼层、房间、物体、移动工具以及智能体统一纳入同一张图中。该设计继承了已有层次场景图在空间组织上的优势，使系统既能表达宏观拓扑，也能表达细粒度物体交互。在边层面，我们区分至少四类关键关系：包含关系、邻接关系、支撑关系以及控制关系。前两者用于表达空间与拓扑结构，后两者用于表达交互性与可操作性。相比传统静态图，我们进一步允许节点状态和部分边关系随时间变化，例如门的开闭、垃圾桶的填充程度、食物的新鲜程度、人的当前位置以及运行时生成的 containment 关系。
+节点类型包括 room、fixed object、movable object、control object、human 和 robot。边关系包括包含、邻接、支撑、控制和运行时位置关系。结构边描述房间连通、对象组成和设备控制等稳定信息；动态边由 parent、runtime relation 和运行时索引重建，用于表达 \texttt{in}、\texttt{on}、\texttt{at}、\texttt{near}、\texttt{held\_by} 和 \texttt{worn\_by} 等关系。这样的区分使房间拓扑和临时物体位置保持解耦，同时允许图在每一步被重新物化为完整 scene graph。
 
-因此，我们提出的图具有两个核心特征。第一，它兼容已有 scene graph 工作中常见的层次表达、状态感知更新和任务相关关系建模能力。第二，它具有持续时间维度：世界中的变化既可以由机器人动作触发，也可以由 NPC 的日程、外生事件和环境演化触发。换言之，GraphWorld 不仅表示世界，还承担 world model 的职责。
+动态状态是图世界可演化性的核心。当前实现中的状态包括清洁、开闭、开关、湿度、折叠、腐烂、烧焦、填充度、设备剩余周期、植物生命值、人类心情和当前活动等。状态既可由机器人动作改变，也可由 NPC 事件、设备周期和环境时间改变。例如洗衣机完成周期后会把衣物从脏变为干净且湿，晾衣架会随时间把湿衣物变干，超市冷柜门打开会影响冷藏商品状态，医院病床使用后会生成清洁或床单补给需求。
 
-\subsection{图的构建方法}
-GraphWorld 的构建采用“先拓扑、后填充、再运行时化”的三阶段流程。
+\subsection{场景构建流程}
+GraphWorld 采用“拓扑生成、房间填充、运行时化”的三阶段流程。第一阶段根据场景类型生成房间集合和连通关系，例如家庭包含卧室、厨房、浴室和客厅，医院包含大厅、诊室、药房、输液区和护士站，超市包含入口、货架区、生鲜区、冷柜区和收银区。第二阶段按照房间功能填充 anchor object、设备、容器和可移动物体，并补全支撑、包含和控制关系。第三阶段将静态图转换为可执行状态，建立 parent-of、relation-of、room-of、control edges 和 room edges 等索引，供运行时验证动作和更新图状态。
 
-\paragraph{1) 房间拓扑生成}
-第一阶段生成建筑级与楼层级拓扑。系统首先根据场景类型选择房间集合与功能分区规则，例如 hospital、office、library、hotel 等场景具有不同的核心房间、公共区域和服务区域。随后依据房间连接规则生成楼层内的邻接关系，并在多层场景下加入电梯厅、电梯和跨层连通机制。该阶段产出的重点不是几何细节，而是具有可规划意义的 room graph。
+这一流程的设计目标不是追求几何真实性，而是生成具有可规划意义的符号世界。图中每个重要对象都应有明确的语义类型、状态字段、可执行动作和合理父节点；每个房间都应能够通过拓扑关系被机器人逐步探索；每类长期扰动都应对应至少一种可恢复路径。
 
-\paragraph{2) 房间填充与关系补全}
-第二阶段在房间拓扑之上填充对象。我们为每类房间定义功能组与放置规则：先生成能够代表房间功能的 anchor objects，再围绕 anchor 放置成员对象与小件物体，并补充包含关系、表面支撑关系与邻近关系。通过这一过程，原始房间拓扑被扩展为带有 affordance、object state 和 logical control 的完整 scene graph。与此同时，图引擎会在添加边的同时同步维护节点上的冗余字段，例如房间所包含的对象列表、楼层所包含的房间列表以及房间邻居列表，从而保证图表示与序列化结果的一致性。
+\section{运行时系统}
+\subsection{统一状态转移}
+GraphWorld 的运行时每一步包含四个主要阶段。首先，系统根据当前分钟数、日期和 NPC 角色日程生成 human event。其次，机器人基于局部观察获得可见节点、可见房间、置信度和合法动作候选。然后，机器人动作由 validator 检查并由 transition rules 执行；随后 human event system 根据事件前置条件和效果模板更新人类位置、物体位置和节点状态。最后，environment system 推进设备周期、自然干燥、腐烂和世界时钟，并同步运行时动态边。
 
-\paragraph{3) 运行时状态构建}
-第三阶段将静态 scene graph 转换为可执行的 runtime state。具体而言，系统从图中抽取 parent-of 关系、room-of 关系、结构边、控制边和节点动态状态，形成仿真时使用的内部状态表示。在每个 step 上，世界状态会根据当前时间、NPC 日程、外生事件和动作效果进行更新，之后再把更新结果重新物化为新的图状态和事件日志。这样，GraphWorld 就从一个“构建好的图”变成了一个“持续运行的图世界”。
+当前低层动作空间包括
+\[
+\{\texttt{move},\texttt{pick},\texttt{place},\texttt{press},\texttt{open},\texttt{close},\texttt{brush},\texttt{fold},\texttt{dump}\}.
+\]
+动作并非只检查语法合法性，还要满足世界规则。例如关闭容器不能直接取放物体，设备门未关闭时不能启动，布类物体不能通过普通 \texttt{brush} 直接洗干净，垃圾桶只能接收腐烂或烧焦食物，装水杯子必须在水槽执行 \texttt{dump}。这些规则保证评分不能被不符合常识的捷径绕过。
 
-\subsection{图质量评价}
-仅仅生成图还不够，我们还需要判断图是否足够好，是否适合作为长期任务规划与仿真的世界底座。为此，我们从以下四个维度评价图质量。
+\subsection{NPC 作为世界动力学}
+GraphWorld 中的 NPC 不是对话角色，而是持续扰动世界状态的内部生成器。每个 NPC 具有 role、persona、当前位置和当前活动。家庭场景中 resident 会起床、穿衣、洗漱、吃饭、离家、回家和睡觉；医院场景中 patient、nurse 和 doctor 分别执行挂号、候诊、叫号、看诊、开药、送药、输液、换床单和补耗材等事件；超市场景中 customer、cashier 和 stocker 会进入商店、取购物车、选购商品、结账、离店和理货。
 
-\paragraph{1) 结构复杂度与多样性}
-第一类指标衡量图是否足够丰富。我们统计平均房间物体密度以及物体类型熵，用于衡量图中是否包含足够多的可交互元素，以及房间内部是否存在合理的功能多样性。如果图过稀疏，Agent 面临的任务空间会过于单薄；如果图过于单一，则无法体现真实复杂环境中的组合关系。
+每个事件由前置条件和效果组成。前置条件用于判断人类活动是否顺利，例如病人是否能拿到处方、护士是否有药品可送、顾客是否能完成结账。效果则把活动影响写回图状态，例如移动物体、改变清洁度、改变填充度、移动 actor 或生成补给需求。由此，任务不是人工静态列举出来的，而是在 NPC 使用世界的过程中自然出现。
 
-\paragraph{2) 物理有效性}
-第二类指标衡量图的物理一致性。一个合格的图不应包含大量“悬空物体”或不合理的放置关系。具体而言，我们检查对象是否具有有效的支撑或包含父节点，并把未被 room、surface 或 container 正确承接的对象视为物理无效。这个指标保证图不仅可看，而且可执行。
+\subsection{局部感知与事件日志}
+机器人并不直接读取全图。Perception 模块根据机器人所在房间、相邻房间、结构门开闭和设备门开闭生成局部观察，并维护 room-level confidence。打开结构门会扩展可见房间；打开设备门会暴露设备内部物体。这使机器人需要通过移动和开门逐步获得信息，而不是在全知状态下选择动作。
 
-\paragraph{3) 任务可用性与交互性}
-第三类指标衡量图是否适合用于规划和任务生成。我们关注对象是否具有 affordance 或 state，是否存在足够多的控制边和逻辑边，以及房间图的连通性和平均最短路长度。其本质是在回答一个问题：这个图是否能够承载“去哪里、操作什么、通过什么控制关系改变世界”的任务过程。如果一个图只包含摆设而缺乏交互属性，那么它对于 embodied planning 的价值是有限的。
+所有机器人动作、人类事件、动作失败和定时转移都会写入 event log。该日志既用于回放，也用于计算人类事件成功率。每个实验会输出 replay、metrics CSV、TensorBoard scalar 和 summary JSON，便于复现实验和观察长期曲线。
 
-\paragraph{4) 运行时可演化性}
-第四类指标衡量图是否支持长期演化。我们关注时间推进后，图中的状态变化是否合理、边关系是否能够被重新构建、事件日志是否可回溯，以及 NPC 活动是否能在图上留下结构化影响。与传统静态场景图不同，GraphWorld 的质量不仅由初始图决定，还由其在长时间运行中的稳定性与可解释性决定。
+\section{技能条件化机器人 Agent}
+\subsection{问题动机}
+在持续演化世界中，机器人面临的难点不是单步动作空间，而是长期任务语义与局部动作候选之间的错配。``把物品放回原位'' 可以由当前父节点与初始父节点的差异定义；但洗衣、倒垃圾、清空杯子、医院补药和清洁病床包含隐含流程，不能等价为一次 \texttt{brush} 或 \texttt{place}。如果每一步都让语言模型从候选动作中重新选择，模型容易被局部合法动作吸引，出现重复开关门、过早收纳、错误清洁方式或目标切换。
 
-综合来看，我们不是只评价一张图“长得像不像”，而是评价它是否同时满足结构丰富、物理合理、任务可用和长期可演化这四个条件。
-
-\subsection{NPC Agent 概念}
-为了使世界具备持续演化能力，我们在 GraphWorld 中引入 NPC agent 概念。这里的 NPC 并不是用于对话的附属角色，而是世界动力学的一部分。每个 NPC 都具有角色、日程和活动状态，并能够在图上留下持续的状态扰动。
-
-在当前原型中，NPC agent 由角色日程驱动。不同角色对应不同的时间表，例如 resident、patient 和 worker 具有不同的起居、工作、休息与用餐安排。系统根据当前分钟数查询目标活动、目标房间和目标位置，并通过房间拓扑执行逐步移动，而不是瞬间传送。若移动路径上存在门等可控对象，NPC 还会触发相应的控制行为，例如开门进入目标房间。
-
-更重要的是，NPC 的行为会改变世界状态。例如起床和穿衣会改变衣物与房间状态，洗漱会引入清洁度扰动，离家与回家会改变人物位置和事件日志，用餐会触发食物状态变化，夜间活动还可能影响洗衣、垃圾和卫生相关状态。也就是说，NPC 不只是图中的一个节点，而是时间驱动图演化的内部生成器。
-
-我们引入 NPC agent 的目的有三点。第一，它为世界提供非机器人触发的变化来源，使世界具备持续性而非 episode 式静止。第二，它让任务产生具有上下文，例如因为有人活动而出现清洁、整理、补给、照护等任务。第三，它为后续研究长期角色型 agent 提供参照系：机器人面对的不再是空世界，而是一个包含常驻角色、规律活动和突发扰动的活世界。
-
-\subsection{技能条件化的机器人 Agent}
-在持续演化环境中，机器人 agent 面临的核心困难不是单步动作空间本身，而是长期任务语义与局部动作候选之间的错配。以家庭整理为例，``把物品放回原位'' 可以通过当前父节点和初始父节点的差异直接定义；但洗衣、倒垃圾、清洗餐具等任务包含隐含流程，不能简单地等价为某个物体的空间还原。如果把所有任务都压缩为一步一步的候选动作选择，语言模型容易选择局部看起来合法但长期无效的动作。例如，脏衣服不能通过普通清洁动作恢复，而必须经过洗衣机、晾衣架、折叠和衣柜收纳这一过程。
-
-为了解决这一问题，我们在机器人 agent 中引入轻量级的技能库。技能库不是端到端策略，也不是完整的符号规划器，而是一组可被图状态触发的结构化常识流程。每个技能包含触发条件、完成目标和阶段化子流程：
+\subsection{技能表示}
+为此，我们引入轻量级技能库。每个技能由触发条件、完成目标和阶段化子流程组成：
 \[
 \text{skill}=(\text{name},\text{trigger},\text{goal},\{\text{phase}_i\}_{i=1}^{n}).
 \]
-例如，洗衣技能的触发条件是布类物体处于脏、湿或未折叠状态；完成目标是该物体位于衣柜中，并满足干净、干燥和已折叠；阶段依次包括装入洗衣机、启动洗衣机、晾干、折叠和收纳。这样的技能表示保留了语言模型可理解的自然语义，同时又能被图状态直接检验和更新。
+家庭场景包括 \texttt{laundry\_clothes}、\texttt{dispose\_food} 和 \texttt{empty\_cup}。医院场景包括补充处方单、补药、归还冷藏药品、清理医疗废物、收集脏床单、补充干净床单、归还轮椅、清洁候诊区和清洁诊疗床等技能。技能不是完整符号规划器，而是可读、可扩展的常识流程，用于在图状态上定义长期目标和阶段偏置。
 
-机器人每一步接收的输入由五类信息组成。第一是当前机器人状态，包括所在房间、可见房间和是否持有物体。第二是全局规则，例如哪些动作会改变清洁度、哪些容器具有容量限制、哪些物体不能用错误方式恢复。第三是 active goal，即上一阶段尚未完成的长期目标。第四是当前相关技能；系统只把与当前图状态或 active goal 有关的技能放入提示词中，避免把完整操作手册全部塞给模型。第五是候选低层动作列表，每个动作都已经由引擎验证为合法动作。
+以洗衣为例，技能阶段包括 \texttt{wash\_load}、\texttt{start\_washer}、\texttt{dry}、\texttt{fold} 和 \texttt{store}。系统根据图状态刷新当前 phase：脏衣物不在洗衣机中时需要装入，已在洗衣机中且设备未运行时需要关闭并启动，湿衣物需要晾干，干燥未折叠时需要折叠，已折叠但未入柜时需要收纳。
 
-在决策上，我们采用高层选择和低层执行分离的方式。语言模型仍然需要输出一个 high-level task 和一个 low-level action index，但系统维护 active goal，并根据图状态刷新其 phase。例如，当衣服仍然是脏的且不在洗衣机中时，active goal 的阶段为 \texttt{wash\_load}；当衣服位于洗衣机且洗衣机未运行时，阶段变为 \texttt{start\_washer}；当衣服变湿时，阶段变为 \texttt{dry}；干燥但未折叠时进入 \texttt{fold}；折叠后若不在衣柜中则进入 \texttt{store}。低层候选动作不会被硬编码为唯一动作，但会根据当前阶段获得排序偏置，例如 \texttt{wash\_load} 阶段优先选择 pick、open washer 和 place into washer，而不是普通的 restore 或 clean 动作。
+\subsection{决策流程}
+机器人每一步的 prompt 包含五类信息：机器人状态、全局规则、active goal、相关技能和合法动作候选。语言模型输出 high-level task 与 low-level action index；随后系统用基于图状态的 ranker 检查该动作是否推进 active goal。如果当前 active goal 有明确阶段，而模型选择的动作明显偏离，ranker 会把动作拉回更能推进阶段的合法候选。这样，语言模型仍负责语义判断和目标选择，图引擎负责动作合法性、阶段一致性和长期目标跟踪。
 
-这一设计的动机是把语言模型最擅长的语义判断与图引擎最擅长的状态约束结合起来。语言模型负责在当前上下文中判断应继续探索、恢复物体位置还是执行某个常识技能；图引擎负责保证动作合法、阶段可验证、目标可持续跟踪。相比纯反应式 agent，该机制减少了每一步重新选择大目标导致的局部循环；相比传统完整任务规划器，它又保持了较低的工程复杂度，并允许技能以可读、可扩展的方式逐步加入。
+\section{评价指标与实验设置}
+\subsection{矩阵化评价}
+GraphWorld 使用三类分数衡量长期表现。状态分数比较当前状态矩阵 $S_t$ 与稳态目标 $S_w$，关注清洁、开闭、湿度、腐烂、填充度、设备状态等是否健康。空间分数比较当前关系矩阵 $R_t$ 与稳态关系 $R_w$，关注可移动物体是否回到合理位置。人类事件分数统计 NPC 日程事件的成功率，衡量机器人是否支持了人的正常活动。综合分数为
+\[
+\text{score}=0.45\,\text{state}+0.35\,\text{spatial}+0.20\,\text{human}.
+\]
+分数按时间累计记录。坏状态持续越久，长期曲线受到的影响越大；机器人后续完成恢复任务时，instant score 会改善，累计分也会逐步回升。
 
-\subsection{当前原型中的观察}
-从当前家庭场景实验可以看到，机器人性能的瓶颈主要来自两个方面。第一类是世界规则与评分逻辑问题：如果引擎允许不符合常识的状态转移，例如用普通清洁动作直接恢复衣服清洁度，则 agent 可能获得表面上较高的分数，但该行为并不符合真实任务语义。第二类是 agent 的长期任务选择问题：当规则修正后，模型必须把一个异常状态展开为多阶段流程，否则容易停留在局部整理或错误还原上。
+\subsection{实验设置}
+我们在五个代表性场景上运行 1600 step 实验：家庭场景包含 1 个 resident；医院、超市、办公室和工厂各包含 3 个 NPC，分别覆盖病人/护士/医生、顾客/收银员/理货员、员工/经理/访客、工人/质检员/维修员等角色。无机器人基线只运行 NPC 和环境转移；机器人设置加入 1 个机器人，使用 Qwen3.5-9B 作为语言模型。
 
-因此，当前工作不仅是提高实验分数，更重要的是暴露了持久图世界中评价与 agent 设计的耦合关系。一个合理的基准需要同时满足两点：如果机器人真的完成了任务，评分应能反映收益；如果机器人通过错误捷径完成状态恢复，规则系统应阻止这种捷径。技能条件化 agent 正是在这个背景下提出的：它不是替代世界规则，而是在规则正确之后，为模型提供可执行的长期任务脚手架。
+我们比较三种机器人方法。Reactive 方法只接收局部可见图、最近分数和合法动作候选，不提供长期目标或技能。Single-round 方法在一次 LLM 调用中同时选择高层任务和低层动作。Goal-review 方法先判断是否继续、切换或结束当前 active goal，再选择低层动作。表~\ref{tab:result-summary} 给出每个场景的最优方法和主要收益来源；表~\ref{tab:main-results} 给出完整结果，其中浅绿色表示该场景综合分最高的方法，浅红色表示低于无机器人基线的失败设置。
 
-\section{Current Scope and Limitations}
-The current system already implements the graph substrate, topology-based scene generation, runtime evolution in representative home-like settings, and symbolic benchmark integration. However, several broader goals remain partially realized, including persistent task arrival, full social-rule modeling, and a complete reinforcement learning training loop. We present GraphWorld as an infrastructure prototype and research direction rather than a fully closed-loop learning system.
+\begin{table}[t]
+\centering
+\caption{Base scene 结果摘要。$\Delta$ 表示相对无机器人基线的综合分提升。}
+\label{tab:result-summary}
+\footnotesize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{llcl}
+\toprule
+场景 & 最优方法 & $\Delta$ 综合分 & 主要收益 \\
+\midrule
+家庭 & single-round & +0.1116 & 空间恢复与人类事件 \\
+医院 & goal-review & +0.1700 & 流程闭环与空间恢复 \\
+超市 & single-round & +0.1783 & 购物车、冷柜与补货闭环 \\
+办公室 & single-round & +0.3260 & 文件、杯子和会议室归位 \\
+工厂 & single-round & +0.2414 & 安全装备、零件和工具物流 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\section{Conclusion}
-GraphWorld reframes the scene graph as a persistent world model for embodied AI. By combining hierarchical symbolic structure, temporal evolution, and planning-oriented interfaces, it provides a foundation for studying long-horizon embodied agents in environments that keep changing over time.
+\begin{table*}[t]
+\centering
+\caption{Base scene 1600 step 长期运行结果。F/S/Sp/H 分别表示综合分、状态分、空间分和人类事件分。绿色表示该场景综合分最高的方法；红色表示综合分低于无机器人基线。}
+\label{tab:main-results}
+\scriptsize
+\setlength{\tabcolsep}{1.6pt}
+\renewcommand{\arraystretch}{1.1}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccccccccccccc}
+\toprule
+\multirow{2}{*}{场景}
+& \multicolumn{4}{c}{no-robot}
+& \multicolumn{4}{c}{reactive}
+& \multicolumn{4}{c}{single-round}
+& \multicolumn{4}{c}{goal-review} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(lr){10-13}\cmidrule(lr){14-17}
+& F & S & Sp & H & F & S & Sp & H & F & S & Sp & H & F & S & Sp & H \\
+\midrule
+家庭
+& 0.780 & 0.889 & 0.605 & 0.843
+& \badcell{0.755} & 0.834 & 0.605 & 0.841
+& \bestcell{0.892} & 0.893 & 0.874 & 0.921
+& 0.854 & 0.865 & 0.800 & 0.921 \\
+医院
+& 0.677 & 0.907 & 0.282 & 0.852
+& \badcell{0.652} & 0.870 & 0.281 & 0.811
+& \badcell{0.670} & 0.907 & 0.282 & 0.815
+& \bestcell{0.847} & 0.925 & 0.711 & 0.911 \\
+超市
+& 0.769 & 0.892 & 0.730 & 0.563
+& 0.779 & 0.946 & 0.737 & 0.477
+& \bestcell{0.948} & 0.906 & 0.975 & 0.993
+& 0.929 & 0.903 & 0.949 & 0.954 \\
+办公室
+& 0.626 & 0.899 & 0.341 & 0.510
+& 0.658 & 0.974 & 0.337 & 0.510
+& \bestcell{0.952} & 0.981 & 0.968 & 0.860
+& 0.892 & 0.956 & 0.885 & 0.758 \\
+工厂
+& 0.645 & 0.927 & 0.505 & 0.254
+& \badcell{0.614} & 0.937 & 0.406 & 0.254
+& \bestcell{0.886} & 0.948 & 0.986 & 0.575
+& 0.856 & 0.943 & 0.956 & 0.485 \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
 
-\section*{Acknowledgment}
-The authors would like to thank the project collaborators and early users of GraphWorld.
+\subsection{结果分析}
+家庭场景中，single-round 方法将综合分从 0.7802 提升到 0.8918，主要收益来自空间分数从 0.6049 提升到 0.8743。这说明家庭任务较规则，给定 active goal 和技能后，一次 LLM 调用已经能够维护洗衣、餐具、垃圾和物体归位等闭环。
+
+医院场景中，goal-review 明显优于 single-round：single-round 的综合分为 0.6698，甚至低于无机器人基线，而 goal-review 达到 0.8473。医院任务具有更强流程依赖，处方单、药品、冷藏药、床单和医疗废物都需要按阶段完成。将“是否继续当前目标”和“下一步做什么”拆开，有助于机器人坚持长链闭环。
+
+超市、办公室和工厂展示了空间恢复的重要性。超市中，购物车、冷柜、货架和收银区被维护后，人类事件分数从 0.5629 提升到 0.9934。办公室中，文件、杯子、会议室和工位归位使空间分数从 0.3414 提升到 0.9681。工厂中，安全装备、零件箱、工具和质检记录构成物流闭环，single-round 将空间分数提升到 0.9858。
+
+Reactive 方法提供了一个重要反例。它在家庭、医院和工厂中低于无机器人基线，说明“局部可见图 + 合法动作候选”并不足以让语言模型自发形成长期维护策略。GraphWorld 因而不只是比较分数高低，也能暴露 agent 的失败类型：局部 affordance 偏置、目标保持不足、闭环完成不足以及对人类活动时间窗口不敏感。
+
+\section{局限与下一步}
+当前 GraphWorld 仍是一个研究原型。首先，稳态目标仍主要基于初始状态，尚未充分支持 activity override。例如吃饭时餐具在桌上、出门时鞋在人身上、护士换床单时床单离开柜子，都可能是活动中的合理偏离；评价系统需要根据活动阶段动态切换合理目标。其次，多机器人协作仍不完整。系统已经支持多个机器人节点、独立 memory 和动作列表，但动作执行仍按顺序进行，缺少资源冲突检测、任务分配和事务式提交。第三，NPC 之间的依赖还比较模板化，医院和超市需要进一步加入队列、共享资源和跨角色事件依赖。最后，当前机器人主要依赖 LLM 与规则 ranker，尚未形成完整强化学习训练闭环。
+
+下一步工作将优先补齐三件事：其一，完善超市机器人实验并加入办公室、工厂等场景；其二，引入全局任务池和机器人任务认领机制，避免多机器人重复追同一目标；其三，将评分中的稳态定义扩展为活动条件化目标，使评价更贴近真实持续世界。
+
+\section{结论}
+本文提出 GraphWorld，一种面向长时程具身智能的持续自演化图世界模型。GraphWorld 将场景图从静态表示扩展为运行时世界底座，把空间结构、对象状态、NPC 日程、环境时间和机器人动作统一在同一符号图中。通过技能条件化机器人 agent 和矩阵化长期评价，GraphWorld 能够研究机器人如何在不断变化的家庭、医院和超市中持续维护世界秩序。初步实验表明，机器人维护行为能够显著改善空间恢复、人类事件成功率和综合长期表现。我们认为，面向无限任务流的持久图世界是服务机器人从完成单次任务走向长期共处的重要基础。
+
 
 \bibliographystyle{IEEEtran}
 \bibliography{refs}

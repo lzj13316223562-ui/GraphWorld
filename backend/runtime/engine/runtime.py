@@ -4,9 +4,11 @@ import copy
 from typing import Any
 
 from backend.core.actions import ActionType
+from backend.core.action_schemas import apply_action_schema
 from backend.core.edges import PARENT_RELATIONS, ROOM_CONNECTIVITY_RELATIONS
 from backend.core.assets.npc_library import get_event_spec
-from backend.core.transition_rules import apply_action_transition, apply_timed_transitions
+from backend.core.states import DISCRETE_STATE_SPACE
+from backend.core.timed_transitions import apply_timed_transitions
 from .validator import validate_action
 
 
@@ -30,11 +32,24 @@ class SceneGraph:
     def __init__(self, scene: dict[str, Any]):
         self.scene_name = str(scene.get("scene_name") or "scene")
         self.nodes = {str(node["id"]): node for node in _scene_nodes(scene) if node.get("id")}
+        self._validate_node_states()
         self.edges = _scene_edges(scene)
         self.world_state = copy.deepcopy(scene.get("world_state") or {})
         self.world_state.setdefault("step", 0)
         self.world_state.setdefault("event_log", [])
         self.refresh_indices()
+
+    def _validate_node_states(self) -> None:
+        allowed = set(DISCRETE_STATE_SPACE)
+        invalid: list[str] = []
+        for node_id, node in sorted(self.nodes.items()):
+            states = node.get("states") or {}
+            for state_name in sorted(set(states) - allowed):
+                invalid.append(f"{node_id}.{state_name}")
+        if invalid:
+            preview = ", ".join(invalid[:20])
+            suffix = "" if len(invalid) <= 20 else f", ... ({len(invalid)} total)"
+            raise ValueError(f"states outside DISCRETE_STATE_SPACE: {preview}{suffix}")
 
     def refresh_indices(self) -> None:
         self.parent_of: dict[str, str] = {}
@@ -147,6 +162,9 @@ class SceneGraph:
     def set_node_states(self, node_id: str, **updates: Any) -> None:
         node = self.nodes.get(node_id)
         if node:
+            invalid = sorted(set(updates) - set(DISCRETE_STATE_SPACE))
+            if invalid:
+                raise ValueError(f"{node_id} received states outside DISCRETE_STATE_SPACE: {invalid}")
             node.setdefault("states", {}).update(updates)
 
     def held_by(self, agent_id: str) -> str:
@@ -204,57 +222,33 @@ class RobotActionSystem(System):
         action_name = str(action.get("action") or "").lower()
         agent_id = str(action.get("agent") or "robot_01")
         target_id = str(action.get("target") or "")
-        object_id = str(action.get("object") or target_id)
         if not action_name:
             return {"ok": False, "reason": "missing action"}
         validation = self.validate(action)
         if not validation.ok:
             self.graph.log("robot_action_failed", validation.reason, action=copy.deepcopy(action))
             return {"ok": False, "reason": validation.reason}
-        if action_name in {ActionType.OPEN.value, ActionType.CLOSE.value, ActionType.PRESS.value, ActionType.BRUSH.value, ActionType.FOLD.value, ActionType.DUMP.value}:
-            failures = apply_action_transition(
-                self.graph.state_for_rules(),
-                action_name,
-                agent_id,
-                target_id,
-                object_id=object_id,
-                step=int(self.graph.world_state.get("step") or 0),
-            )
-            if failures:
-                reason = "; ".join(failures)
-                self.graph.log("robot_action_failed", reason, action=copy.deepcopy(action))
-                return {"ok": False, "reason": reason}
-            self.graph.log("robot_action", f"{agent_id} {action_name} {target_id}", action=copy.deepcopy(action))
-            return {"ok": True}
+
+        held_before = str(action.get("object") or self.graph.held_by(agent_id))
+        failures = apply_action_schema(
+            self.graph.state_for_rules(),
+            action,
+            step=int(self.graph.world_state.get("step") or 0),
+        )
+        if failures:
+            reason = "; ".join(failures)
+            self.graph.log("robot_action_failed", reason, action=copy.deepcopy(action))
+            return {"ok": False, "reason": reason}
+
+        detail = f"{agent_id} {action_name} {target_id}"
         if action_name == ActionType.MOVE.value:
-            relation = "at" if str(self.graph.node(target_id).get("node_type") or "") == "room" else "near"
-            self.graph.move_node(agent_id, target_id, relation)
-            self.graph.log("robot_action", f"{agent_id} moved to {target_id}", action=copy.deepcopy(action))
-            return {"ok": True}
-        if action_name == ActionType.PICK.value:
-            self.graph.move_node(object_id, agent_id, "held_by")
-            self.graph.log("robot_action", f"{agent_id} picked {object_id}", action=copy.deepcopy(action))
-            return {"ok": True}
-        if action_name == ActionType.PLACE.value:
-            held = str(action.get("object") or self.graph.held_by(agent_id))
-            if not held:
-                return {"ok": False, "reason": "agent holds nothing"}
-            target_semantic = str(self.graph.node(target_id).get("semantic_type") or "").lower()
-            relation = "on" if target_semantic in {"drying_rack", "rack", "table", "counter", "shelf"} else "in"
-            self.graph.move_node(held, target_id, relation)
-            held_node = self.graph.node(held)
-            held_semantic = str(held_node.get("semantic_type") or "").lower()
-            held_states = held_node.setdefault("states", {})
-            if held_semantic in {"shoes", "shoe"} and target_semantic in {"shoe_rack", "rack", "shelf"}:
-                held_states["scattered"] = False
-            if target_id in {"sink_bathroom", "sink_kitchen"} or target_semantic == "sink":
-                held_states.pop("misplaced_near", None)
-            if target_semantic == "trash_bin":
-                target_states = self.graph.node(target_id).setdefault("states", {})
-                target_states["is_dirty"] = True
-            self.graph.log("robot_action", f"{agent_id} placed {held} {relation} {target_id}", action=copy.deepcopy(action))
-            return {"ok": True}
-        return {"ok": False, "reason": f"unsupported action: {action_name}"}
+            detail = f"{agent_id} moved to {target_id}"
+        elif action_name == ActionType.PICK.value:
+            detail = f"{agent_id} picked {target_id}"
+        elif action_name == ActionType.PLACE.value:
+            detail = f"{agent_id} placed {held_before} at {target_id}"
+        self.graph.log("robot_action", detail, action=copy.deepcopy(action))
+        return {"ok": True}
 
 
 class HumanEventSystem(System):
@@ -361,6 +355,8 @@ class HumanEventSystem(System):
         parent_id, relation = self._resolved_parent(effect, actor_id)
         if parent_id:
             self.graph.move_node(actor_id, parent_id, relation)
+        if str(getattr(effect, "activity", "") or ""):
+            self.graph.node(actor_id)["current_activity"] = str(effect.activity)
 
     def set_state(self, effect: Any, actor_id: str) -> None:
         target_id = actor_id if str(effect.target or "") == "human" else str(effect.target or "")
@@ -463,7 +459,7 @@ class HumanEventSystem(System):
         failures = self.precondition_failures(event_id, actor_id)
         actor = self.graph.nodes.get(actor_id)
         if actor:
-            actor.setdefault("states", {})["current_activity"] = event_id
+            actor["current_activity"] = event_id
         if spec:
             effects = spec.effects_on_failure if failures else spec.effects_on_success
             for effect in effects:

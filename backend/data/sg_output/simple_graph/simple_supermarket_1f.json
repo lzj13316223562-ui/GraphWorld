@@ -58,6 +58,29 @@
       ]
     },
     {
+      "id": "outside_home",
+      "name": "Outside",
+      "name_cn": "店外",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": null,
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan"
+      ]
+    },
+    {
       "id": "produce_area",
       "name": "Produce Area",
       "name_cn": "生鲜区",
@@ -130,6 +153,7 @@
         "counter_checkout",
         "display_checkout",
         "table_checkout",
+        "cart_return_checkout",
         "trash_bin_checkout"
       ],
       "interactive_actions": [
@@ -183,7 +207,8 @@
       "child": [
         "table_staff_room",
         "seat_staff_room",
-        "cabinet_staff_room"
+        "cabinet_staff_room",
+        "receiving_dock_staff_room"
       ],
       "interactive_actions": [
         "move",
@@ -275,7 +300,6 @@
       "semantic_type": "vegetable",
       "mobility": "movable",
       "states": {
-        "freshness": 1.0,
         "temperature": "room",
         "is_cooked": false,
         "is_rotten": false
@@ -302,7 +326,6 @@
       "semantic_type": "vegetable",
       "mobility": "movable",
       "states": {
-        "freshness": 0.9,
         "temperature": "room",
         "is_cooked": false,
         "is_rotten": false
@@ -329,7 +352,6 @@
       "semantic_type": "fruit",
       "mobility": "movable",
       "states": {
-        "freshness": 1.0,
         "temperature": "room",
         "is_cooked": false,
         "is_rotten": false
@@ -356,7 +378,6 @@
       "semantic_type": "fruit",
       "mobility": "movable",
       "states": {
-        "freshness": 0.95,
         "temperature": "room",
         "is_cooked": false,
         "is_rotten": false
@@ -434,7 +455,6 @@
       "semantic_type": "drink",
       "mobility": "movable",
       "states": {
-        "freshness": 1.0,
         "temperature": "room",
         "is_cooked": false,
         "is_rotten": false
@@ -461,7 +481,6 @@
       "semantic_type": "drink",
       "mobility": "movable",
       "states": {
-        "freshness": 1.0,
         "temperature": "room",
         "is_cooked": false,
         "is_rotten": false
@@ -606,7 +625,8 @@
       "interactive_actions": [
         "move",
         "place",
-        "scan"
+        "scan",
+        "brush"
       ]
     },
     {
@@ -637,6 +657,30 @@
       ]
     },
     {
+      "id": "cart_return_checkout",
+      "name": "cart return",
+      "name_cn": "购物车回收点",
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "cart_return",
+      "mobility": "fixed",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 4,
+      "parent": "checkout_area",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan"
+      ],
+      "max_capacity": 3
+    },
+    {
       "id": "fridge_cold_storage",
       "name": "refrigerator",
       "name_cn": "冷柜",
@@ -658,6 +702,8 @@
       },
       "affordance_count": 10,
       "parent": "cold_storage",
+      "blocks_containment": true,
+      "max_capacity": 3,
       "child": [
         "milk_cold_storage_1",
         "juice_cold_storage_1"
@@ -665,6 +711,8 @@
       "interactive_actions": [
         "move",
         "place",
+        "open",
+        "close",
         "scan"
       ]
     },
@@ -677,7 +725,6 @@
       "semantic_type": "milk",
       "mobility": "movable",
       "states": {
-        "freshness": 1.0,
         "temperature": "cold",
         "is_cooked": false,
         "is_rotten": false
@@ -704,7 +751,6 @@
       "semantic_type": "juice",
       "mobility": "movable",
       "states": {
-        "freshness": 1.0,
         "temperature": "cold",
         "is_cooked": false,
         "is_rotten": false
@@ -818,22 +864,56 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 6,
+      "affordance_count": 8,
       "parent": "staff_room",
       "child": [],
       "interactive_actions": [
         "move",
         "place",
         "scan",
+        "open",
+        "close",
         "pull",
         "push"
       ]
+    },
+    {
+      "id": "receiving_dock_staff_room",
+      "name": "receiving dock",
+      "name_cn": "到货区",
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "receiving_dock",
+      "mobility": "fixed",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 4,
+      "parent": "staff_room",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan"
+      ],
+      "max_capacity": 5
     }
   ],
   "edges": [
     {
       "source_id": "F1",
       "target_id": "entrance",
+      "edge_type": "structural_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "outside_home",
       "edge_type": "structural_edge",
       "relation": "contains",
       "category": "structural",
@@ -876,6 +956,14 @@
       "target_id": "staff_room",
       "edge_type": "structural_edge",
       "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "outside_home",
+      "target_id": "entrance",
+      "edge_type": "structural_edge",
+      "relation": "connected",
       "category": "structural",
       "properties": {}
     },
@@ -1056,6 +1144,14 @@
       "properties": {}
     },
     {
+      "source_id": "checkout_area",
+      "target_id": "cart_return_checkout",
+      "edge_type": "structural_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
       "source_id": "cold_storage",
       "target_id": "fridge_cold_storage",
       "edge_type": "structural_edge",
@@ -1106,6 +1202,14 @@
     {
       "source_id": "staff_room",
       "target_id": "cabinet_staff_room",
+      "edge_type": "structural_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "staff_room",
+      "target_id": "receiving_dock_staff_room",
       "edge_type": "structural_edge",
       "relation": "inside_room",
       "category": "structural",

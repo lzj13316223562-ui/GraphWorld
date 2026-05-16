@@ -1,2 +1,26 @@
 3rdparty/
 backend/data/replays/
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Runtime and experiment outputs
+backend/data/replay_logs/
+backend/data/tensorboard/
+backend/data/experiments/
+
+# Local editor / assistant state
+.vscode/
+.codex
+
+# LaTeX build intermediates
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex*
+*.xdv

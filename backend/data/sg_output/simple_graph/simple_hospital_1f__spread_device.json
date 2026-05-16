@@ -1,0 +1,2670 @@
+{
+  "scene_name": "simple_hospital_1f__spread_device",
+  "scene_name_cn": "简单医院单层 / spread_device",
+  "world_state": {
+    "step": 0,
+    "day": 1,
+    "time_min": 360,
+    "minutes_per_step": 10,
+    "weather": "sunny",
+    "day_phase": "dawn"
+  },
+  "nodes": [
+    {
+      "id": "F1",
+      "name": "Floor 1",
+      "name_cn": "第 1 层",
+      "floor_number": 1,
+      "node_type": "fixed_object",
+      "semantic_class": "space",
+      "semantic_type": "floor",
+      "mobility": "structural",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": null,
+      "child": [
+        "corridor_main",
+        "entrance",
+        "lobby",
+        "outpatient_clinic_1",
+        "outside_home",
+        "pharmacy",
+        "registration",
+        "staff_room",
+        "treatment_room",
+        "waiting_area"
+      ],
+      "interactive_actions": [
+        "move"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "entrance",
+      "name": "Entrance",
+      "name_cn": "入口",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {
+        "temperature": 24.0
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "F1",
+      "child": [
+        "button_entrance",
+        "door_entrance",
+        "light_entrance",
+        "sanitizer_entrance",
+        "wheelchair_entrance"
+      ],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {
+        "doorways": []
+      }
+    },
+    {
+      "id": "wheelchair_entrance",
+      "name": "wheelchair",
+      "name_cn": "轮椅",
+      "states": {},
+      "node_type": "movable_object",
+      "semantic_class": "tool",
+      "semantic_type": "wheelchair",
+      "mobility": "movable",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "entrance",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "place"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "sanitizer_entrance",
+      "name": "hand sanitizer dispenser",
+      "name_cn": "手部消毒器",
+      "states": {},
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "hand_sanitizer_dispenser",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "entrance",
+      "child": [],
+      "interactive_actions": [
+        "move"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "door_entrance",
+      "name": "door",
+      "name_cn": "门",
+      "states": {
+        "is_dirty": false,
+        "is_open": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "door",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "manual_door"
+      },
+      "affordance_count": 0,
+      "parent": "entrance",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "open",
+        "close"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "light_entrance",
+      "name": "light",
+      "name_cn": "灯",
+      "states": {
+        "is_on": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "room_light",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "button_only"
+      },
+      "affordance_count": 0,
+      "parent": "entrance",
+      "child": [],
+      "interactive_actions": [
+        "move"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "button_entrance",
+      "name": "button",
+      "name_cn": "按钮",
+      "states": {
+        "is_on": false,
+        "is_pressed": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "button",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "entrance",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "press"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "lobby",
+      "name": "Lobby",
+      "name_cn": "大厅",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {
+        "temperature": 24.0
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "F1",
+      "child": [
+        "bench_lobby",
+        "button_lobby",
+        "door_lobby",
+        "light_lobby",
+        "prescription_return_lobby",
+        "supply_zone_lobby"
+      ],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {
+        "doorways": []
+      }
+    },
+    {
+      "id": "bench_lobby",
+      "name": "seat",
+      "name_cn": "座椅",
+      "states": {
+        "is_dirty": false,
+        "fill_level": 0.0,
+        "is_full": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "seat",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "lobby",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "prescription_return_lobby",
+      "name": "prescription return tray",
+      "name_cn": "处方回收处",
+      "states": {},
+      "node_type": "fixed_object",
+      "semantic_class": "storage",
+      "semantic_type": "prescription_return",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "lobby",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {},
+      "max_capacity": 5
+    },
+    {
+      "id": "supply_zone_lobby",
+      "name": "supply receiving zone",
+      "name_cn": "进货区",
+      "states": {},
+      "node_type": "fixed_object",
+      "semantic_class": "storage",
+      "semantic_type": "supply_zone",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "lobby",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {},
+      "max_capacity": 5
+    },
+    {
+      "id": "door_lobby",
+      "name": "door",
+      "name_cn": "门",
+      "states": {
+        "is_dirty": false,
+        "is_open": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "door",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "manual_door"
+      },
+      "affordance_count": 0,
+      "parent": "lobby",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "open",
+        "close"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "light_lobby",
+      "name": "light",
+      "name_cn": "灯",
+      "states": {
+        "is_on": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "room_light",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "button_only"
+      },
+      "affordance_count": 0,
+      "parent": "lobby",
+      "child": [],
+      "interactive_actions": [
+        "move"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "button_lobby",
+      "name": "button",
+      "name_cn": "按钮",
+      "states": {
+        "is_on": false,
+        "is_pressed": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "button",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "lobby",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "press"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "registration",
+      "name": "Registration",
+      "name_cn": "挂号处",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {
+        "temperature": 24.0
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "F1",
+      "child": [
+        "button_registration",
+        "computer_registration",
+        "counter_registration",
+        "door_registration",
+        "light_registration",
+        "printer_registration"
+      ],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {
+        "doorways": []
+      }
+    },
+    {
+      "id": "counter_registration",
+      "name": "counter",
+      "name_cn": "操作台",
+      "states": {
+        "is_dirty": false,
+        "fill_level": 0.0,
+        "is_full": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "counter",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 4,
+      "parent": "registration",
+      "child": [
+        "medical_form_registration"
+      ],
+      "interactive_actions": [
+        "move",
+        "place",
+        "brush"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "computer_registration",
+      "name": "computer",
+      "name_cn": "电脑",
+      "states": {
+        "is_on": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "computer",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "registration",
+      "child": [],
+      "interactive_actions": [
+        "move"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "door_registration",
+      "name": "door",
+      "name_cn": "门",
+      "states": {
+        "is_dirty": false,
+        "is_open": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "door",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "manual_door"
+      },
+      "affordance_count": 0,
+      "parent": "registration",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "open",
+        "close"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "light_registration",
+      "name": "light",
+      "name_cn": "灯",
+      "states": {
+        "is_on": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "room_light",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "button_only"
+      },
+      "affordance_count": 0,
+      "parent": "registration",
+      "child": [],
+      "interactive_actions": [
+        "move"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "button_registration",
+      "name": "button",
+      "name_cn": "按钮",
+      "states": {
+        "is_on": false,
+        "is_pressed": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "button",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "registration",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "press"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "waiting_area",
+      "name": "Waiting Area",
+      "name_cn": "候诊区",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {
+        "temperature": 24.0
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "F1",
+      "child": [
+        "button_waiting_area",
+        "door_waiting_area",
+        "light_waiting_area",
+        "queue_screen_waiting_area",
+        "seats_waiting_area"
+      ],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {
+        "doorways": []
+      }
+    },
+    {
+      "id": "seats_waiting_area",
+      "name": "seat",
+      "name_cn": "座椅",
+      "states": {
+        "is_dirty": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "seat",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "waiting_area",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place",
+        "brush"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "queue_screen_waiting_area",
+      "name": "display",
+      "name_cn": "显示屏",
+      "states": {
+        "is_on": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "display",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "waiting_area",
+      "child": [],
+      "interactive_actions": [
+        "move"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "door_waiting_area",
+      "name": "door",
+      "name_cn": "门",
+      "states": {
+        "is_dirty": false,
+        "is_open": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "door",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "manual_door"
+      },
+      "affordance_count": 0,
+      "parent": "waiting_area",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "open",
+        "close"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "light_waiting_area",
+      "name": "light",
+      "name_cn": "灯",
+      "states": {
+        "is_on": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "room_light",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "button_only"
+      },
+      "affordance_count": 0,
+      "parent": "waiting_area",
+      "child": [],
+      "interactive_actions": [
+        "move"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "button_waiting_area",
+      "name": "button",
+      "name_cn": "按钮",
+      "states": {
+        "is_on": false,
+        "is_pressed": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "button",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "waiting_area",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "press"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "corridor_main",
+      "name": "Main Corridor",
+      "name_cn": "主走廊",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {
+        "temperature": 24.0
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "F1",
+      "child": [
+        "button_corridor_main",
+        "door_corridor_main",
+        "light_corridor_main",
+        "trash_bin_corridor_main"
+      ],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {
+        "doorways": []
+      }
+    },
+    {
+      "id": "trash_bin_corridor_main",
+      "name": "trash bin",
+      "name_cn": "垃圾桶",
+      "states": {
+        "fill_level": 0.0,
+        "is_full": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "container",
+      "semantic_type": "trash_bin",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 8,
+      "parent": "corridor_main",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {},
+      "max_capacity": 3
+    },
+    {
+      "id": "door_corridor_main",
+      "name": "door",
+      "name_cn": "门",
+      "states": {
+        "is_dirty": false,
+        "is_open": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "door",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "manual_door"
+      },
+      "affordance_count": 0,
+      "parent": "corridor_main",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "open",
+        "close"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "light_corridor_main",
+      "name": "light",
+      "name_cn": "灯",
+      "states": {
+        "is_on": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "room_light",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "button_only"
+      },
+      "affordance_count": 0,
+      "parent": "corridor_main",
+      "child": [],
+      "interactive_actions": [
+        "move"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "button_corridor_main",
+      "name": "button",
+      "name_cn": "按钮",
+      "states": {
+        "is_on": false,
+        "is_pressed": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "button",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "corridor_main",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "press"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "outpatient_clinic_1",
+      "name": "Outpatient Clinic 1",
+      "name_cn": "门诊诊室1",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {
+        "temperature": 24.0
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "F1",
+      "child": [
+        "button_outpatient_clinic_1",
+        "computer_clinic_1",
+        "desk_clinic_1",
+        "door_outpatient_clinic_1",
+        "exam_bed_clinic_1",
+        "light_outpatient_clinic_1",
+        "prescription_sheet_clinic_1"
+      ],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {
+        "doorways": []
+      }
+    },
+    {
+      "id": "exam_bed_clinic_1",
+      "name": "bed",
+      "name_cn": "床",
+      "states": {
+        "is_dirty": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "bed",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "outpatient_clinic_1",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place",
+        "brush"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "desk_clinic_1",
+      "name": "desk",
+      "name_cn": "书桌",
+      "states": {
+        "is_dirty": false,
+        "fill_level": 0.0,
+        "is_full": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "desk",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 5,
+      "parent": "outpatient_clinic_1",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "door_outpatient_clinic_1",
+      "name": "door",
+      "name_cn": "门",
+      "states": {
+        "is_dirty": false,
+        "is_open": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "door",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "manual_door"
+      },
+      "affordance_count": 0,
+      "parent": "outpatient_clinic_1",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "open",
+        "close"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "light_outpatient_clinic_1",
+      "name": "light",
+      "name_cn": "灯",
+      "states": {
+        "is_on": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "room_light",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "button_only"
+      },
+      "affordance_count": 0,
+      "parent": "outpatient_clinic_1",
+      "child": [],
+      "interactive_actions": [
+        "move"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "button_outpatient_clinic_1",
+      "name": "button",
+      "name_cn": "按钮",
+      "states": {
+        "is_on": false,
+        "is_pressed": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "button",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "outpatient_clinic_1",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "press"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "treatment_room",
+      "name": "Treatment Room",
+      "name_cn": "治疗室",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {
+        "temperature": 24.0
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "F1",
+      "child": [
+        "button_treatment_room",
+        "dirty_linen_bin_treatment_room",
+        "door_treatment_room",
+        "light_treatment_room",
+        "medical_cart_treatment_room",
+        "medical_waste_bin_treatment_room",
+        "supply_cabinet_treatment_room",
+        "treatment_bed_treatment_room"
+      ],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {
+        "doorways": []
+      }
+    },
+    {
+      "id": "treatment_bed_treatment_room",
+      "name": "bed",
+      "name_cn": "床",
+      "states": {
+        "is_dirty": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "bed",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "treatment_room",
+      "child": [
+        "dirty_sheet_treatment_room"
+      ],
+      "interactive_actions": [
+        "move",
+        "place",
+        "brush"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "door_treatment_room",
+      "name": "door",
+      "name_cn": "门",
+      "states": {
+        "is_dirty": false,
+        "is_open": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "door",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "manual_door"
+      },
+      "affordance_count": 0,
+      "parent": "treatment_room",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "open",
+        "close"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "light_treatment_room",
+      "name": "light",
+      "name_cn": "灯",
+      "states": {
+        "is_on": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "room_light",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "button_only"
+      },
+      "affordance_count": 0,
+      "parent": "treatment_room",
+      "child": [],
+      "interactive_actions": [
+        "move"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "button_treatment_room",
+      "name": "button",
+      "name_cn": "按钮",
+      "states": {
+        "is_on": false,
+        "is_pressed": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "button",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "treatment_room",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "press"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "pharmacy",
+      "name": "Pharmacy",
+      "name_cn": "药房",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {
+        "temperature": 24.0
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "F1",
+      "child": [
+        "button_pharmacy",
+        "door_pharmacy",
+        "light_pharmacy",
+        "medicine_box_pharmacy",
+        "medicine_fridge_pharmacy",
+        "shelf_pharmacy"
+      ],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {
+        "doorways": []
+      }
+    },
+    {
+      "id": "shelf_pharmacy",
+      "name": "shelf",
+      "name_cn": "货架",
+      "states": {
+        "is_dirty": false,
+        "fill_level": 0.0,
+        "is_full": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "shelf",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 6,
+      "parent": "pharmacy",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "medicine_box_pharmacy",
+      "name": "medicine box",
+      "name_cn": "药盒",
+      "states": {},
+      "node_type": "movable_object",
+      "semantic_class": "container",
+      "semantic_type": "medicine_box",
+      "mobility": "movable",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "pharmacy",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "place"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "door_pharmacy",
+      "name": "door",
+      "name_cn": "门",
+      "states": {
+        "is_dirty": false,
+        "is_open": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "door",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "manual_door"
+      },
+      "affordance_count": 0,
+      "parent": "pharmacy",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "open",
+        "close"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "light_pharmacy",
+      "name": "light",
+      "name_cn": "灯",
+      "states": {
+        "is_on": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "room_light",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "button_only"
+      },
+      "affordance_count": 0,
+      "parent": "pharmacy",
+      "child": [],
+      "interactive_actions": [
+        "move"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "button_pharmacy",
+      "name": "button",
+      "name_cn": "按钮",
+      "states": {
+        "is_on": false,
+        "is_pressed": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "button",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "pharmacy",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "press"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "staff_room",
+      "name": "Staff Room",
+      "name_cn": "员工室",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {
+        "temperature": 24.0
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "F1",
+      "child": [
+        "button_staff_room",
+        "doctor_coat_staff_room",
+        "door_staff_room",
+        "light_staff_room",
+        "locker_staff_room",
+        "nurse_uniform_staff_room"
+      ],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {
+        "doorways": []
+      }
+    },
+    {
+      "id": "locker_staff_room",
+      "name": "locker",
+      "name_cn": "储物柜",
+      "states": {
+        "is_open": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "tool",
+      "semantic_type": "locker",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "staff_room",
+      "child": [],
+      "interactive_actions": [
+        "move"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "door_staff_room",
+      "name": "door",
+      "name_cn": "门",
+      "states": {
+        "is_dirty": false,
+        "is_open": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "door",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "manual_door"
+      },
+      "affordance_count": 0,
+      "parent": "staff_room",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "open",
+        "close"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "light_staff_room",
+      "name": "light",
+      "name_cn": "灯",
+      "states": {
+        "is_on": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "room_light",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": "button_only"
+      },
+      "affordance_count": 0,
+      "parent": "staff_room",
+      "child": [],
+      "interactive_actions": [
+        "move"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "button_staff_room",
+      "name": "button",
+      "name_cn": "按钮",
+      "states": {
+        "is_on": false,
+        "is_pressed": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "control",
+      "semantic_type": "button",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "{'movable': False}",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "staff_room",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "press"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "printer_registration",
+      "name": "printer",
+      "name_cn": "打印机",
+      "states": {
+        "is_on": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "printer",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "registration",
+      "child": [],
+      "interactive_actions": [
+        "move"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "computer_clinic_1",
+      "name": "computer",
+      "name_cn": "电脑",
+      "states": {
+        "is_on": false
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "computer",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "outpatient_clinic_1",
+      "child": [],
+      "interactive_actions": [
+        "move"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "prescription_sheet_clinic_1",
+      "name": "prescription sheet",
+      "name_cn": "处方单",
+      "states": {},
+      "node_type": "movable_object",
+      "semantic_class": "personal_item",
+      "semantic_type": "prescription_sheet",
+      "mobility": "movable",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "outpatient_clinic_1",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "place"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "medical_cart_treatment_room",
+      "name": "medical cart",
+      "name_cn": "治疗推车",
+      "states": {
+        "fill_level": 0.0,
+        "is_full": false
+      },
+      "node_type": "movable_object",
+      "semantic_class": "tool",
+      "semantic_type": "medical_cart",
+      "mobility": "movable",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 6,
+      "parent": "treatment_room",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "place"
+      ],
+      "layout": {},
+      "max_capacity": 5
+    },
+    {
+      "id": "medicine_fridge_pharmacy",
+      "name": "medicine fridge",
+      "name_cn": "药品冰箱",
+      "states": {
+        "is_on": true,
+        "fill_level": 0.0,
+        "is_full": false,
+        "is_open": false,
+        "temperature": "cold"
+      },
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "medicine_fridge",
+      "mobility": "fixed",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 10,
+      "parent": "pharmacy",
+      "child": [
+        "refrigerated_medicine_pharmacy"
+      ],
+      "interactive_actions": [
+        "move",
+        "open",
+        "close",
+        "place"
+      ],
+      "layout": {},
+      "max_capacity": 3
+    },
+    {
+      "id": "refrigerated_medicine_pharmacy",
+      "name": "refrigerated medicine",
+      "name_cn": "冷藏药品",
+      "states": {
+        "temperature": "cold"
+      },
+      "node_type": "movable_object",
+      "semantic_class": "consumable",
+      "semantic_type": "refrigerated_medicine",
+      "mobility": "movable",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "medicine_fridge_pharmacy",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "place"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "nurse_uniform_staff_room",
+      "name": "nurse uniform",
+      "name_cn": "护士服",
+      "states": {},
+      "node_type": "movable_object",
+      "semantic_class": "personal_item",
+      "semantic_type": "nurse_uniform",
+      "mobility": "movable",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "staff_room",
+      "child": [],
+      "interactive_actions": [
+        "pick"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "doctor_coat_staff_room",
+      "name": "doctor coat",
+      "name_cn": "白大褂",
+      "states": {},
+      "node_type": "movable_object",
+      "semantic_class": "personal_item",
+      "semantic_type": "doctor_coat",
+      "mobility": "movable",
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "staff_room",
+      "child": [],
+      "interactive_actions": [
+        "pick"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "outside_home",
+      "name": "Outside hospital",
+      "name_cn": "医院外部",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {
+        "temperature": 24.0
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "F1",
+      "child": [
+        "doctor_1",
+        "nurse_1",
+        "patient_1"
+      ],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "patient_1",
+      "name": "patient",
+      "name_cn": "病人",
+      "node_type": "human",
+      "semantic_class": "agent",
+      "semantic_type": "human",
+      "mobility": "fixed",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "outside_home",
+      "child": [],
+      "interactive_actions": [],
+      "layout": {},
+      "role": "patient",
+      "persona": "hospital_patient",
+      "current_activity": "away"
+    },
+    {
+      "id": "nurse_1",
+      "name": "nurse",
+      "name_cn": "护士",
+      "node_type": "human",
+      "semantic_class": "agent",
+      "semantic_type": "human",
+      "mobility": "fixed",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "outside_home",
+      "child": [],
+      "interactive_actions": [],
+      "layout": {},
+      "role": "nurse",
+      "persona": "hospital_nurse",
+      "current_activity": "off_shift"
+    },
+    {
+      "id": "doctor_1",
+      "name": "doctor",
+      "name_cn": "医生",
+      "node_type": "human",
+      "semantic_class": "agent",
+      "semantic_type": "human",
+      "mobility": "fixed",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "outside_home",
+      "child": [],
+      "interactive_actions": [],
+      "layout": {},
+      "role": "doctor",
+      "persona": "hospital_doctor",
+      "current_activity": "off_shift"
+    },
+    {
+      "id": "medical_form_registration",
+      "name": "medical form",
+      "name_cn": "挂号表",
+      "node_type": "movable_object",
+      "semantic_class": "object",
+      "semantic_type": "medical_form",
+      "mobility": "movable",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "counter_registration",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "place"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "used_syringe_treatment_room",
+      "name": "used syringe",
+      "name_cn": "用过的注射器",
+      "node_type": "movable_object",
+      "semantic_class": "object",
+      "semantic_type": "medical_waste",
+      "mobility": "movable",
+      "states": {
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "medical_waste_bin_treatment_room",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "place"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "medical_waste_bin_treatment_room",
+      "name": "medical waste bin",
+      "name_cn": "医疗垃圾桶",
+      "node_type": "fixed_object",
+      "semantic_class": "object",
+      "semantic_type": "medical_waste_bin",
+      "mobility": "fixed",
+      "states": {
+        "is_full": false,
+        "fill_level": 0.0
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "treatment_room",
+      "child": [
+        "used_syringe_treatment_room"
+      ],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {},
+      "max_capacity": 5
+    },
+    {
+      "id": "dirty_sheet_treatment_room",
+      "name": "dirty bed sheet",
+      "name_cn": "脏床单",
+      "node_type": "movable_object",
+      "semantic_class": "object",
+      "semantic_type": "bed_sheet",
+      "mobility": "movable",
+      "states": {
+        "is_dirty": false,
+        "is_wet": false,
+        "folded": true
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "treatment_bed_treatment_room",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "place",
+        "fold"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "dirty_linen_bin_treatment_room",
+      "name": "dirty linen bin",
+      "name_cn": "脏布草桶",
+      "node_type": "fixed_object",
+      "semantic_class": "object",
+      "semantic_type": "linen_bin",
+      "mobility": "fixed",
+      "states": {
+        "is_full": false,
+        "fill_level": 0.0
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "treatment_room",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place"
+      ],
+      "layout": {},
+      "max_capacity": 3
+    },
+    {
+      "id": "clean_sheet_storage",
+      "name": "clean bed sheet",
+      "name_cn": "干净床单",
+      "node_type": "movable_object",
+      "semantic_class": "object",
+      "semantic_type": "bed_sheet",
+      "mobility": "movable",
+      "states": {
+        "is_dirty": false,
+        "is_wet": false,
+        "folded": true
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "supply_cabinet_treatment_room",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "place",
+        "fold"
+      ],
+      "layout": {}
+    },
+    {
+      "id": "supply_cabinet_treatment_room",
+      "name": "supply cabinet",
+      "name_cn": "耗材柜",
+      "node_type": "fixed_object",
+      "semantic_class": "object",
+      "semantic_type": "supply_cabinet",
+      "mobility": "fixed",
+      "states": {
+        "is_open": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "treatment_room",
+      "child": [
+        "clean_sheet_storage"
+      ],
+      "interactive_actions": [
+        "move",
+        "open",
+        "close",
+        "place"
+      ],
+      "layout": {},
+      "max_capacity": 4
+    }
+  ],
+  "edges": [
+    {
+      "source_id": "button_entrance",
+      "target_id": "light_entrance",
+      "edge_type": "control_edge",
+      "relation": "controls",
+      "category": "control",
+      "properties": {}
+    },
+    {
+      "source_id": "button_lobby",
+      "target_id": "light_lobby",
+      "edge_type": "control_edge",
+      "relation": "controls",
+      "category": "control",
+      "properties": {}
+    },
+    {
+      "source_id": "button_registration",
+      "target_id": "light_registration",
+      "edge_type": "control_edge",
+      "relation": "controls",
+      "category": "control",
+      "properties": {}
+    },
+    {
+      "source_id": "button_waiting_area",
+      "target_id": "light_waiting_area",
+      "edge_type": "control_edge",
+      "relation": "controls",
+      "category": "control",
+      "properties": {}
+    },
+    {
+      "source_id": "button_corridor_main",
+      "target_id": "light_corridor_main",
+      "edge_type": "control_edge",
+      "relation": "controls",
+      "category": "control",
+      "properties": {}
+    },
+    {
+      "source_id": "button_outpatient_clinic_1",
+      "target_id": "light_outpatient_clinic_1",
+      "edge_type": "control_edge",
+      "relation": "controls",
+      "category": "control",
+      "properties": {}
+    },
+    {
+      "source_id": "button_treatment_room",
+      "target_id": "light_treatment_room",
+      "edge_type": "control_edge",
+      "relation": "controls",
+      "category": "control",
+      "properties": {}
+    },
+    {
+      "source_id": "button_pharmacy",
+      "target_id": "light_pharmacy",
+      "edge_type": "control_edge",
+      "relation": "controls",
+      "category": "control",
+      "properties": {}
+    },
+    {
+      "source_id": "button_staff_room",
+      "target_id": "light_staff_room",
+      "edge_type": "control_edge",
+      "relation": "controls",
+      "category": "control",
+      "properties": {}
+    },
+    {
+      "source_id": "outside_home",
+      "target_id": "entrance",
+      "edge_type": "structural_edge",
+      "relation": "connected",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "entrance",
+      "target_id": "lobby",
+      "edge_type": "structural_edge",
+      "relation": "connected",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "lobby",
+      "target_id": "registration",
+      "edge_type": "structural_edge",
+      "relation": "connected",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "registration",
+      "target_id": "waiting_area",
+      "edge_type": "structural_edge",
+      "relation": "connected",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "waiting_area",
+      "target_id": "corridor_main",
+      "edge_type": "structural_edge",
+      "relation": "connected",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "corridor_main",
+      "target_id": "outpatient_clinic_1",
+      "edge_type": "structural_edge",
+      "relation": "connected",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "outpatient_clinic_1",
+      "target_id": "treatment_room",
+      "edge_type": "structural_edge",
+      "relation": "connected",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "treatment_room",
+      "target_id": "staff_room",
+      "edge_type": "structural_edge",
+      "relation": "connected",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "staff_room",
+      "target_id": "pharmacy",
+      "edge_type": "structural_edge",
+      "relation": "connected",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "entrance",
+      "edge_type": "room_floor_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "entrance",
+      "target_id": "wheelchair_entrance",
+      "edge_type": "containment_edge",
+      "relation": "in",
+      "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "entrance",
+      "target_id": "sanitizer_entrance",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "entrance",
+      "target_id": "door_entrance",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "entrance",
+      "target_id": "light_entrance",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "entrance",
+      "target_id": "button_entrance",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "lobby",
+      "edge_type": "room_floor_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "lobby",
+      "target_id": "bench_lobby",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "lobby",
+      "target_id": "prescription_return_lobby",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "lobby",
+      "target_id": "supply_zone_lobby",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "lobby",
+      "target_id": "door_lobby",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "lobby",
+      "target_id": "light_lobby",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "lobby",
+      "target_id": "button_lobby",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "registration",
+      "edge_type": "room_floor_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "registration",
+      "target_id": "counter_registration",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "registration",
+      "target_id": "computer_registration",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "registration",
+      "target_id": "door_registration",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "registration",
+      "target_id": "light_registration",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "registration",
+      "target_id": "button_registration",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "waiting_area",
+      "edge_type": "room_floor_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "waiting_area",
+      "target_id": "seats_waiting_area",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "waiting_area",
+      "target_id": "queue_screen_waiting_area",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "waiting_area",
+      "target_id": "door_waiting_area",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "waiting_area",
+      "target_id": "light_waiting_area",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "waiting_area",
+      "target_id": "button_waiting_area",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "corridor_main",
+      "edge_type": "room_floor_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "corridor_main",
+      "target_id": "trash_bin_corridor_main",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "corridor_main",
+      "target_id": "door_corridor_main",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "corridor_main",
+      "target_id": "light_corridor_main",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "corridor_main",
+      "target_id": "button_corridor_main",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "outpatient_clinic_1",
+      "edge_type": "room_floor_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "outpatient_clinic_1",
+      "target_id": "exam_bed_clinic_1",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "outpatient_clinic_1",
+      "target_id": "desk_clinic_1",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "outpatient_clinic_1",
+      "target_id": "door_outpatient_clinic_1",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "outpatient_clinic_1",
+      "target_id": "light_outpatient_clinic_1",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "outpatient_clinic_1",
+      "target_id": "button_outpatient_clinic_1",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "treatment_room",
+      "edge_type": "room_floor_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "treatment_room",
+      "target_id": "treatment_bed_treatment_room",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "treatment_room",
+      "target_id": "door_treatment_room",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "treatment_room",
+      "target_id": "light_treatment_room",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "treatment_room",
+      "target_id": "button_treatment_room",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "pharmacy",
+      "edge_type": "room_floor_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "pharmacy",
+      "target_id": "shelf_pharmacy",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "pharmacy",
+      "target_id": "medicine_box_pharmacy",
+      "edge_type": "containment_edge",
+      "relation": "in",
+      "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "pharmacy",
+      "target_id": "door_pharmacy",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "pharmacy",
+      "target_id": "light_pharmacy",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "pharmacy",
+      "target_id": "button_pharmacy",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "staff_room",
+      "edge_type": "room_floor_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "staff_room",
+      "target_id": "locker_staff_room",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "staff_room",
+      "target_id": "door_staff_room",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "staff_room",
+      "target_id": "light_staff_room",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "staff_room",
+      "target_id": "button_staff_room",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "registration",
+      "target_id": "printer_registration",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "outpatient_clinic_1",
+      "target_id": "computer_clinic_1",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "outpatient_clinic_1",
+      "target_id": "prescription_sheet_clinic_1",
+      "edge_type": "containment_edge",
+      "relation": "in",
+      "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "treatment_room",
+      "target_id": "medical_cart_treatment_room",
+      "edge_type": "containment_edge",
+      "relation": "in",
+      "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "pharmacy",
+      "target_id": "medicine_fridge_pharmacy",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "medicine_fridge_pharmacy",
+      "target_id": "refrigerated_medicine_pharmacy",
+      "edge_type": "containment_edge",
+      "relation": "in",
+      "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "staff_room",
+      "target_id": "nurse_uniform_staff_room",
+      "edge_type": "containment_edge",
+      "relation": "in",
+      "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "staff_room",
+      "target_id": "doctor_coat_staff_room",
+      "edge_type": "containment_edge",
+      "relation": "in",
+      "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "outside_home",
+      "edge_type": "room_floor_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "outside_home",
+      "target_id": "patient_1",
+      "edge_type": "containment_edge",
+      "relation": "at",
+      "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "outside_home",
+      "target_id": "nurse_1",
+      "edge_type": "containment_edge",
+      "relation": "at",
+      "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "outside_home",
+      "target_id": "doctor_1",
+      "edge_type": "containment_edge",
+      "relation": "at",
+      "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "counter_registration",
+      "target_id": "medical_form_registration",
+      "edge_type": "containment_edge",
+      "relation": "on",
+      "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "medical_waste_bin_treatment_room",
+      "target_id": "used_syringe_treatment_room",
+      "edge_type": "containment_edge",
+      "relation": "in",
+      "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "treatment_room",
+      "target_id": "medical_waste_bin_treatment_room",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "treatment_bed_treatment_room",
+      "target_id": "dirty_sheet_treatment_room",
+      "edge_type": "containment_edge",
+      "relation": "on",
+      "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "treatment_room",
+      "target_id": "dirty_linen_bin_treatment_room",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "supply_cabinet_treatment_room",
+      "target_id": "clean_sheet_storage",
+      "edge_type": "containment_edge",
+      "relation": "in",
+      "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "treatment_room",
+      "target_id": "supply_cabinet_treatment_room",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    }
+  ],
+  "agent": {
+    "id": "robot_01",
+    "name": "robot_01",
+    "type": "agent",
+    "properties": {},
+    "current_room": "entrance",
+    "inventory": [],
+    "max_inventory": 2,
+    "state": {}
+  },
+  "variant_profile": "spread_device",
+  "variant_axes": {
+    "topology": "spread",
+    "object_task": "device"
+  }
+}

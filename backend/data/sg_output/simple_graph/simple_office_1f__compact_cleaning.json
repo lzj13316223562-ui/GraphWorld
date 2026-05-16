@@ -1,0 +1,1253 @@
+{
+  "scene_name": "simple_office_1f__compact_cleaning",
+  "scene_name_cn": "简单办公室单层 / compact_cleaning",
+  "world_state": {
+    "step": 0,
+    "day": 1,
+    "time_min": 360,
+    "minutes_per_step": 10
+  },
+  "nodes": [
+    {
+      "id": "F1",
+      "name": "Floor 1",
+      "name_cn": "第 1 层",
+      "node_type": "fixed_object",
+      "semantic_class": "space",
+      "semantic_type": "floor",
+      "mobility": "structural",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": null,
+      "child": [
+        "entrance",
+        "manager_office",
+        "meeting_room",
+        "open_office",
+        "outside_home",
+        "pantry",
+        "restroom"
+      ],
+      "interactive_actions": [
+        "move",
+        "scan"
+      ],
+      "floor_number": 1
+    },
+    {
+      "id": "entrance",
+      "name": "Entrance",
+      "name_cn": "入口",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "F1",
+      "child": [
+        "plant_entrance",
+        "signboard_entrance"
+      ],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan"
+      ]
+    },
+    {
+      "id": "open_office",
+      "name": "Open Office",
+      "name_cn": "办公区",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "F1",
+      "child": [
+        "desk_open_office_1",
+        "desk_open_office_2",
+        "printer_open_office"
+      ],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan"
+      ]
+    },
+    {
+      "id": "meeting_room",
+      "name": "Meeting Room",
+      "name_cn": "会议室",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "F1",
+      "child": [
+        "display_meeting_room",
+        "seat_meeting_room",
+        "table_meeting_room"
+      ],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan"
+      ]
+    },
+    {
+      "id": "pantry",
+      "name": "Pantry",
+      "name_cn": "茶水间",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "F1",
+      "child": [
+        "counter_pantry",
+        "fridge_pantry",
+        "microwave_pantry",
+        "water_dispenser_pantry"
+      ],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan"
+      ]
+    },
+    {
+      "id": "manager_office",
+      "name": "Manager Office",
+      "name_cn": "经理室",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "F1",
+      "child": [
+        "cabinet_manager_office",
+        "desk_manager_office",
+        "plant_manager_office"
+      ],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan"
+      ]
+    },
+    {
+      "id": "restroom",
+      "name": "Restroom",
+      "name_cn": "卫生间",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "F1",
+      "child": [
+        "sink_restroom",
+        "toilet_restroom"
+      ],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan"
+      ]
+    },
+    {
+      "id": "signboard_entrance",
+      "name": "signboard",
+      "name_cn": "前台牌",
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "signboard",
+      "mobility": "fixed",
+      "states": {
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "entrance",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "scan"
+      ]
+    },
+    {
+      "id": "plant_entrance",
+      "name": "plant",
+      "name_cn": "绿植",
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "plant",
+      "mobility": "fixed",
+      "states": {
+        "vitality": 1.0,
+        "is_wilted": false,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "entrance",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "scan"
+      ]
+    },
+    {
+      "id": "desk_open_office_1",
+      "name": "desk",
+      "name_cn": "办公桌",
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "desk",
+      "mobility": "fixed",
+      "states": {
+        "fill_level": 0.3,
+        "is_full": false,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 4,
+      "parent": "open_office",
+      "child": [
+        "computer_open_office_1",
+        "seat_open_office_1"
+      ],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan",
+        "brush"
+      ]
+    },
+    {
+      "id": "computer_open_office_1",
+      "name": "computer",
+      "name_cn": "电脑",
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "computer",
+      "mobility": "fixed",
+      "states": {
+        "is_on": true,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "desk_open_office_1",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "scan"
+      ]
+    },
+    {
+      "id": "seat_open_office_1",
+      "name": "seat",
+      "name_cn": "办公椅",
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "seat",
+      "mobility": "fixed",
+      "states": {
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "desk_open_office_1",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan"
+      ]
+    },
+    {
+      "id": "desk_open_office_2",
+      "name": "desk",
+      "name_cn": "办公桌",
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "desk",
+      "mobility": "fixed",
+      "states": {
+        "fill_level": 0.3,
+        "is_full": false,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 4,
+      "parent": "open_office",
+      "child": [
+        "computer_open_office_2",
+        "seat_open_office_2"
+      ],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan",
+        "brush"
+      ]
+    },
+    {
+      "id": "computer_open_office_2",
+      "name": "computer",
+      "name_cn": "电脑",
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "computer",
+      "mobility": "fixed",
+      "states": {
+        "is_on": true,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "desk_open_office_2",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "scan"
+      ]
+    },
+    {
+      "id": "seat_open_office_2",
+      "name": "seat",
+      "name_cn": "办公椅",
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "seat",
+      "mobility": "fixed",
+      "states": {
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "desk_open_office_2",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan"
+      ]
+    },
+    {
+      "id": "printer_open_office",
+      "name": "printer",
+      "name_cn": "打印机",
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "printer",
+      "mobility": "fixed",
+      "states": {
+        "is_on": false,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "open_office",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "scan"
+      ]
+    },
+    {
+      "id": "table_meeting_room",
+      "name": "table",
+      "name_cn": "会议桌",
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "table",
+      "mobility": "fixed",
+      "states": {
+        "fill_level": 0.1,
+        "is_full": false,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 4,
+      "parent": "meeting_room",
+      "child": [
+        "book_meeting_room"
+      ],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan",
+        "brush"
+      ]
+    },
+    {
+      "id": "book_meeting_room",
+      "name": "book",
+      "name_cn": "会议本",
+      "node_type": "movable_object",
+      "semantic_class": "personal_item",
+      "semantic_type": "book",
+      "mobility": "movable",
+      "states": {
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "table_meeting_room",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "scan"
+      ]
+    },
+    {
+      "id": "seat_meeting_room",
+      "name": "seat",
+      "name_cn": "座椅",
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "seat",
+      "mobility": "fixed",
+      "states": {
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 4,
+      "parent": "meeting_room",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan",
+        "brush"
+      ]
+    },
+    {
+      "id": "display_meeting_room",
+      "name": "display",
+      "name_cn": "投屏显示器",
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "display",
+      "mobility": "fixed",
+      "states": {
+        "is_on": false,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "meeting_room",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "scan"
+      ]
+    },
+    {
+      "id": "counter_pantry",
+      "name": "counter",
+      "name_cn": "操作台",
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "counter",
+      "mobility": "fixed",
+      "states": {
+        "fill_level": 0.1,
+        "is_full": false,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 4,
+      "parent": "pantry",
+      "child": [
+        "cup_pantry"
+      ],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan",
+        "brush"
+      ]
+    },
+    {
+      "id": "cup_pantry",
+      "name": "cup",
+      "name_cn": "杯子",
+      "node_type": "movable_object",
+      "semantic_class": "consumable",
+      "semantic_type": "cup",
+      "mobility": "movable",
+      "states": {
+        "is_dirty": false,
+        "is_wet": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "counter_pantry",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "scan",
+        "brush"
+      ]
+    },
+    {
+      "id": "microwave_pantry",
+      "name": "microwave",
+      "name_cn": "微波炉",
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "microwave",
+      "mobility": "fixed",
+      "states": {
+        "is_on": false,
+        "is_open": false,
+        "fill_level": 0.0,
+        "is_full": false,
+        "cycle_remaining": 0,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "pantry",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "scan"
+      ]
+    },
+    {
+      "id": "fridge_pantry",
+      "name": "refrigerator",
+      "name_cn": "冰箱",
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "fridge",
+      "mobility": "fixed",
+      "states": {
+        "is_on": true,
+        "is_open": false,
+        "fill_level": 0.2,
+        "is_full": false,
+        "cycle_remaining": 0,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 5,
+      "parent": "pantry",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan",
+        "open",
+        "close"
+      ]
+    },
+    {
+      "id": "water_dispenser_pantry",
+      "name": "water dispenser",
+      "name_cn": "饮水机",
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "water_dispenser",
+      "mobility": "fixed",
+      "states": {
+        "is_on": true,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "pantry",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "scan"
+      ]
+    },
+    {
+      "id": "desk_manager_office",
+      "name": "desk",
+      "name_cn": "办公桌",
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "desk",
+      "mobility": "fixed",
+      "states": {
+        "fill_level": 0.2,
+        "is_full": false,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 4,
+      "parent": "manager_office",
+      "child": [
+        "computer_manager_office",
+        "seat_manager_office"
+      ],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan",
+        "brush"
+      ]
+    },
+    {
+      "id": "computer_manager_office",
+      "name": "computer",
+      "name_cn": "电脑",
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "computer",
+      "mobility": "fixed",
+      "states": {
+        "is_on": true,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "desk_manager_office",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "scan"
+      ]
+    },
+    {
+      "id": "seat_manager_office",
+      "name": "seat",
+      "name_cn": "椅子",
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "seat",
+      "mobility": "fixed",
+      "states": {
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "desk_manager_office",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan"
+      ]
+    },
+    {
+      "id": "cabinet_manager_office",
+      "name": "cabinet",
+      "name_cn": "文件柜",
+      "node_type": "fixed_object",
+      "semantic_class": "container",
+      "semantic_type": "cabinet",
+      "mobility": "fixed",
+      "states": {
+        "is_open": false,
+        "fill_level": 0.5,
+        "is_full": false,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 8,
+      "parent": "manager_office",
+      "child": [
+        "report_open_office"
+      ],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan",
+        "open",
+        "close",
+        "pull",
+        "push"
+      ]
+    },
+    {
+      "id": "plant_manager_office",
+      "name": "plant",
+      "name_cn": "绿植",
+      "node_type": "fixed_object",
+      "semantic_class": "furniture",
+      "semantic_type": "plant",
+      "mobility": "fixed",
+      "states": {
+        "vitality": 1.0,
+        "is_wilted": false,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "manager_office",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "scan"
+      ]
+    },
+    {
+      "id": "sink_restroom",
+      "name": "sink",
+      "name_cn": "洗手池",
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "sink",
+      "mobility": "fixed",
+      "states": {
+        "fill_level": 0.0,
+        "is_full": false,
+        "is_on": false,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 4,
+      "parent": "restroom",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan",
+        "brush"
+      ]
+    },
+    {
+      "id": "toilet_restroom",
+      "name": "toilet",
+      "name_cn": "马桶",
+      "node_type": "fixed_object",
+      "semantic_class": "appliance",
+      "semantic_type": "toilet",
+      "mobility": "fixed",
+      "states": {
+        "is_on": false,
+        "fill_level": 0.0,
+        "is_full": false,
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 0,
+      "parent": "restroom",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "scan",
+        "brush"
+      ]
+    },
+    {
+      "id": "outside_home",
+      "name": "Outside",
+      "name_cn": "Outside",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 3,
+      "parent": "F1",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan"
+      ]
+    },
+    {
+      "id": "report_open_office",
+      "name": "report",
+      "name_cn": "report",
+      "node_type": "movable_object",
+      "semantic_class": "document",
+      "semantic_type": "report",
+      "mobility": "movable",
+      "states": {
+        "is_dirty": false
+      },
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 3,
+      "parent": "cabinet_manager_office",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "place",
+        "scan"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source_id": "outside_home",
+      "target_id": "entrance",
+      "edge_type": "structural_edge",
+      "relation": "connected",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "entrance",
+      "target_id": "open_office",
+      "edge_type": "structural_edge",
+      "relation": "connected",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "open_office",
+      "target_id": "meeting_room",
+      "edge_type": "structural_edge",
+      "relation": "connected",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "open_office",
+      "target_id": "pantry",
+      "edge_type": "structural_edge",
+      "relation": "connected",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "open_office",
+      "target_id": "manager_office",
+      "edge_type": "structural_edge",
+      "relation": "connected",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "open_office",
+      "target_id": "restroom",
+      "edge_type": "structural_edge",
+      "relation": "connected",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "entrance",
+      "edge_type": "room_floor_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "open_office",
+      "edge_type": "room_floor_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "meeting_room",
+      "edge_type": "room_floor_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "pantry",
+      "edge_type": "room_floor_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "manager_office",
+      "edge_type": "room_floor_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "restroom",
+      "edge_type": "room_floor_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "entrance",
+      "target_id": "signboard_entrance",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "entrance",
+      "target_id": "plant_entrance",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "open_office",
+      "target_id": "desk_open_office_1",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "desk_open_office_1",
+      "target_id": "computer_open_office_1",
+      "edge_type": "object_edge",
+      "relation": "on",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "desk_open_office_1",
+      "target_id": "seat_open_office_1",
+      "edge_type": "object_edge",
+      "relation": "on",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "open_office",
+      "target_id": "desk_open_office_2",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "desk_open_office_2",
+      "target_id": "computer_open_office_2",
+      "edge_type": "object_edge",
+      "relation": "on",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "desk_open_office_2",
+      "target_id": "seat_open_office_2",
+      "edge_type": "object_edge",
+      "relation": "on",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "open_office",
+      "target_id": "printer_open_office",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "meeting_room",
+      "target_id": "table_meeting_room",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "table_meeting_room",
+      "target_id": "book_meeting_room",
+      "edge_type": "containment_edge",
+      "relation": "on",
+      "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "meeting_room",
+      "target_id": "seat_meeting_room",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "meeting_room",
+      "target_id": "display_meeting_room",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "pantry",
+      "target_id": "counter_pantry",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "counter_pantry",
+      "target_id": "cup_pantry",
+      "edge_type": "containment_edge",
+      "relation": "on",
+      "category": "containment",
+      "properties": {}
+    },
+    {
+      "source_id": "pantry",
+      "target_id": "microwave_pantry",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "pantry",
+      "target_id": "fridge_pantry",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "pantry",
+      "target_id": "water_dispenser_pantry",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "manager_office",
+      "target_id": "desk_manager_office",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "desk_manager_office",
+      "target_id": "computer_manager_office",
+      "edge_type": "object_edge",
+      "relation": "on",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "desk_manager_office",
+      "target_id": "seat_manager_office",
+      "edge_type": "object_edge",
+      "relation": "on",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "manager_office",
+      "target_id": "cabinet_manager_office",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "manager_office",
+      "target_id": "plant_manager_office",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "restroom",
+      "target_id": "sink_restroom",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "restroom",
+      "target_id": "toilet_restroom",
+      "edge_type": "object_edge",
+      "relation": "inside_room",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "outside_home",
+      "edge_type": "room_floor_edge",
+      "relation": "contains",
+      "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "cabinet_manager_office",
+      "target_id": "report_open_office",
+      "edge_type": "containment_edge",
+      "relation": "in",
+      "category": "containment",
+      "properties": {}
+    }
+  ],
+  "variant_profile": "compact_cleaning",
+  "variant_axes": {
+    "topology": "compact",
+    "object_task": "cleaning"
+  }
+}

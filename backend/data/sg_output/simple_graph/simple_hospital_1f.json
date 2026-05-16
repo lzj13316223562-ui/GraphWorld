@@ -588,8 +588,7 @@
       "name": "seat",
       "name_cn": "座椅",
       "states": {
-        "is_dirty": false,
-        "cleanliness": 0.95
+        "is_dirty": false
       },
       "node_type": "fixed_object",
       "semantic_class": "furniture",
@@ -887,8 +886,7 @@
       "name": "bed",
       "name_cn": "床",
       "states": {
-        "is_dirty": false,
-        "needs_cleaning": false
+        "is_dirty": false
       },
       "node_type": "fixed_object",
       "semantic_class": "furniture",
@@ -1054,8 +1052,7 @@
       "name": "bed",
       "name_cn": "床",
       "states": {
-        "is_dirty": false,
-        "needs_cleaning": false
+        "is_dirty": false
       },
       "node_type": "fixed_object",
       "semantic_class": "furniture",
@@ -1612,9 +1609,7 @@
       "id": "nurse_uniform_staff_room",
       "name": "nurse uniform",
       "name_cn": "护士服",
-      "states": {
-        "is_clean": true
-      },
+      "states": {},
       "node_type": "movable_object",
       "semantic_class": "personal_item",
       "semantic_type": "nurse_uniform",
@@ -1636,9 +1631,7 @@
       "id": "doctor_coat_staff_room",
       "name": "doctor coat",
       "name_cn": "白大褂",
-      "states": {
-        "is_clean": true
-      },
+      "states": {},
       "node_type": "movable_object",
       "semantic_class": "personal_item",
       "semantic_type": "doctor_coat",
@@ -1693,9 +1686,7 @@
       "semantic_class": "agent",
       "semantic_type": "human",
       "mobility": "fixed",
-      "states": {
-        "current_activity": "away"
-      },
+      "states": {},
       "property": {
         "appearance": "",
         "physical": "",
@@ -1707,7 +1698,8 @@
       "interactive_actions": [],
       "layout": {},
       "role": "patient",
-      "persona": "hospital_patient"
+      "persona": "hospital_patient",
+      "current_activity": "away"
     },
     {
       "id": "nurse_1",
@@ -1717,9 +1709,7 @@
       "semantic_class": "agent",
       "semantic_type": "human",
       "mobility": "fixed",
-      "states": {
-        "current_activity": "off_shift"
-      },
+      "states": {},
       "property": {
         "appearance": "",
         "physical": "",
@@ -1731,7 +1721,8 @@
       "interactive_actions": [],
       "layout": {},
       "role": "nurse",
-      "persona": "hospital_nurse"
+      "persona": "hospital_nurse",
+      "current_activity": "off_shift"
     },
     {
       "id": "doctor_1",
@@ -1741,9 +1732,7 @@
       "semantic_class": "agent",
       "semantic_type": "human",
       "mobility": "fixed",
-      "states": {
-        "current_activity": "off_shift"
-      },
+      "states": {},
       "property": {
         "appearance": "",
         "physical": "",
@@ -1755,7 +1744,8 @@
       "interactive_actions": [],
       "layout": {},
       "role": "doctor",
-      "persona": "hospital_doctor"
+      "persona": "hospital_doctor",
+      "current_activity": "off_shift"
     },
     {
       "id": "medical_form_registration",
@@ -1788,9 +1778,7 @@
       "semantic_class": "object",
       "semantic_type": "medical_waste",
       "mobility": "movable",
-      "states": {
-        "is_medical_waste": true
-      },
+      "states": {},
       "property": {
         "appearance": "",
         "physical": "",
@@ -1926,7 +1914,6 @@
       "semantic_type": "supply_cabinet",
       "mobility": "fixed",
       "states": {
-        "is_low": false,
         "is_open": false
       },
       "property": {

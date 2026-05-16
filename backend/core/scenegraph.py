@@ -5,6 +5,7 @@ from typing import Any
 
 from .edges import BaseEdge, SpatialRelation, create_edge
 from .nodes import NodeType
+from .states import DISCRETE_STATE_SPACE
 
 
 @dataclass
@@ -17,10 +18,14 @@ class SceneGraph:
 
     def add_node(self, node_id: str, node_type: NodeType | str, **payload: Any) -> dict[str, Any]:
         node_type_value = NodeType(node_type).value
+        states = dict(payload.pop("states", {}) or {})
+        invalid_states = sorted(set(states) - set(DISCRETE_STATE_SPACE))
+        if invalid_states:
+            raise ValueError(f"{node_id} uses states outside DISCRETE_STATE_SPACE: {invalid_states}")
         node = {
             "id": str(node_id),
             "node_type": node_type_value,
-            "states": dict(payload.pop("states", {}) or {}),
+            "states": states,
             **payload,
         }
         node.setdefault("name", str(node_id))

@@ -125,8 +125,8 @@ TASK_SKILLS: tuple[dict[str, Any], ...] = (
     },
     {
         "name": "clean_exam_bed",
-        "trigger": "exam bed is dirty or needs_cleaning=true",
-        "goal": "exam bed is clean and needs_cleaning=false",
+        "trigger": "exam bed is dirty",
+        "goal": "exam bed is clean",
         "phases": [{"phase": "clean_surface", "next": "move to exam_bed and brush it"}],
     },
 )
@@ -165,7 +165,7 @@ def relevant_skills_for_nodes(nodes: dict[str, dict[str, Any]], active_goal: dic
             relevant.append(SKILLS_BY_NAME["return_wheelchair"])
         if str(item.get("id") or "") == "seats_waiting_area" and states.get("is_dirty") is True:
             relevant.append(SKILLS_BY_NAME["clean_waiting_area"])
-        if semantic == "bed" and (states.get("is_dirty") is True or states.get("needs_cleaning") is True):
+        if semantic == "bed" and states.get("is_dirty") is True:
             relevant.append(SKILLS_BY_NAME["clean_exam_bed"])
     deduped = {str(skill["name"]): skill for skill in relevant}
     return list(deduped.values())

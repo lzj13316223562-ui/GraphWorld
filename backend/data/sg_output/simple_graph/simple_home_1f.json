@@ -542,7 +542,6 @@
       "states": {
         "is_open": false,
         "is_rotten": false,
-        "freshness": 1.0,
         "temperature": "cold",
         "is_cooked": false
       },
@@ -572,7 +571,6 @@
       "states": {
         "is_open": false,
         "is_rotten": false,
-        "freshness": 1.0,
         "temperature": "cold",
         "is_cooked": false
       },
@@ -601,7 +599,6 @@
       "mobility": "movable",
       "states": {
         "is_rotten": false,
-        "freshness": 1.0,
         "temperature": "cold",
         "is_cooked": false
       },
@@ -1084,8 +1081,7 @@
       "semantic_type": "toilet",
       "mobility": "fixed",
       "states": {
-        "is_dirty": false,
-        "cleanliness": 0.92
+        "is_dirty": false
       },
       "property": {
         "appearance": "",

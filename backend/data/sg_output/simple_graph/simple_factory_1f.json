@@ -24,7 +24,9 @@
       },
       "affordance_count": 0,
       "parent": null,
-      "child": [],
+      "child": [
+        "outside_home"
+      ],
       "interactive_actions": [
         "move",
         "scan"
@@ -131,7 +133,8 @@
       "parent": null,
       "child": [
         "shelf_warehouse",
-        "cart_warehouse"
+        "cart_warehouse",
+        "finished_product_assembly"
       ],
       "interactive_actions": [
         "move",
@@ -239,13 +242,17 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 6,
+      "affordance_count": 8,
       "parent": "entrance",
-      "child": [],
+      "child": [
+        "safety_gear_entrance"
+      ],
       "interactive_actions": [
         "move",
         "place",
         "scan",
+        "open",
+        "close",
         "pull",
         "push"
       ]
@@ -296,7 +303,8 @@
       "interactive_actions": [
         "move",
         "place",
-        "scan"
+        "scan",
+        "brush"
       ]
     },
     {
@@ -634,13 +642,18 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 6,
+      "affordance_count": 8,
       "parent": "control_room",
-      "child": [],
+      "child": [
+        "quality_record_control",
+        "toolkit_workshop"
+      ],
       "interactive_actions": [
         "move",
         "place",
         "scan",
+        "open",
+        "close",
         "pull",
         "push"
       ]
@@ -695,7 +708,8 @@
       "interactive_actions": [
         "move",
         "place",
-        "scan"
+        "scan",
+        "brush"
       ]
     },
     {
@@ -714,13 +728,14 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 0,
+      "affordance_count": 4,
       "parent": "break_room",
       "child": [],
       "interactive_actions": [
         "move",
         "place",
-        "scan"
+        "scan",
+        "brush"
       ]
     },
     {
@@ -767,13 +782,15 @@
         "physical": "",
         "operation": ""
       },
-      "affordance_count": 10,
+      "affordance_count": 5,
       "parent": "break_room",
       "child": [],
       "interactive_actions": [
         "move",
         "place",
-        "scan"
+        "scan",
+        "open",
+        "close"
       ]
     },
     {
@@ -829,6 +846,121 @@
         "move",
         "scan",
         "brush"
+      ]
+    },
+    {
+      "id": "outside_home",
+      "name": "Outside",
+      "name_cn": "Outside",
+      "node_type": "room",
+      "semantic_class": "space",
+      "semantic_type": "room",
+      "mobility": "fixed",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 3,
+      "parent": "F1",
+      "child": [],
+      "interactive_actions": [
+        "move",
+        "place",
+        "scan"
+      ]
+    },
+    {
+      "id": "safety_gear_entrance",
+      "name": "safety gear",
+      "name_cn": "safety gear",
+      "node_type": "movable_object",
+      "semantic_class": "equipment",
+      "semantic_type": "safety_gear",
+      "mobility": "movable",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 3,
+      "parent": "cabinet_entrance",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "place",
+        "scan"
+      ]
+    },
+    {
+      "id": "finished_product_assembly",
+      "name": "finished product",
+      "name_cn": "finished product",
+      "node_type": "movable_object",
+      "semantic_class": "product",
+      "semantic_type": "finished_product",
+      "mobility": "movable",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 3,
+      "parent": "warehouse",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "place",
+        "scan"
+      ]
+    },
+    {
+      "id": "quality_record_control",
+      "name": "quality record",
+      "name_cn": "quality record",
+      "node_type": "movable_object",
+      "semantic_class": "document",
+      "semantic_type": "quality_record",
+      "mobility": "movable",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 3,
+      "parent": "cabinet_control_room",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "place",
+        "scan"
+      ]
+    },
+    {
+      "id": "toolkit_workshop",
+      "name": "toolkit",
+      "name_cn": "toolkit",
+      "node_type": "movable_object",
+      "semantic_class": "tool",
+      "semantic_type": "toolkit",
+      "mobility": "movable",
+      "states": {},
+      "property": {
+        "appearance": "",
+        "physical": "",
+        "operation": ""
+      },
+      "affordance_count": 3,
+      "parent": "cabinet_control_room",
+      "child": [],
+      "interactive_actions": [
+        "pick",
+        "place",
+        "scan"
       ]
     }
   ],
@@ -1127,6 +1259,54 @@
       "edge_type": "structural_edge",
       "relation": "inside_room",
       "category": "structural",
+      "properties": {}
+    },
+    {
+      "source_id": "F1",
+      "target_id": "outside_home",
+      "edge_type": "scene_edge",
+      "relation": "contains",
+      "category": "spatial",
+      "properties": {}
+    },
+    {
+      "source_id": "outside_home",
+      "target_id": "entrance",
+      "edge_type": "scene_edge",
+      "relation": "connected",
+      "category": "spatial",
+      "properties": {}
+    },
+    {
+      "source_id": "cabinet_entrance",
+      "target_id": "safety_gear_entrance",
+      "edge_type": "object_edge",
+      "relation": "contains",
+      "category": "physical",
+      "properties": {}
+    },
+    {
+      "source_id": "warehouse",
+      "target_id": "finished_product_assembly",
+      "edge_type": "object_edge",
+      "relation": "contains",
+      "category": "physical",
+      "properties": {}
+    },
+    {
+      "source_id": "cabinet_control_room",
+      "target_id": "quality_record_control",
+      "edge_type": "object_edge",
+      "relation": "contains",
+      "category": "physical",
+      "properties": {}
+    },
+    {
+      "source_id": "cabinet_control_room",
+      "target_id": "toolkit_workshop",
+      "edge_type": "object_edge",
+      "relation": "contains",
+      "category": "physical",
       "properties": {}
     }
   ]
