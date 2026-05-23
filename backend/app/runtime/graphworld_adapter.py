@@ -1,0 +1,212 @@
+from __future__ import annotations
+
+import copy
+from typing import Any
+
+from backend.runtime.agent.planning import candidate_actions
+from backend.runtime.engine import Orchestrator
+
+from backend.app.schemas.action import CandidateAction
+from backend.app.schemas.observation import Observation
+from backend.app.schemas.run import VisibilityMode
+
+
+def canonical_node_type(node: dict[str, Any]) -> str:
+    return str(node.get("node_type") or node.get("type") or node.get("semantic_type") or "")
+
+
+def ensure_robot_node(raw: dict[str, Any], agent_id: str = "robot_01") -> None:
+    nodes = raw.setdefault("nodes", [])
+    if any(str(node.get("id") or "") == agent_id for node in nodes if isinstance(node, dict)):
+        return
+    current_room = str((raw.get("agent") or {}).get("current_room") or "")
+    if not current_room:
+        current_room = next(
+            (
+                str(node.get("id") or "")
+                for node in nodes
+                if isinstance(node, dict) and canonical_node_type(node) == "room"
+            ),
+            "",
+        )
+    if not current_room:
+        return
+    nodes.append(
+        {
+            "id": agent_id,
+            "name": "Robot",
+            "name_cn": "机器人",
+            "node_type": "robot",
+            "semantic_type": "robot",
+            "mobility": "agent",
+            "states": {},
+            "property": {"appearance": "", "physical": "", "operation": ""},
+            "affordance_count": 0,
+            "parent": current_room,
+            "child": [],
+            "interactive_actions": [],
+            "layout": {},
+            "current_location": current_room,
+        }
+    )
+    raw.setdefault("edges", []).append(
+        {
+            "source_id": current_room,
+            "target_id": agent_id,
+            "relation": "at",
+            "edge_type": "agent_room_edge",
+            "category": "containment",
+            "properties": {"visualized_from": "web_runtime_adapter"},
+        }
+    )
+
+
+def action_id(action: dict[str, Any]) -> str:
+    parts = [
+        str(action.get("action") or ""),
+        str(action.get("target") or ""),
+        str(action.get("object") or ""),
+    ]
+    return ":".join(parts)
+
+
+def compact_candidate(action: dict[str, Any]) -> CandidateAction:
+    return CandidateAction(
+        action_id=action_id(action),
+        action_type=str(action.get("action") or ""),
+        actor_id=str(action.get("agent") or ""),
+        target_id=str(action.get("target") or ""),
+        object_id=str(action.get("object") or ""),
+        reason=str(action.get("reason") or ""),
+        legal=bool(action.get("legal", True)),
+        preview=str(action.get("reason") or ""),
+        payload=copy.deepcopy(action),
+    )
+
+
+class GraphWorldAdapter:
+    def __init__(self, source_json: dict[str, Any], *, agent_id: str = "robot_01") -> None:
+        self.source_json = copy.deepcopy(source_json)
+        self.agent_id = agent_id
+
+    def orchestrator(self) -> Orchestrator:
+        raw = copy.deepcopy(self.source_json)
+        ensure_robot_node(raw, self.agent_id)
+        return Orchestrator(raw)
+
+    def replay_orchestrator(
+        self,
+        selected_actions: list[dict[str, Any]],
+        *,
+        visibility_mode: str | VisibilityMode = VisibilityMode.fog_of_war,
+    ) -> Orchestrator:
+        orchestrator = self.orchestrator()
+        for action in selected_actions:
+            if action:
+                self.runtime_observation(orchestrator, visibility_mode=visibility_mode)
+                orchestrator.step(robot_actions=[copy.deepcopy(action)], capture_robot_scene=False, capture_scene=False)
+        self.runtime_observation(orchestrator, visibility_mode=visibility_mode)
+        return orchestrator
+
+    def runtime_observation(
+        self,
+        orchestrator: Orchestrator,
+        *,
+        visibility_mode: str | VisibilityMode,
+    ) -> dict[str, Any]:
+        mode = str(getattr(visibility_mode, "value", visibility_mode))
+        if mode == VisibilityMode.full.value:
+            raw = orchestrator.graph.to_scene()
+            visible_rooms = [
+                str(node.get("id") or "")
+                for node in raw.get("nodes") or []
+                if isinstance(node, dict) and canonical_node_type(node) == "room"
+            ]
+            observation = {
+                "world_state": {
+                    **copy.deepcopy(raw.get("world_state") or {}),
+                    "visible_rooms": sorted(visible_rooms),
+                    "confidence_by_room": {room_id: 1.0 for room_id in visible_rooms},
+                },
+                "nodes": copy.deepcopy(raw.get("nodes") or []),
+                "edges": copy.deepcopy(raw.get("edges") or []),
+            }
+        elif mode == VisibilityMode.room.value:
+            current_room = orchestrator.graph.room_of.get(self.agent_id, "")
+            visible_rooms = {current_room} if current_room else set()
+            visible_ids = {
+                node_id
+                for node_id in orchestrator.graph.nodes
+                if node_id == self.agent_id
+                or node_id in visible_rooms
+                or orchestrator.graph.room_of.get(node_id) in visible_rooms
+            }
+            observation = {
+                "scene_name": orchestrator.graph.scene_name,
+                "world_state": {
+                    **copy.deepcopy(orchestrator.graph.world_state),
+                    "visible_rooms": sorted(visible_rooms),
+                    "confidence_by_room": {room_id: 1.0 for room_id in visible_rooms},
+                },
+                "nodes": [copy.deepcopy(orchestrator.graph.nodes[node_id]) for node_id in sorted(visible_ids)],
+                "edges": [
+                    copy.deepcopy(edge)
+                    for edge in orchestrator.graph.edges
+                    if str(edge.get("source_id") or "") in visible_ids
+                    and str(edge.get("target_id") or "") in visible_ids
+                ],
+            }
+        else:
+            observation = orchestrator.perception.robot_view(self.agent_id)
+        return observation
+
+    def candidate_payloads(
+        self,
+        orchestrator: Orchestrator,
+        *,
+        visibility_mode: str | VisibilityMode,
+    ) -> list[dict[str, Any]]:
+        observation = self.runtime_observation(orchestrator, visibility_mode=visibility_mode)
+        return candidate_actions(orchestrator, observation, self.agent_id)
+
+    def observation(
+        self,
+        orchestrator: Orchestrator,
+        *,
+        visibility_mode: str | VisibilityMode,
+    ) -> Observation:
+        mode = str(getattr(visibility_mode, "value", visibility_mode))
+        observation = self.runtime_observation(orchestrator, visibility_mode=mode)
+
+        candidates = [
+            compact_candidate(item)
+            for item in candidate_actions(orchestrator, observation, self.agent_id)
+        ]
+        world_state = observation.get("world_state") or {}
+        return Observation(
+            actor_id=self.agent_id,
+            step_index=int(world_state.get("step") or 0),
+            visibility_mode=mode,
+            visible_rooms=[str(item) for item in world_state.get("visible_rooms") or []],
+            visible_nodes=copy.deepcopy(observation.get("nodes") or []),
+            visible_edges=copy.deepcopy(observation.get("edges") or []),
+            memory_nodes=[],
+            unknown_rooms=[],
+            confidence_by_room={
+                str(key): float(value)
+                for key, value in (world_state.get("confidence_by_room") or {}).items()
+            },
+            candidate_actions=candidates,
+        )
+
+    def candidate_by_id(
+        self,
+        orchestrator: Orchestrator,
+        *,
+        visibility_mode: str | VisibilityMode,
+        selected_action_id: str,
+    ) -> dict[str, Any] | None:
+        for candidate in self.candidate_payloads(orchestrator, visibility_mode=visibility_mode):
+            if action_id(candidate) == selected_action_id:
+                return copy.deepcopy(candidate)
+        return None

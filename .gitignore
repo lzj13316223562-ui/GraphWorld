@@ -4,11 +4,23 @@ backend/data/replays/
 # Python caches
 __pycache__/
 *.py[cod]
+.venv/
+.gw-services/
 
 # Runtime and experiment outputs
 backend/data/replay_logs/
 backend/data/tensorboard/
 backend/data/experiments/
+backend/data/*.sqlite3
+backend/data/web_pg/
+backend/data/web_redis/
+backend/data/web_*.log
+backend/data/web_artifacts/
+
+# Frontend local dependencies and build outputs
+frontend/node_modules/
+frontend/dist/
+frontend/tsconfig.tsbuildinfo
 
 # Local editor / assistant state
 .vscode/
