@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import csv
 import math
+import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -25,8 +26,13 @@ from matplotlib.ticker import MaxNLocator
 
 ROOT = Path(__file__).resolve().parents[2]
 EXP_ROOT = ROOT / "backend" / "data" / "experiments"
-FIG_DIR = ROOT / "paper" / "figures" / "overview"
-CACHE_PATH = ROOT / "paper" / "analysis" / "realtime_scores_cache.csv"
+MODEL_SLUG = os.environ.get("FIG_MODEL_SLUG", "vllm_qwen3_5_9b")
+FIGURE_SET = os.environ.get("FIGURE_SET", "")
+FIG_ROOT = ROOT / "paper" / "figures" / FIGURE_SET if FIGURE_SET else ROOT / "paper" / "figures"
+FIG_DIR = FIG_ROOT / "overview"
+CACHE_NAME = f"realtime_scores_cache_{FIGURE_SET}.csv" if FIGURE_SET else "realtime_scores_cache.csv"
+CACHE_PATH = ROOT / "paper" / "analysis" / CACHE_NAME
+EXPERIMENT_STEPS = int(os.environ.get("EXPERIMENT_STEPS", "1600"))
 
 SCENES = [
     ("simple_home_1f", "Home", 1),
@@ -60,13 +66,13 @@ def find_run(scene: str, method: str, humans: int) -> Path | None:
     scene_dir = EXP_ROOT / scene
     if method == "no_robot":
         metrics = latest(
-            list(scene_dir.glob(f"steps_1600__robots_0__humans_{humans}__model_npc_only_baseline/*/no_robot/metrics.csv"))
+            list(scene_dir.glob(f"steps_{EXPERIMENT_STEPS}__robots_0__humans_{humans}__model_npc_only_baseline/*/no_robot/metrics.csv"))
         )
     else:
         metrics = latest(
             list(
                 scene_dir.glob(
-                    f"steps_1600__robots_1__humans_{humans}__model_vllm_qwen3_5_9b_{method}/*/with_robot/metrics.csv"
+                    f"steps_{EXPERIMENT_STEPS}__robots_1__humans_{humans}__model_{MODEL_SLUG}_{method}/*/with_robot/metrics.csv"
                 )
             )
         )

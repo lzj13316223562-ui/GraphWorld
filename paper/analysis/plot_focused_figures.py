@@ -11,6 +11,7 @@ from __future__ import annotations
 import csv
 import json
 import math
+import os
 import textwrap
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -22,9 +23,12 @@ from matplotlib.ticker import MaxNLocator
 
 ROOT = Path(__file__).resolve().parents[2]
 EXP_ROOT = ROOT / "backend" / "data" / "experiments"
-FIG_ROOT = ROOT / "paper" / "figures"
+MODEL_SLUG = os.environ.get("FIG_MODEL_SLUG", "vllm_qwen3_5_9b")
+FIGURE_SET = os.environ.get("FIGURE_SET", "")
+FIG_ROOT = ROOT / "paper" / "figures" / FIGURE_SET if FIGURE_SET else ROOT / "paper" / "figures"
 OVERVIEW_DIR = FIG_ROOT / "overview"
 FAILURE_DIR = FIG_ROOT / "failure"
+EXPERIMENT_STEPS = int(os.environ.get("EXPERIMENT_STEPS", "1600"))
 
 SCENES = [
     ("simple_home_1f", "Home"),
@@ -99,6 +103,8 @@ CASE_PATHS = {
         "with_robot",
     ),
 }
+if MODEL_SLUG != "vllm_qwen3_5_9b" or EXPERIMENT_STEPS != 1600:
+    CASE_PATHS = {}
 
 CASE_SHORT_LABELS = {
     "factory": {
@@ -138,13 +144,13 @@ def find_metrics(scene: str, method: str) -> Path | None:
     scene_dir = EXP_ROOT / scene
     humans = SCENE_HUMANS[scene]
     if method == "no_robot":
-        pattern = f"steps_1600__robots_0__humans_{humans}__model_npc_only_baseline/*/no_robot/metrics.csv"
+        pattern = f"steps_{EXPERIMENT_STEPS}__robots_0__humans_{humans}__model_npc_only_baseline/*/no_robot/metrics.csv"
         return latest(list(scene_dir.glob(pattern)))
 
     if method in {"reactive", "single_round", "goal_review"}:
         labelled = list(
             scene_dir.glob(
-                f"steps_1600__robots_1__humans_{humans}__model_vllm_qwen3_5_9b_{method}/*/with_robot/metrics.csv"
+                f"steps_{EXPERIMENT_STEPS}__robots_1__humans_{humans}__model_{MODEL_SLUG}_{method}/*/with_robot/metrics.csv"
             )
         )
         if labelled:
@@ -155,7 +161,7 @@ def find_metrics(scene: str, method: str) -> Path | None:
         # the directory name. Keep using them so existing long runs remain useful.
         legacy = list(
             scene_dir.glob(
-                f"steps_1600__robots_1__humans_{humans}__model_vllm_qwen3_5_9b/*/with_robot/metrics.csv"
+                f"steps_{EXPERIMENT_STEPS}__robots_1__humans_{humans}__model_{MODEL_SLUG}/*/with_robot/metrics.csv"
             )
         )
         return latest(legacy)
@@ -167,13 +173,13 @@ def find_replay(scene: str, method: str) -> Path | None:
     scene_dir = EXP_ROOT / scene
     humans = SCENE_HUMANS[scene]
     if method == "no_robot":
-        pattern = f"steps_1600__robots_0__humans_{humans}__model_npc_only_baseline/*/no_robot/replay.json"
+        pattern = f"steps_{EXPERIMENT_STEPS}__robots_0__humans_{humans}__model_npc_only_baseline/*/no_robot/replay.json"
         return latest(list(scene_dir.glob(pattern)))
 
     if method in {"reactive", "single_round", "goal_review"}:
         labelled = list(
             scene_dir.glob(
-                f"steps_1600__robots_1__humans_{humans}__model_vllm_qwen3_5_9b_{method}/*/with_robot/replay.json"
+                f"steps_{EXPERIMENT_STEPS}__robots_1__humans_{humans}__model_{MODEL_SLUG}_{method}/*/with_robot/replay.json"
             )
         )
         if labelled:
@@ -182,7 +188,7 @@ def find_replay(scene: str, method: str) -> Path | None:
     if method == "goal_review":
         legacy = list(
             scene_dir.glob(
-                f"steps_1600__robots_1__humans_{humans}__model_vllm_qwen3_5_9b/*/with_robot/replay.json"
+                f"steps_{EXPERIMENT_STEPS}__robots_1__humans_{humans}__model_{MODEL_SLUG}/*/with_robot/replay.json"
             )
         )
         return latest(legacy)

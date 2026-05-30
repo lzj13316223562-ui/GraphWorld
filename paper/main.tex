@@ -226,6 +226,39 @@ S(t)=0.45S_{\mathrm{state}}(t)+0.35S_{\mathrm{spatial}}(t)+0.20S_{\mathrm{human}
 }
 \end{table*}
 
+\subsection{模型主干补充实验：同一策略是否受模型能力影响}
+除 1600 step Qwen3.5-9B 主实验外，我们进一步在相同五个 base scenes 上运行 800 step 模型对比实验，比较 Qwen3.5-9B 与 DeepSeek-R1-Distill-Qwen-14B 在 reactive、single-round 和 goal-review 三种机器人策略下的表现。图~\ref{fig:model-comparison} 展示最终综合分对比，灰色虚线为对应场景的 no-robot 基线。表~\ref{tab:model-avg-results} 汇总跨场景平均分。
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/model_comparison/model_final_score_comparison.png}
+  \caption{800 step 模型主干对比实验。柱状图为机器人策略在不同模型下的最终综合分，灰色虚线为对应场景的无机器人基线。}
+  \label{fig:model-comparison}
+\end{figure*}
+
+\begin{table}[t]
+\centering
+\caption{五个场景上的 800 step 平均最终综合分。$\Delta$ 表示相对无机器人基线的平均提升；无机器人基线平均最终综合分为 0.5184。}
+\label{tab:model-avg-results}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lcccc}
+\toprule
+\multirow{2}{*}{策略}
+& \multicolumn{2}{c}{Qwen3.5-9B}
+& \multicolumn{2}{c}{DeepSeek-R1-14B} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+& 分数 & $\Delta$ & 分数 & $\Delta$ \\
+\midrule
+Reactive & 0.5323 & +0.0139 & 0.5257 & +0.0073 \\
+Single-round & 0.6748 & +0.1564 & 0.6808 & +0.1624 \\
+Goal-review & 0.6397 & +0.1213 & \bestcell{0.7130} & \bestcell{+0.1946} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+结果显示，reactive 方法对模型能力不敏感，两个模型相对 no-robot 的平均提升都很小，说明局部可见图和合法动作候选不足以形成长期维护策略。Single-round 在两个模型上都稳定提升，表明显式输出高层任务与低层动作已经能利用图状态中的长期异常。Goal-review 对模型能力更敏感：Qwen3.5-9B 平均提升为 +0.1213，而 DeepSeek-R1-14B 达到 +0.1946，是该补充实验中的最佳结果。这说明当策略被拆成“是否继续当前目标”和“下一步动作选择”两个层次后，更强的模型更能保持长链任务上下文，减少过早切换目标和重复局部动作。
+
 \subsection{多样性实验：Graph Profile 是否拉开难度}
 图~\ref{fig:diversity-grid} 展示三种 graph profile 的结果。多样性实验验证了两个点。第一，no-robot 随着任务物体压力增加而明显下降，尤其在 hospital、supermarket、office 和 factory 中，spread/device profile 更容易积累状态偏离和流程阻塞。第二，goal-review 大多数情况下高于 no-robot，说明 agent 对共生闭环的调节能力不是只对一个固定 base graph 有效。
 
