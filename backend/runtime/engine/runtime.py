@@ -539,15 +539,39 @@ class Perception:
                 continue
             age = step - seen.get(node_id, -self.confidence_horizon)
             confidence[node_id] = round(max(0.0, 1.0 - (age / self.confidence_horizon)), 4)
+        visible_edges = [
+            copy.deepcopy(edge)
+            for edge in self.graph.edges
+            if str(edge.get("source_id") or "") in visible_ids and str(edge.get("target_id") or "") in visible_ids
+        ]
+        edge_keys = {
+            (str(edge.get("source_id") or ""), str(edge.get("target_id") or ""), str(edge.get("relation") or ""))
+            for edge in visible_edges
+        }
+        for door_id in sorted(visible_ids):
+            door = self.graph.node(door_id)
+            if str(door.get("door_kind") or "") != "structural":
+                continue
+            for room_id in sorted(str(room_id) for room_id in door.get("connected_rooms") or [] if room_id in visible_rooms):
+                key = (room_id, door_id, "doorway")
+                if key in edge_keys:
+                    continue
+                visible_edges.append(
+                    {
+                        "source_id": room_id,
+                        "target_id": door_id,
+                        "relation": "doorway",
+                        "edge_type": "visibility_edge",
+                        "category": "perception",
+                        "properties": {"synthetic": True},
+                    }
+                )
+                edge_keys.add(key)
         return {
             "scene_name": self.graph.scene_name,
             "world_state": {**copy.deepcopy(self.graph.world_state), "visible_rooms": sorted(visible_rooms), "confidence_by_room": confidence},
             "nodes": [copy.deepcopy(self.graph.nodes[node_id]) for node_id in sorted(visible_ids)],
-            "edges": [
-                copy.deepcopy(edge)
-                for edge in self.graph.edges
-                if str(edge.get("source_id") or "") in visible_ids and str(edge.get("target_id") or "") in visible_ids
-            ],
+            "edges": visible_edges,
         }
 
 

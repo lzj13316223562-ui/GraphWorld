@@ -56,13 +56,20 @@ def parse_action_index(text: str, fallback: int = 0) -> int:
         payload = json.loads(text)
         return int(payload.get("action_index", fallback))
     except Exception:
-        match = re.search(r"\{.*\}", text, re.S)
-        if match:
+        decoder = json.JSONDecoder()
+        valid_indices: list[int] = []
+        for match in re.finditer(r"\{", text or ""):
             try:
-                payload = json.loads(match.group(0))
-                return int(payload.get("action_index", fallback))
+                payload, _ = decoder.raw_decode((text or "")[match.start():])
+                if isinstance(payload, dict) and "action_index" in payload:
+                    valid_indices.append(int(payload.get("action_index", fallback)))
             except Exception:
-                pass
+                continue
+        if valid_indices:
+            return valid_indices[-1]
+        match = re.search(r'"action_index"\s*:\s*(-?\d+)', text or "")
+        if match:
+            return int(match.group(1))
     return fallback
 
 
@@ -73,12 +80,18 @@ def parse_goal_review(text: str, allowed_tasks: list[str], active_task: str = ""
     try:
         payload = json.loads(text)
     except Exception:
-        match = re.search(r"\{.*\}", text, re.S)
-        if not match:
-            return fallback
-        try:
-            payload = json.loads(match.group(0))
-        except Exception:
+        decoder = json.JSONDecoder()
+        payload = None
+        for match in re.finditer(r"\{", text or ""):
+            try:
+                candidate, _ = decoder.raw_decode((text or "")[match.start():])
+            except Exception:
+                continue
+            if isinstance(candidate, dict) and (
+                "decision" in candidate or "high_level_task" in candidate
+            ):
+                payload = candidate
+        if payload is None:
             return fallback
     decision = str(payload.get("decision") or "").strip().lower()
     if decision not in {"keep", "switch", "finish", "drop"}:

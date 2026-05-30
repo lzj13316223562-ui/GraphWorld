@@ -105,7 +105,17 @@ SUPPORTED_AGENTS = {
         "base_url_env": "VLLM_BASE_URL",
         "multimodal": False,
     },
-        "vllm-qwen3.6-27b": {
+    "vllm-deepseek-r1-14b": {
+        "type": "openai",
+        "model": "deepseek-r1-14b",
+        "model_env": "VLLM_MODEL",
+        "api_key": "EMPTY",
+        "api_key_env": "VLLM_API_KEY",
+        "base_url": "http://127.0.0.1:8000/v1",
+        "base_url_env": "VLLM_BASE_URL",
+        "multimodal": False,
+    },
+    "vllm-qwen3.6-27b": {
         "type": "openai",
         "model": "qwen36-27b",
         "model_env": "VLLM_MODEL",
@@ -214,13 +224,14 @@ def get_client(agent: str):
 
         elif client_type == "openai":
             from openai import OpenAI
+            import httpx
             api_key = _cfg_value(cfg, "api_key")
             api_key_env = cfg.get("api_key_env")
             base_url = _cfg_value(cfg, "base_url")
             if not api_key:
                 hint = f"（可通过环境变量 {api_key_env} 提供）" if api_key_env else ""
                 raise RuntimeError(f"缺少 {agent} 的 API key{hint}")
-            client = OpenAI(api_key=api_key, base_url=base_url)
+            client = OpenAI(api_key=api_key, base_url=base_url, http_client=httpx.Client(trust_env=False))
             clients[agent] = client
             return client
 
@@ -311,6 +322,8 @@ def llm_query(system_prompt: str, user_query: str, agent: str = "glm-4", timeout
                 extra_body["enable_search"] = True
             if agent.startswith("vllm-qwen3"):
                 extra_body["chat_template_kwargs"] = {"enable_thinking": False}
+            if agent.startswith("vllm-deepseek"):
+                extra_args["response_format"] = {"type": "json_object"}
             if extra_body:
                 extra_args["extra_body"] = extra_body
 
