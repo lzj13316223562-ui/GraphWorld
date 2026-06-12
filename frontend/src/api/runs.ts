@@ -12,6 +12,10 @@ export function getRun(runId: string) {
   return requestJson<RunRead>(`/runs/${runId}`);
 }
 
+export function listRuns() {
+  return requestJson<RunRead[]>("/runs");
+}
+
 export function getRunCurrent(runId: string) {
   return requestJson<RunCurrentResponse>(`/runs/${runId}/current`);
 }

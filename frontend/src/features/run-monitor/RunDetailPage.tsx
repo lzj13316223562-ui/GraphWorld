@@ -67,6 +67,8 @@ export function RunDetailPage() {
   const isHuman = state?.run.control_mode === "human";
   const canAct = isHuman && state?.run.status === "waiting_for_human";
   const canAdvance = state && state.run.control_mode !== "human" && !["completed", "failed", "canceled"].includes(state.run.status);
+  const latestStep = steps.data?.length ? steps.data[steps.data.length - 1] : undefined;
+  const latestEvents = latestStep?.events ?? [];
 
   return (
     <section className="page full-height">
@@ -139,6 +141,15 @@ export function RunDetailPage() {
               <pre>{JSON.stringify(state.latest_action_result, null, 2)}</pre>
             ) : (
               <span>No action yet.</span>
+            )}
+          </div>
+
+          <h2>Latest Events</h2>
+          <div className="detail-block compact">
+            {latestEvents.length ? (
+              <pre>{JSON.stringify(latestEvents, null, 2)}</pre>
+            ) : (
+              <span>No events yet.</span>
             )}
           </div>
 

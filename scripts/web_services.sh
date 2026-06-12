@@ -2,7 +2,11 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SERVICES_DIR="$ROOT_DIR/.gw-services"
+DEFAULT_SERVICES_DIR="$ROOT_DIR/.gw-services"
+if [[ ! -x "$DEFAULT_SERVICES_DIR/bin/postgres" && -n "${CONDA_PREFIX:-}" ]]; then
+  DEFAULT_SERVICES_DIR="$CONDA_PREFIX"
+fi
+SERVICES_DIR="${GRAPHWORLD_SERVICES_DIR:-$DEFAULT_SERVICES_DIR}"
 PG_DATA="$ROOT_DIR/backend/data/web_pg"
 PG_LOG="$ROOT_DIR/backend/data/web_postgres.log"
 REDIS_DIR="$ROOT_DIR/backend/data/web_redis"

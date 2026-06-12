@@ -7,4 +7,4 @@ export GRAPHWORLD_DATABASE_URL="${GRAPHWORLD_DATABASE_URL:-postgresql+psycopg://
 export GRAPHWORLD_REDIS_URL="${GRAPHWORLD_REDIS_URL:-redis://127.0.0.1:56379/0}"
 
 cd "$ROOT_DIR"
-exec .venv/bin/rq worker graphworld-runs --url "$GRAPHWORLD_REDIS_URL"
+exec "${GRAPHWORLD_RQ_BIN:-rq}" worker graphworld-runs --url "$GRAPHWORLD_REDIS_URL"

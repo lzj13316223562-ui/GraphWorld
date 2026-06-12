@@ -71,6 +71,14 @@ export function ReplayPage() {
           <div className="detail-block compact">
             <pre>{JSON.stringify(activeStep?.action_result ?? {}, null, 2)}</pre>
           </div>
+          <h2>Events</h2>
+          <div className="detail-block compact">
+            {activeStep?.events?.length ? (
+              <pre>{JSON.stringify(activeStep.events, null, 2)}</pre>
+            ) : (
+              <span>No events at this step.</span>
+            )}
+          </div>
         </aside>
       </div>
     </section>

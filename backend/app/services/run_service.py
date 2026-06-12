@@ -8,17 +8,19 @@ from uuid import uuid4
 from sqlalchemy.orm import Session
 
 from backend.runtime.agent import fallback_choose_action, llm_choose_action
+from backend.runtime.eval import build_matrix_snapshot, matrix_score
 
 from backend.app.core.errors import InvalidStateError, NotFoundError
-from backend.app.db.models import Run, RunStep
+from backend.app.db.models import Run, RunStep, User
 from backend.app.repositories.run_repo import RunRepository
 from backend.app.repositories.scene_repo import SceneRepository
 from backend.app.runtime.graphworld_adapter import GraphWorldAdapter, action_id
+from backend.app.runtime.schedule import expected_events, planned_events_for_step
 from backend.app.schemas.action import ActionRequest, ActionResult
 from backend.app.schemas.metrics import MetricPoint, RunMetricsResponse
 from backend.app.schemas.observation import Observation
 from backend.app.schemas.replay import ReplayResponse, ReplayStepRead
-from backend.app.schemas.run import ControlMode, RunCreate, RunCurrentResponse, RunRead, RunStatus
+from backend.app.schemas.run import ControlMode, RunCreate, RunCurrentResponse, RunRead, RunStatus, VisibilityMode
 
 
 def _run_id() -> str:
@@ -28,6 +30,8 @@ def _run_id() -> str:
 def _run_read(run: Run) -> RunRead:
     return RunRead(
         id=run.id,
+        owner_user_id=run.owner_user_id,
+        owner_username=run.owner.username if run.owner else None,
         scene_version_id=run.scene_version_id,
         control_mode=run.control_mode,
         visibility_mode=run.visibility_mode,
@@ -81,9 +85,13 @@ def _metrics_for_step(
     candidates: list[dict[str, Any]],
     action_result: ActionResult,
     after_scene: dict[str, Any],
+    *,
+    baseline_scene: dict[str, Any] | None = None,
+    before_scene: dict[str, Any] | None = None,
+    expected_human_events: tuple[str, ...] = (),
 ) -> dict[str, Any]:
     world_state = after_scene.get("world_state") or {}
-    return {
+    metrics = {
         "world_step": int(world_state.get("step") or 0),
         "visible_room_count": len(observation.visible_rooms),
         "visible_node_count": len(observation.visible_nodes),
@@ -91,40 +99,64 @@ def _metrics_for_step(
         "candidate_action_count": len(candidates),
         "action_ok": action_result.ok,
     }
+    try:
+        current = build_matrix_snapshot(after_scene, expected_human_events)
+        baseline = build_matrix_snapshot(baseline_scene or after_scene, expected_human_events)
+        previous = build_matrix_snapshot(before_scene, expected_human_events) if before_scene else None
+        world_metrics = matrix_score(current, baseline, previous)
+        metrics.update({str(key): value for key, value in world_metrics.items()})
+    except Exception as error:
+        metrics["score_error"] = str(error)
+    return metrics
 
 
 class RunService:
-    def __init__(self, db: Session) -> None:
+    def __init__(self, db: Session, current_user: User | None = None) -> None:
+        self.current_user = current_user
         self.runs = RunRepository(db)
         self.scenes = SceneRepository(db)
 
     def list_runs(self) -> list[RunRead]:
-        return [_run_read(run) for run in self.runs.list()]
+        if self.current_user is None or self.current_user.role == "admin":
+            return [_run_read(run) for run in self.runs.list()]
+        return [_run_read(run) for run in self.runs.list_for_user(self.current_user.id)]
 
     def get_run(self, run_id: str) -> RunRead:
-        run = self.runs.get(run_id)
-        if run is None:
-            raise NotFoundError(f"Run not found: {run_id}")
+        run = self._require_run(run_id)
         return _run_read(run)
 
     def create_run(self, request: RunCreate) -> RunCurrentResponse:
         version = self.scenes.get_version(request.scene_version_id)
         if version is None:
             raise NotFoundError(f"Scene version not found: {request.scene_version_id}")
-        status = RunStatus.waiting_for_human.value if request.control_mode == ControlMode.human else RunStatus.pending.value
+        control_mode = request.control_mode
+        visibility_mode = request.visibility_mode
+        agent_model = request.agent_model
+        config = dict(request.config)
+        scheduled_events = expected_events(version.source_json, request.max_steps)
+        if self.current_user is not None and self.current_user.role != "admin":
+            if control_mode == ControlMode.agent:
+                raise InvalidStateError("Agent control is only available to admins")
+            if visibility_mode != VisibilityMode.fog_of_war:
+                raise InvalidStateError("User runs must use fog_of_war visibility")
+            agent_model = None
+            config["use_llm"] = False
+        status = RunStatus.waiting_for_human.value if control_mode == ControlMode.human else RunStatus.pending.value
         run = Run(
             id=_run_id(),
+            owner_user_id=self.current_user.id if self.current_user is not None else None,
             scene_version_id=request.scene_version_id,
-            control_mode=request.control_mode.value,
-            visibility_mode=request.visibility_mode.value,
+            control_mode=control_mode.value,
+            visibility_mode=visibility_mode.value,
             status=status,
             current_step=0,
             config={
                 "task_id": request.task_id,
-                "agent_model": request.agent_model,
+                "agent_model": agent_model,
                 "max_steps": request.max_steps,
                 "seed": request.seed,
-                **request.config,
+                "expected_events": list(scheduled_events),
+                **config,
             },
             summary={},
             started_at=datetime.now(timezone.utc),
@@ -249,6 +281,8 @@ class RunService:
         run = self.runs.get(run_id)
         if run is None:
             raise NotFoundError(f"Run not found: {run_id}")
+        if self.current_user is not None and self.current_user.role != "admin" and run.owner_user_id != self.current_user.id:
+            raise NotFoundError(f"Run not found: {run_id}")
         return run
 
     def _selected_actions(self, run: Run) -> list[dict[str, Any]]:
@@ -306,17 +340,30 @@ class RunService:
             self.runs.steps(run.id),
         )
         before_scene = orchestrator.graph.to_scene()
+        human_events = planned_events_for_step(before_scene, run.current_step)
         if actor_type == "npc_only":
-            result = orchestrator.step(robot_actions=[], capture_robot_scene=False)
+            result = orchestrator.step(robot_actions=[], human_events=human_events, capture_robot_scene=False)
             first_result = {"ok": True, "message": "advanced environment"}
         else:
-            result = orchestrator.step(robot_actions=[copy.deepcopy(selected)], capture_robot_scene=False)
+            result = orchestrator.step(
+                robot_actions=[copy.deepcopy(selected)],
+                human_events=human_events,
+                capture_robot_scene=False,
+            )
             robot_results = result.get("robot_actions") or []
             first_result = robot_results[0] if robot_results else {}
         after_scene = orchestrator.graph.to_scene()
         action_result = _action_result(first_result)
         candidate_actions = [item.model_dump(mode="json") for item in before_observation.candidate_actions]
-        metrics = _metrics_for_step(before_observation, candidate_actions, action_result, after_scene)
+        metrics = _metrics_for_step(
+            before_observation,
+            candidate_actions,
+            action_result,
+            after_scene,
+            baseline_scene=adapter.source_json,
+            before_scene=before_scene,
+            expected_human_events=tuple(str(item) for item in (run.config or {}).get("expected_events") or ()),
+        )
         step = RunStep(
             run_id=run.id,
             step_index=run.current_step,
@@ -378,8 +425,10 @@ class RunService:
     def _update_summary(self, run: Run) -> None:
         steps = self.runs.steps(run.id)
         ok_count = sum(1 for step in steps if (step.action_result or {}).get("ok") is True)
+        latest_metrics = copy.deepcopy(steps[-1].metrics) if steps else {}
         run.summary = {
             **(run.summary or {}),
+            **latest_metrics,
             "step_count": len(steps),
             "ok_action_count": ok_count,
             "failed_action_count": len(steps) - ok_count,

@@ -79,6 +79,121 @@ a {
   color: #1e3a8a;
 }
 
+.sidebar-user {
+  display: grid;
+  gap: 4px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 14px;
+}
+
+.sidebar-user span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sidebar-user strong {
+  overflow: hidden;
+  color: #111827;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-button {
+  width: fit-content;
+  border: 0;
+  background: transparent;
+  color: #1d4ed8;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 0;
+}
+
+.sidebar-run {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 16px;
+}
+
+.sidebar-run-heading,
+.sidebar-run-status,
+.sidebar-latest {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sidebar-run-heading {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sidebar-run > strong,
+.sidebar-latest strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-run-status {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.sidebar-score-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.sidebar-score-list div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  min-height: 34px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 6px 8px;
+}
+
+.sidebar-score-list dt,
+.sidebar-latest span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sidebar-score-list dd {
+  margin: 0;
+  color: #111827;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.sidebar-latest {
+  display: grid;
+  gap: 4px;
+  align-items: start;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 10px;
+}
+
+.sidebar-latest strong {
+  color: #334155;
+  font-size: 12px;
+}
+
 .sidebar-footer {
   margin-top: auto;
   color: #64748b;
@@ -169,13 +284,16 @@ a {
 
 .button:disabled,
 .wide-action:disabled,
-.action-row:disabled {
+.action-row:disabled,
+.option-button:disabled,
+input:disabled {
   cursor: not-allowed;
   opacity: 0.55;
 }
 
 select,
 input[type="text"],
+input[type="password"],
 input[type="number"],
 input:not([type]) {
   min-height: 38px;
@@ -201,6 +319,19 @@ input:not([type]) {
   border-radius: 8px;
   background: #ffffff;
   padding: 10px 14px;
+}
+
+.run-row {
+  grid-template-columns: 24px minmax(0, 1fr) auto 24px;
+}
+
+.run-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .table-row:hover {
@@ -464,6 +595,37 @@ pre {
   font-weight: 700;
 }
 
+.loading-screen,
+.login-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  background: #f6f7f9;
+  padding: 24px;
+}
+
+.login-panel {
+  display: grid;
+  width: min(420px, 100%);
+  gap: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 24px;
+}
+
+.login-panel h1 {
+  margin: 2px 0 0;
+}
+
+.login-panel label {
+  display: grid;
+  gap: 7px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .form-grid {
   display: grid;
   max-width: 860px;
@@ -477,6 +639,78 @@ pre {
   color: #334155;
   font-size: 13px;
   font-weight: 700;
+}
+
+.mode-banner {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 4px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  padding: 12px;
+}
+
+.mode-banner span {
+  color: #475569;
+  font-size: 12px;
+}
+
+.form-section {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.form-section legend {
+  margin: 0 0 7px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.form-section:first-child {
+  grid-column: 1 / -1;
+}
+
+.option-group {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.option-group.two {
+  max-width: 360px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.option-button {
+  min-height: 38px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.option-button:hover:not(:disabled) {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.option-button.selected {
+  border-color: #2563eb;
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.option-button:disabled {
+  background: #f1f5f9;
 }
 
 .check-row {

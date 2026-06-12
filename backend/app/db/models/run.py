@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -8,11 +9,15 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.app.db.models.base import Base, TimestampMixin
 from backend.app.db.models.types import JSONBType
 
+if TYPE_CHECKING:
+    from backend.app.db.models.user import User
+
 
 class Run(TimestampMixin, Base):
     __tablename__ = "runs"
 
     id: Mapped[str] = mapped_column(String(128), primary_key=True)
+    owner_user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), index=True)
     scene_version_id: Mapped[str] = mapped_column(ForeignKey("scene_versions.id"), index=True, nullable=False)
     control_mode: Mapped[str] = mapped_column(String(32), index=True, nullable=False)
     visibility_mode: Mapped[str] = mapped_column(String(32), index=True, nullable=False)
@@ -26,6 +31,7 @@ class Run(TimestampMixin, Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     steps: Mapped[list["RunStep"]] = relationship(back_populates="run", cascade="all, delete-orphan")
+    owner: Mapped["User | None"] = relationship(back_populates="runs")
 
 
 class RunStep(TimestampMixin, Base):

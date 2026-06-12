@@ -6,6 +6,7 @@ from typing import Any
 from backend.runtime.agent.planning import candidate_actions
 from backend.runtime.engine import Orchestrator
 
+from backend.app.runtime.schedule import planned_events_for_step
 from backend.app.schemas.action import CandidateAction
 from backend.app.schemas.observation import Observation
 from backend.app.schemas.run import VisibilityMode
@@ -101,10 +102,15 @@ class GraphWorldAdapter:
         visibility_mode: str | VisibilityMode = VisibilityMode.fog_of_war,
     ) -> Orchestrator:
         orchestrator = self.orchestrator()
-        for action in selected_actions:
-            if action:
-                self.runtime_observation(orchestrator, visibility_mode=visibility_mode)
-                orchestrator.step(robot_actions=[copy.deepcopy(action)], capture_robot_scene=False, capture_scene=False)
+        for step_index, action in enumerate(selected_actions):
+            self.runtime_observation(orchestrator, visibility_mode=visibility_mode)
+            human_events = planned_events_for_step(orchestrator.graph.to_scene(), step_index)
+            orchestrator.step(
+                robot_actions=[copy.deepcopy(action)] if action else [],
+                human_events=human_events,
+                capture_robot_scene=False,
+                capture_scene=False,
+            )
         self.runtime_observation(orchestrator, visibility_mode=visibility_mode)
         return orchestrator
 

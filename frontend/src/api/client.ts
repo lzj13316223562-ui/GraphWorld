@@ -1,4 +1,17 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
+const TOKEN_KEY = "graphworld_access_token";
+
+export function getStoredToken() {
+  return localStorage.getItem(TOKEN_KEY) ?? "";
+}
+
+export function setStoredToken(token: string) {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearStoredToken() {
+  localStorage.removeItem(TOKEN_KEY);
+}
 
 export class ApiError extends Error {
   constructor(
@@ -10,9 +23,11 @@ export class ApiError extends Error {
 }
 
 export async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getStoredToken();
   const response = await fetch(`${API_BASE}${path}`, {
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init?.headers ?? {}),
     },
     ...init,

@@ -45,6 +45,8 @@ class RunCreate(BaseModel):
 
 class RunRead(BaseModel):
     id: str
+    owner_user_id: str | None = None
+    owner_username: str | None = None
     scene_version_id: str
     control_mode: ControlMode
     visibility_mode: VisibilityMode

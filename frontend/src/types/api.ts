@@ -2,6 +2,21 @@ export type ControlMode = "agent" | "human" | "npc_only" | "hybrid";
 export type VisibilityMode = "full" | "room" | "fog_of_war";
 export type RunStatus = "pending" | "running" | "waiting_for_human" | "completed" | "failed" | "canceled";
 
+export interface UserRead {
+  id: string;
+  username: string;
+  display_name: string;
+  role: "admin" | "user" | string;
+  is_active: boolean;
+  created_at?: string;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  user: UserRead;
+}
+
 export interface SceneRead {
   id: string;
   name: string;
@@ -73,6 +88,8 @@ export interface ActionResult {
 
 export interface RunRead {
   id: string;
+  owner_user_id?: string | null;
+  owner_username?: string | null;
   scene_version_id: string;
   control_mode: ControlMode;
   visibility_mode: VisibilityMode;

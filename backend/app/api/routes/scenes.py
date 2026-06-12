@@ -5,7 +5,9 @@ from collections.abc import Iterator
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from backend.app.api.auth import get_current_user, require_admin
 from backend.app.core.errors import NotFoundError
+from backend.app.db.models import User
 from backend.app.db.session import get_db
 from backend.app.schemas.graph import SceneGraphResponse
 from backend.app.schemas.scene import SceneImportRequest, SceneRead, SceneVersionRead
@@ -19,20 +21,28 @@ def get_scene_service(db: Session = Depends(get_db)) -> Iterator[SceneService]:
 
 
 @router.get("/scenes", response_model=list[SceneRead])
-def list_scenes(service: SceneService = Depends(get_scene_service)) -> list[SceneRead]:
+def list_scenes(
+    _: User = Depends(get_current_user),
+    service: SceneService = Depends(get_scene_service),
+) -> list[SceneRead]:
     return service.list_scenes()
 
 
 @router.post("/scenes/import", response_model=SceneVersionRead, status_code=201)
 def import_scene(
     request: SceneImportRequest,
+    _: User = Depends(require_admin),
     service: SceneService = Depends(get_scene_service),
 ) -> SceneVersionRead:
     return service.import_scene(request)
 
 
 @router.get("/scenes/{scene_id}", response_model=SceneRead)
-def get_scene(scene_id: str, service: SceneService = Depends(get_scene_service)) -> SceneRead:
+def get_scene(
+    scene_id: str,
+    _: User = Depends(get_current_user),
+    service: SceneService = Depends(get_scene_service),
+) -> SceneRead:
     try:
         return service.get_scene(scene_id)
     except NotFoundError as error:
@@ -40,7 +50,11 @@ def get_scene(scene_id: str, service: SceneService = Depends(get_scene_service))
 
 
 @router.get("/scenes/{scene_id}/versions", response_model=list[SceneVersionRead])
-def list_scene_versions(scene_id: str, service: SceneService = Depends(get_scene_service)) -> list[SceneVersionRead]:
+def list_scene_versions(
+    scene_id: str,
+    _: User = Depends(get_current_user),
+    service: SceneService = Depends(get_scene_service),
+) -> list[SceneVersionRead]:
     try:
         return service.list_versions(scene_id)
     except NotFoundError as error:
@@ -50,6 +64,7 @@ def list_scene_versions(scene_id: str, service: SceneService = Depends(get_scene
 @router.get("/scene-versions/{scene_version_id}/graph", response_model=SceneGraphResponse)
 def get_scene_graph(
     scene_version_id: str,
+    _: User = Depends(get_current_user),
     service: SceneService = Depends(get_scene_service),
 ) -> SceneGraphResponse:
     try:

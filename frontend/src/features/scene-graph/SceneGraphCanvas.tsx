@@ -70,6 +70,7 @@ const LINK_COLORS: Record<string, string> = {
   touching_or_adjacent: "#94a3b8",
   connected: "#2f9e75",
   connected_to: "#2f9e75",
+  doorway: "#ef4444",
   controls: "#f59e0b",
   contains: "#64748b",
   inside_room: "#64748b",

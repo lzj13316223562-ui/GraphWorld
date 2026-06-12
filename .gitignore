@@ -8,6 +8,8 @@ __pycache__/
 .gw-services/
 
 # Runtime and experiment outputs
+/core
+backend/tmp/
 backend/data/replay_logs/
 backend/data/tensorboard/
 backend/data/experiments/

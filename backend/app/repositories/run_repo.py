@@ -23,6 +23,10 @@ class RunRepository:
         statement = select(Run).order_by(Run.created_at.desc(), Run.id.asc())
         return list(self.db.scalars(statement).all())
 
+    def list_for_user(self, user_id: str) -> list[Run]:
+        statement = select(Run).where(Run.owner_user_id == user_id).order_by(Run.created_at.desc(), Run.id.asc())
+        return list(self.db.scalars(statement).all())
+
     def steps(self, run_id: str, *, offset: int = 0, limit: int | None = None) -> list[RunStep]:
         statement = select(RunStep).where(RunStep.run_id == run_id).order_by(RunStep.step_index.asc()).offset(max(0, offset))
         if limit is not None:
