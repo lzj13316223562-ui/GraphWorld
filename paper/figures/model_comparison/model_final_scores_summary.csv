@@ -1,0 +1,36 @@
+scene,scene_label,method,method_label,model_slug,model_label,run_id,final_score,delta_vs_no_robot
+simple_home_1f,Home,no_robot,No robot,npc_only_baseline,No robot,20260529T161048Z_917ff90f,0.6588,0.0
+simple_home_1f,Home,reactive,Reactive,vllm_qwen3_5_9b,Qwen3.5-9B,20260528T155300Z_7cbb166b,0.6672,0.008399999999999963
+simple_home_1f,Home,reactive,Reactive,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T161103Z_bd97f81e,0.6562,-0.0026000000000000467
+simple_home_1f,Home,single_round,Single-round,vllm_qwen3_5_9b,Qwen3.5-9B,20260528T160834Z_346239dc,0.6181,-0.04070000000000007
+simple_home_1f,Home,single_round,Single-round,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T162536Z_b4011ce2,0.627,-0.03180000000000005
+simple_home_1f,Home,goal_review,Goal-review,vllm_qwen3_5_9b,Qwen3.5-9B,20260528T164212Z_13e795d6,0.6717,0.012899999999999912
+simple_home_1f,Home,goal_review,Goal-review,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T180700Z_e482a967,0.7612,0.10239999999999994
+simple_hospital_1f,Hospital,no_robot,No robot,npc_only_baseline,No robot,20260529T193356Z_c49ae8da,0.5205,0.0
+simple_hospital_1f,Hospital,reactive,Reactive,vllm_qwen3_5_9b,Qwen3.5-9B,20260528T173026Z_1fed12ac,0.5437,0.0232
+simple_hospital_1f,Hospital,reactive,Reactive,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T193420Z_244f138a,0.5158,-0.0046999999999999265
+simple_hospital_1f,Hospital,single_round,Single-round,vllm_qwen3_5_9b,Qwen3.5-9B,20260528T173925Z_b94c8806,0.6953,0.17480000000000007
+simple_hospital_1f,Hospital,single_round,Single-round,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T195443Z_950470a7,0.6953,0.17480000000000007
+simple_hospital_1f,Hospital,goal_review,Goal-review,vllm_qwen3_5_9b,Qwen3.5-9B,20260528T180147Z_f4ff19b8,0.5725,0.052000000000000046
+simple_hospital_1f,Hospital,goal_review,Goal-review,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T203956Z_ef784743,0.7329,0.21240000000000003
+simple_supermarket_1f,Supermarket,no_robot,No robot,npc_only_baseline,No robot,20260529T215738Z_bdd7dafe,0.5762,0.0
+simple_supermarket_1f,Supermarket,reactive,Reactive,vllm_qwen3_5_9b,Qwen3.5-9B,20260529T120441Z_811bf2fe,0.568,-0.008200000000000096
+simple_supermarket_1f,Supermarket,reactive,Reactive,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T215759Z_20da938f,0.6097,0.033499999999999974
+simple_supermarket_1f,Supermarket,single_round,Single-round,vllm_qwen3_5_9b,Qwen3.5-9B,20260529T121504Z_887ba29b,0.6582,0.08199999999999996
+simple_supermarket_1f,Supermarket,single_round,Single-round,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T221252Z_eaaee666,0.6957,0.11949999999999994
+simple_supermarket_1f,Supermarket,goal_review,Goal-review,vllm_qwen3_5_9b,Qwen3.5-9B,20260529T123222Z_932964eb,0.6896,0.11339999999999995
+simple_supermarket_1f,Supermarket,goal_review,Goal-review,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T223928Z_6a8531b1,0.686,0.10980000000000001
+simple_office_1f,Office,no_robot,No robot,npc_only_baseline,No robot,20260529T232706Z_1da5e1ed,0.4559,0.0
+simple_office_1f,Office,reactive,Reactive,vllm_qwen3_5_9b,Qwen3.5-9B,20260529T130311Z_4de7b85b,0.5126,0.05669999999999992
+simple_office_1f,Office,reactive,Reactive,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T232727Z_001f3766,0.4624,0.00649999999999995
+simple_office_1f,Office,single_round,Single-round,vllm_qwen3_5_9b,Qwen3.5-9B,20260529T131335Z_e79259d1,0.7547,0.2988
+simple_office_1f,Office,single_round,Single-round,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T234155Z_6a70bb84,0.7398,0.2839
+simple_office_1f,Office,goal_review,Goal-review,vllm_qwen3_5_9b,Qwen3.5-9B,20260529T133404Z_1c631567,0.6716,0.21569999999999995
+simple_office_1f,Office,goal_review,Goal-review,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260530T000946Z_7ae3a0f1,0.7415,0.2856
+simple_factory_1f,Factory,no_robot,No robot,npc_only_baseline,No robot,20260530T010037Z_01754b48,0.3806,0.0
+simple_factory_1f,Factory,reactive,Reactive,vllm_qwen3_5_9b,Qwen3.5-9B,20260529T140857Z_79a46d31,0.3699,-0.010699999999999987
+simple_factory_1f,Factory,reactive,Reactive,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260530T010059Z_3ea5e142,0.3845,0.0039000000000000146
+simple_factory_1f,Factory,single_round,Single-round,vllm_qwen3_5_9b,Qwen3.5-9B,20260529T141853Z_6b2dfe6f,0.6478,0.26720000000000005
+simple_factory_1f,Factory,single_round,Single-round,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260530T011329Z_861b65ca,0.6461,0.2655
+simple_factory_1f,Factory,goal_review,Goal-review,vllm_qwen3_5_9b,Qwen3.5-9B,20260529T143318Z_aeb981ee,0.5933,0.21270000000000006
+simple_factory_1f,Factory,goal_review,Goal-review,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260530T013655Z_85d489bb,0.6433,0.2627

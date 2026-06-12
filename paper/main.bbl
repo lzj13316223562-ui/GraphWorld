@@ -7,8 +7,7 @@
 \providecommand{\BIBentrySTDinterwordspacing}{\spaceskip=0pt\relax}
 \providecommand{\BIBentryALTinterwordstretchfactor}{4}
 \providecommand{\BIBentryALTinterwordspacing}{\spaceskip=\fontdimen2\font plus
-\BIBentryALTinterwordstretchfactor\fontdimen3\font minus
-  \fontdimen4\font\relax}
+\BIBentryALTinterwordstretchfactor\fontdimen3\font minus \fontdimen4\font\relax}
 \providecommand{\BIBforeignlanguage}[2]{{%
 \expandafter\ifx\csname l@#1\endcsname\relax
 \typeout{** WARNING: IEEEtran.bst: No hyphenation pattern has been}%
@@ -22,30 +21,21 @@
 \BIBdecl
 
 \bibitem{hydrarss2022}
-K.-M. et~al., ``Hydra: A real-time spatial perception system for 3d scene graph
-  construction and optimization,'' \emph{arXiv preprint arXiv:2201.13360},
-  2022.
+K.-M. et~al., ``Hydra: A real-time spatial perception system for 3d scene graph construction and optimization,'' \emph{arXiv preprint arXiv:2201.13360}, 2022.
 
 \bibitem{sayplan2023}
-S.~Vemprala \emph{et~al.}, ``Sayplan: Grounding large language models using 3d
-  scene graphs for scalable robot planning,'' in \emph{Conference on Robot
-  Learning}, 2023.
+S.~Vemprala \emph{et~al.}, ``Sayplan: Grounding large language models using 3d scene graphs for scalable robot planning,'' in \emph{Conference on Robot Learning}, 2023.
 
 \bibitem{taskography2022}
-A.~Bagaria \emph{et~al.}, ``Taskography: Evaluating robot task planning over
-  large 3d scene graphs,'' \emph{arXiv preprint arXiv:2207.05006}, 2022.
-
-\bibitem{generativeagents2023}
-J.~S. Park \emph{et~al.}, ``Generative agents: Interactive simulacra of human
-  behavior,'' \emph{Proceedings of the 36th Annual ACM Symposium on User
-  Interface Software and Technology}, 2023.
+A.~Bagaria \emph{et~al.}, ``Taskography: Evaluating robot task planning over large 3d scene graphs,'' \emph{arXiv preprint arXiv:2207.05006}, 2022.
 
 \bibitem{saycan2022}
-M.~Ahn \emph{et~al.}, ``Do as i can, not as i say: Grounding language in
-  robotic affordances,'' \emph{arXiv preprint arXiv:2204.01691}, 2022.
+M.~Ahn \emph{et~al.}, ``Do as i can, not as i say: Grounding language in robotic affordances,'' \emph{arXiv preprint arXiv:2204.01691}, 2022.
 
 \bibitem{innermonologue2022}
-W.~Huang \emph{et~al.}, ``Inner monologue: Embodied reasoning through planning
-  with language models,'' \emph{arXiv preprint arXiv:2207.05608}, 2022.
+W.~Huang \emph{et~al.}, ``Inner monologue: Embodied reasoning through planning with language models,'' \emph{arXiv preprint arXiv:2207.05608}, 2022.
+
+\bibitem{generativeagents2023}
+J.~S. Park \emph{et~al.}, ``Generative agents: Interactive simulacra of human behavior,'' \emph{Proceedings of the 36th Annual ACM Symposium on User Interface Software and Technology}, 2023.
 
 \end{thebibliography}
