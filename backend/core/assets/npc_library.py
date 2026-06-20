@@ -170,6 +170,7 @@ class ScheduleEntry:
 @dataclass(frozen=True)
 class EventPrecondition:
     kind: str
+    precondition_id: str = ""
     target: str = ""
     semantic_type: str = ""
     semantic_types: tuple[str, ...] = ()
@@ -182,6 +183,7 @@ class EventPrecondition:
     parent: str = ""
     room: str = ""
     description: str = ""
+    recoverable: bool = False
 
     def __post_init__(self) -> None:
         _validate_event_state_keys(
@@ -430,11 +432,13 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         preconditions=(
             EventPrecondition(
                 "has_node",
+                precondition_id="home_clean_clothes_available",
                 semantic_type="clothes",
                 room="bedroom",
                 states={"is_dirty": False, "is_wet": False, "folded": True},
                 relation_not="worn_by",
                 description="No clean clothes available.",
+                recoverable=True,
             ),
         ),
         effects_on_success=(
@@ -459,9 +463,11 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         preconditions=(
             EventPrecondition(
                 "has_semantics",
+                precondition_id="home_bathroom_supplies_ready_morning",
                 semantic_types=("toothbrush", "toothpaste", "cup"),
                 room="bathroom",
                 description="Bathroom supplies are unavailable.",
+                recoverable=True,
             ),
         ),
         effects_on_success=(
@@ -495,9 +501,11 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         preconditions=(
             EventPrecondition(
                 "has_semantics",
+                precondition_id="home_bathroom_supplies_ready_night",
                 semantic_types=("toothbrush", "toothpaste", "cup"),
                 room="bathroom",
                 description="Bathroom supplies are unavailable.",
+                recoverable=True,
             ),
         ),
         effects_on_success=(
@@ -557,11 +565,13 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         preconditions=(
             EventPrecondition(
                 "has_node",
+                precondition_id="home_shoes_ready_at_entrance",
                 semantic_type="shoes",
                 room="entrance",
                 states={"is_dirty": False, "is_wet": False},
                 relation_not="worn_by",
                 description="No shoes available to leave home.",
+                recoverable=True,
             ),
         ),
         effects_on_success=(
@@ -659,7 +669,14 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         event_id="patient_register",
         duration=1,
         preconditions=(
-            EventPrecondition("has_node", target="medical_form_registration", parent="counter_registration", description="No registration form available."),
+            EventPrecondition(
+                "has_node",
+                precondition_id="hospital_registration_form_ready",
+                target="medical_form_registration",
+                parent="counter_registration",
+                description="No registration form available.",
+                recoverable=True,
+            ),
         ),
         effects_on_success=(
             EventEffect("move_actor", parent="counter_registration", relation="near"),
@@ -702,8 +719,22 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         event_id="patient_take_medicine",
         duration=1,
         preconditions=(
-            EventPrecondition("has_node", semantic_type="prescription_sheet", parent="patient_1", description="Patient has no prescription."),
-            EventPrecondition("has_node", target="medicine_box_pharmacy", parent="pharmacy", description="No medicine box available at pharmacy."),
+            EventPrecondition(
+                "has_node",
+                precondition_id="hospital_patient_has_prescription",
+                semantic_type="prescription_sheet",
+                parent="patient_1",
+                description="Patient has no prescription.",
+                recoverable=True,
+            ),
+            EventPrecondition(
+                "has_node",
+                precondition_id="hospital_pharmacy_medicine_box_ready",
+                target="medicine_box_pharmacy",
+                parent="pharmacy",
+                description="No medicine box available at pharmacy.",
+                recoverable=True,
+            ),
         ),
         effects_on_success=(
             EventEffect("move_actor", parent="shelf_pharmacy", relation="near"),
@@ -719,7 +750,14 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         event_id="patient_infusion",
         duration=1,
         preconditions=(
-            EventPrecondition("has_node", target="refrigerated_medicine_pharmacy", parent="patient_1", description="Infusion medicine was not delivered to patient."),
+            EventPrecondition(
+                "has_node",
+                precondition_id="hospital_patient_has_infusion_medicine",
+                target="refrigerated_medicine_pharmacy",
+                parent="patient_1",
+                description="Infusion medicine was not delivered to patient.",
+                recoverable=True,
+            ),
         ),
         effects_on_success=(
             EventEffect("move_actor", parent="treatment_bed_treatment_room", relation="near"),
@@ -774,7 +812,14 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         event_id="doctor_prescribe",
         duration=1,
         preconditions=(
-            EventPrecondition("has_node", target="prescription_sheet_clinic_1", parent="outpatient_clinic_1", description="No blank prescription sheet available."),
+            EventPrecondition(
+                "has_node",
+                precondition_id="hospital_blank_prescription_ready",
+                target="prescription_sheet_clinic_1",
+                parent="outpatient_clinic_1",
+                description="No blank prescription sheet available.",
+                recoverable=True,
+            ),
         ),
         effects_on_success=(
             EventEffect("move_actor", parent="desk_clinic_1", relation="near"),
@@ -806,7 +851,14 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         event_id="nurse_deliver_medicine",
         duration=1,
         preconditions=(
-            EventPrecondition("has_node", target="refrigerated_medicine_pharmacy", parent="medicine_fridge_pharmacy", description="No refrigerated medicine available."),
+            EventPrecondition(
+                "has_node",
+                precondition_id="hospital_refrigerated_medicine_ready",
+                target="refrigerated_medicine_pharmacy",
+                parent="medicine_fridge_pharmacy",
+                description="No refrigerated medicine available.",
+                recoverable=True,
+            ),
         ),
         effects_on_success=(
             EventEffect("move_actor", parent="medical_cart_treatment_room", relation="near"),
@@ -821,7 +873,14 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         event_id="nurse_change_bed_sheet",
         duration=1,
         preconditions=(
-            EventPrecondition("has_node", target="clean_sheet_storage", parent="supply_cabinet_treatment_room", description="No clean bed sheet available."),
+            EventPrecondition(
+                "has_node",
+                precondition_id="hospital_clean_sheet_ready",
+                target="clean_sheet_storage",
+                parent="supply_cabinet_treatment_room",
+                description="No clean bed sheet available.",
+                recoverable=True,
+            ),
         ),
         effects_on_success=(
             EventEffect("move_actor", parent="treatment_bed_treatment_room", relation="near"),
@@ -875,7 +934,14 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         event_id="customer_take_cart",
         duration=1,
         preconditions=(
-            EventPrecondition("has_node", target="cart_entrance", parent="entrance", description="No shopping cart at entrance."),
+            EventPrecondition(
+                "has_node",
+                precondition_id="store_cart_ready_at_entrance",
+                target="cart_entrance",
+                parent="entrance",
+                description="No shopping cart at entrance.",
+                recoverable=True,
+            ),
         ),
         effects_on_success=(
             EventEffect("move_actor", parent="cart_entrance", relation="near"),
@@ -886,7 +952,14 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         event_id="customer_shop_produce",
         duration=1,
         preconditions=(
-            EventPrecondition("has_node", target="fruit_produce_1", parent="shelf_produce", description="No fruit on produce shelf."),
+            EventPrecondition(
+                "has_node",
+                precondition_id="store_produce_shelf_stocked",
+                target="fruit_produce_1",
+                parent="shelf_produce",
+                description="No fruit on produce shelf.",
+                recoverable=True,
+            ),
         ),
         effects_on_success=(
             EventEffect("move_actor", parent="shelf_produce", relation="near"),
@@ -902,8 +975,22 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         event_id="customer_shop_cold",
         duration=1,
         preconditions=(
-            EventPrecondition("has_node", target="milk_cold_storage_1", parent="fridge_cold_storage", description="No milk in cold fridge."),
-            EventPrecondition("has_node", target="fridge_cold_storage", states={"is_open": False}, description="Cold fridge was left open."),
+            EventPrecondition(
+                "has_node",
+                precondition_id="store_cold_milk_stocked",
+                target="milk_cold_storage_1",
+                parent="fridge_cold_storage",
+                description="No milk in cold fridge.",
+                recoverable=True,
+            ),
+            EventPrecondition(
+                "has_node",
+                precondition_id="store_cold_fridge_closed",
+                target="fridge_cold_storage",
+                states={"is_open": False},
+                description="Cold fridge was left open.",
+                recoverable=True,
+            ),
         ),
         effects_on_success=(
             EventEffect("move_actor", parent="fridge_cold_storage", relation="near"),
@@ -946,7 +1033,14 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         event_id="cashier_prepare",
         duration=1,
         preconditions=(
-            EventPrecondition("has_node", target="counter_checkout", states={"is_dirty": False}, description="Checkout counter is dirty."),
+            EventPrecondition(
+                "has_node",
+                precondition_id="store_checkout_counter_clean",
+                target="counter_checkout",
+                states={"is_dirty": False},
+                description="Checkout counter is dirty.",
+                recoverable=True,
+            ),
         ),
         effects_on_success=(
             EventEffect("move_actor", parent="counter_checkout", relation="near"),
@@ -958,7 +1052,14 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         event_id="cashier_scan_items",
         duration=1,
         preconditions=(
-            EventPrecondition("has_node", target="display_checkout", states={"is_on": True}, description="Checkout display is not ready."),
+            EventPrecondition(
+                "has_node",
+                precondition_id="store_checkout_display_ready",
+                target="display_checkout",
+                states={"is_on": True},
+                description="Checkout display is not ready.",
+                recoverable=True,
+            ),
         ),
         effects_on_success=(
             EventEffect("move_actor", parent="counter_checkout", relation="near"),
@@ -1001,7 +1102,15 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         values=(VALUE_CREATIVE_IMPROVEMENT, VALUE_ROLE_DUTY),
         pattern=PATTERN_RETRIEVE_USE_DISPLACE,
         description="worker creates documents and leaves work materials on the desk",
-        preconditions=(require_node(target="report_open_office", parent="cabinet_manager_office", description="No filed report template available."),),
+        preconditions=(
+            require_node(
+                precondition_id="office_report_template_filed",
+                target="report_open_office",
+                parent="cabinet_manager_office",
+                description="No filed report template available.",
+                recoverable=True,
+            ),
+        ),
         effects=(
             move_actor("desk_open_office_1"),
             set_states("cabinet_manager_office", is_open=True),
@@ -1017,8 +1126,20 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         pattern=PATTERN_SERVICE_FLOW,
         description="team uses the meeting room for coordination",
         preconditions=(
-            require_node(target="report_open_office", parent="desk_open_office_1", description="No report prepared on the worker desk."),
-            require_node(target="cup_pantry", parent="counter_pantry", description="No clean pantry cup available for the meeting."),
+            require_node(
+                precondition_id="office_report_on_worker_desk",
+                target="report_open_office",
+                parent="desk_open_office_1",
+                description="No report prepared on the worker desk.",
+                recoverable=True,
+            ),
+            require_node(
+                precondition_id="office_clean_pantry_cup_ready",
+                target="cup_pantry",
+                parent="counter_pantry",
+                description="No clean pantry cup available for the meeting.",
+                recoverable=True,
+            ),
         ),
         effects=(
             move_actor("table_meeting_room"),
@@ -1047,7 +1168,15 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         values=(VALUE_SOCIAL_COORDINATION,),
         pattern=PATTERN_SERVICE_FLOW,
         description="visitor receives help, consuming shared office resources",
-        preconditions=(require_node(target="cup_pantry", parent="counter_pantry", description="No clean shared cup available for visitor help."),),
+        preconditions=(
+            require_node(
+                precondition_id="office_shared_cup_ready",
+                target="cup_pantry",
+                parent="counter_pantry",
+                description="No clean shared cup available for visitor help.",
+                recoverable=True,
+            ),
+        ),
         effects=(
             move_actor("counter_pantry"),
             set_states("counter_pantry", is_dirty=True, fill_level=0.8),
@@ -1098,7 +1227,15 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         values=(VALUE_HEALTH_SAFETY, VALUE_ROLE_DUTY),
         pattern=PATTERN_EQUIP_ROLE_ITEM,
         description="worker equips protective gear before entering production",
-        preconditions=(require_node(target="safety_gear_entrance", parent="cabinet_entrance", description="No safety gear available in the entrance cabinet."),),
+        preconditions=(
+            require_node(
+                precondition_id="factory_safety_gear_ready",
+                target="safety_gear_entrance",
+                parent="cabinet_entrance",
+                description="No safety gear available in the entrance cabinet.",
+                recoverable=True,
+            ),
+        ),
         effects=(
             move_actor("cabinet_entrance"),
             move_item("safety_gear_entrance", match_parent="cabinet_entrance", parent="worker_1", relation="worn_by"),
@@ -1111,7 +1248,15 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         values=(VALUE_ROLE_DUTY,),
         pattern=PATTERN_RETRIEVE_USE_DISPLACE,
         description="worker moves warehouse parts onto the assembly line",
-        preconditions=(require_node(target="box_warehouse_1", parent="shelf_warehouse", description="No ready parts available on the warehouse shelf."),),
+        preconditions=(
+            require_node(
+                precondition_id="factory_parts_box_ready_on_shelf",
+                target="box_warehouse_1",
+                parent="shelf_warehouse",
+                description="No ready parts available on the warehouse shelf.",
+                recoverable=True,
+            ),
+        ),
         effects=(
             move_actor("shelf_warehouse"),
             set_states("cabinet_control_room", is_open=True),
@@ -1131,8 +1276,20 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         pattern=PATTERN_SERVICE_FLOW,
         description="assembly line runs and produces an item for inspection",
         preconditions=(
-            require_node(target="box_warehouse_1", parent="machine_assembly_line", description="Assembly line has no loaded parts."),
-            require_node(target="finished_product_assembly", parent="warehouse", description="Previous product has not been stored."),
+            require_node(
+                precondition_id="factory_assembly_line_loaded",
+                target="box_warehouse_1",
+                parent="machine_assembly_line",
+                description="Assembly line has no loaded parts.",
+                recoverable=True,
+            ),
+            require_node(
+                precondition_id="factory_previous_product_stored",
+                target="finished_product_assembly",
+                parent="warehouse",
+                description="Previous product has not been stored.",
+                recoverable=True,
+            ),
         ),
         effects=(
             move_actor("machine_assembly_line"),
@@ -1154,8 +1311,20 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         pattern=PATTERN_SERVICE_FLOW,
         description="inspector checks produced item and creates records",
         preconditions=(
-            require_node(target="finished_product_assembly", parent="table_workshop", description="No uninspected product available."),
-            require_node(target="quality_record_control", parent="cabinet_control_room", description="No filed quality record template available."),
+            require_node(
+                precondition_id="factory_uninspected_product_ready",
+                target="finished_product_assembly",
+                parent="table_workshop",
+                description="No uninspected product available.",
+                recoverable=True,
+            ),
+            require_node(
+                precondition_id="factory_quality_record_template_filed",
+                target="quality_record_control",
+                parent="cabinet_control_room",
+                description="No filed quality record template available.",
+                recoverable=True,
+            ),
         ),
         effects=(
             move_actor("table_workshop"),
@@ -1171,7 +1340,15 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         values=(VALUE_HEALTH_SAFETY, VALUE_ROLE_DUTY),
         pattern=PATTERN_CLEAN_OR_DIRTY_SURFACE,
         description="maintenance worker checks equipment and leaves tools out",
-        preconditions=(require_node(target="toolkit_workshop", parent="cabinet_control_room", description="No maintenance toolkit available in control room cabinet."),),
+        preconditions=(
+            require_node(
+                precondition_id="factory_maintenance_toolkit_ready",
+                target="toolkit_workshop",
+                parent="cabinet_control_room",
+                description="No maintenance toolkit available in control room cabinet.",
+                recoverable=True,
+            ),
+        ),
         effects=(
             move_actor("machine_assembly_line"),
             set_states("machine_assembly_line", is_on=False),
@@ -1186,7 +1363,15 @@ NPC_EVENT_LIBRARY: dict[str, EventSpec] = {
         values=(VALUE_SOCIAL_COORDINATION, VALUE_ROLE_DUTY),
         pattern=PATTERN_SERVICE_FLOW,
         description="workers coordinate at shift handover",
-        preconditions=(require_node(target="quality_record_control", parent="cabinet_control_room", description="Quality record has not been filed for handover."),),
+        preconditions=(
+            require_node(
+                precondition_id="factory_quality_record_ready_for_handover",
+                target="quality_record_control",
+                parent="cabinet_control_room",
+                description="Quality record has not been filed for handover.",
+                recoverable=True,
+            ),
+        ),
         effects=(
             move_actor("display_control_room"),
             set_states("display_control_room", is_on=True),

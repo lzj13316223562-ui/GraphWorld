@@ -96,15 +96,116 @@ ACTION_CODES = {
 }
 
 
+def _blocking_targets_satisfied(case: dict[str, Any], scene: dict[str, Any]) -> bool:
+    nodes = {str(node.get("id") or ""): node for node in scene.get("nodes") or [] if node.get("id")}
+    parent_of = {str(node.get("id") or ""): str(node.get("parent") or "") for node in scene.get("nodes") or [] if node.get("id")}
+    target = str(case.get("target") or "")
+    parent = str(case.get("parent") or "")
+    states = dict(case.get("states") or {})
+    room = str(case.get("room") or "")
+    relation_not = str(case.get("relation_not") or "")
+    semantic_type = str(case.get("semantic_type") or "")
+    semantic_types = {str(item) for item in case.get("semantic_types") or [] if str(item)}
+
+    def node_matches(node_id: str) -> bool:
+        node = nodes.get(node_id) or {}
+        if not node:
+            return False
+        if target and node_id != target:
+            return False
+        if semantic_type and str(node.get("semantic_type") or "") != semantic_type:
+            return False
+        if semantic_types and str(node.get("semantic_type") or "") not in semantic_types:
+            return False
+        if parent and parent_of.get(node_id) != parent:
+            return False
+        if room and room_of(scene, node_id) != room:
+            return False
+        if relation_not and relation_of(scene, node_id) == relation_not:
+            return False
+        node_states = node.get("states") or {}
+        return all(node_states.get(key) == value for key, value in states.items())
+
+    target_ids = [str(item) for item in case.get("blocking_target_ids") or [] if str(item)]
+    if target_ids:
+        return any(node_matches(node_id) for node_id in target_ids)
+
+    if semantic_types:
+        available = {
+            str(node.get("semantic_type") or "")
+            for node_id, node in nodes.items()
+            if not room or room_of(scene, node_id) == room
+        }
+        return semantic_types.issubset(available)
+
+    return any(node_matches(node_id) for node_id in nodes)
+
+
+def update_blocking_cases(
+    cases: list[dict[str, Any]],
+    current_scene: dict[str, Any],
+    actions: list[dict[str, Any]],
+    step: int,
+) -> None:
+    primary_action = actions[0] if actions else {}
+    resolution_action = f"{primary_action.get('action', '')}:{primary_action.get('target', '')}"
+    for case in cases:
+        if str(case.get("status") or "") != "open":
+            continue
+        if not bool(case.get("recoverable", False)):
+            continue
+        if _blocking_targets_satisfied(case, current_scene):
+            case["status"] = "resolved"
+            case["resolved_step"] = step
+            case["resolved_by_robot"] = bool(actions)
+            case["resolution_action"] = resolution_action
+
+
+def finalize_blocking_case_outcomes(
+    cases: list[dict[str, Any]],
+    human_events: list[dict[str, Any]],
+) -> None:
+    event_outcomes = {str(item.get("event") or ""): bool(item.get("ok", False)) for item in human_events if item.get("event")}
+    for case in cases:
+        if str(case.get("status") or "") != "resolved":
+            continue
+        event_id = str(case.get("event_id") or "")
+        if event_id in event_outcomes and event_outcomes[event_id]:
+            case["status"] = "closed_success"
+
+
 class TensorBoardWriter:
     def __init__(self, log_dir: Path | str) -> None:
-        self._writer = EventFileWriter(str(log_dir))
+        self._log_dir = Path(log_dir)
+        self._log_dir.mkdir(parents=True, exist_ok=True)
+        self._writer = EventFileWriter(str(self._log_dir))
+        self._disabled = False
+        self._warned = False
+
+    def _disable(self, exc: Exception) -> None:
+        if self._disabled:
+            return
+        self._disabled = True
+        if not self._warned:
+            tqdm.write(f"tensorboard disabled for {self._log_dir}: {exc}")
+            self._warned = True
+        with contextlib.suppress(Exception):
+            self._writer.close()
+
+    def _add_event(self, event: event_pb2.Event) -> None:
+        if self._disabled:
+            return
+        try:
+            self._log_dir.mkdir(parents=True, exist_ok=True)
+            self._writer.add_event(event)
+        except Exception as exc:
+            self._disable(exc)
 
     def add_scalar(self, tag: str, value: float, step: int) -> None:
         summary = summary_pb2.Summary(
             value=[summary_pb2.Summary.Value(tag=tag, simple_value=float(value))]
         )
-        self._writer.add_event(event_pb2.Event(wall_time=time.time(), step=int(step), summary=summary))
+        self._add_event(event_pb2.Event(wall_time=time.time(), step=int(step), summary=summary))
 
     def add_text(self, tag: str, text: str, step: int = 0) -> None:
         metadata = summary_pb2.SummaryMetadata(
@@ -118,7 +219,7 @@ class TensorBoardWriter:
         summary = summary_pb2.Summary(
             value=[summary_pb2.Summary.Value(tag=tag, metadata=metadata, tensor=tensor)]
         )
-        self._writer.add_event(event_pb2.Event(wall_time=time.time(), step=int(step), summary=summary))
+        self._add_event(event_pb2.Event(wall_time=time.time(), step=int(step), summary=summary))
 
     def add_figure(self, tag: str, fig: plt.Figure, step: int = 0) -> None:
         buffer = io.BytesIO()
@@ -130,13 +231,19 @@ class TensorBoardWriter:
             colorspace=4,
         )
         summary = summary_pb2.Summary(value=[summary_pb2.Summary.Value(tag=tag, image=image)])
-        self._writer.add_event(event_pb2.Event(wall_time=time.time(), step=int(step), summary=summary))
+        self._add_event(event_pb2.Event(wall_time=time.time(), step=int(step), summary=summary))
 
     def flush(self) -> None:
-        self._writer.flush()
+        if self._disabled:
+            return
+        try:
+            self._writer.flush()
+        except Exception as exc:
+            self._disable(exc)
 
     def close(self) -> None:
-        self._writer.close()
+        with contextlib.suppress(Exception):
+            self._writer.close()
 
 
 def _slug(value: str | None) -> str:
@@ -1679,6 +1786,9 @@ def run_episode(
     last_record: dict[str, Any] = {}
     cumulative_state_score = 0.0
     cumulative_spatial_score = 0.0
+    blocking_cases: list[dict[str, Any]] = []
+    human_blocking_total = 0
+    human_blocking_recovered = 0
     experiment_name = "with_robot" if robot_count else "no_robot"
     experiment_output_dir = output_dir / experiment_name
     experiment_output_dir.mkdir(parents=True, exist_ok=True)
@@ -1874,6 +1984,13 @@ def run_episode(
         for robot_id in robot_ids(robot_count):
             memories[robot_id] = reflect(memories.get(robot_id), result)
         current = orchestrator.graph.to_scene()
+        new_blocking_cases: list[dict[str, Any]] = []
+        for event_result in result.get("human_events") or []:
+            for case in event_result.get("blocking_cases") or []:
+                new_blocking_cases.append(copy.deepcopy(case))
+        if new_blocking_cases:
+            blocking_cases.extend(new_blocking_cases)
+            human_blocking_total += sum(1 for case in new_blocking_cases if bool(case.get("recoverable", False)))
         action_results = {
             robot_id: copy.deepcopy(action_result)
             for robot_id, action_result in zip(robot_ids(robot_count), result.get("robot_actions") or [])
@@ -1922,10 +2039,26 @@ def run_episode(
             "avg_spatial_score": avg_spatial_score,
             "robot_state_improvements": instant_metrics.get("robot_state_improvements", 0),
             "robot_spatial_improvements": instant_metrics.get("robot_spatial_improvements", 0),
+            "human_blocking_total": human_blocking_total,
+            "human_blocking_recovered": human_blocking_recovered,
+            "human_blocking_recovery_rate": round(
+                human_blocking_recovered / human_blocking_total, 4
+            )
+            if human_blocking_total
+            else 0.0,
         }
         previous_snapshot = current_snapshot
         primary_action = actions[0] if actions else {}
         action_name = str(primary_action.get("action") or "")
+        before_resolved = sum(1 for case in blocking_cases if str(case.get("status") or "") in {"resolved", "closed_success"})
+        update_blocking_cases(blocking_cases, current, actions, step)
+        finalize_blocking_case_outcomes(blocking_cases, result.get("human_events") or [])
+        after_resolved = sum(1 for case in blocking_cases if str(case.get("status") or "") in {"resolved", "closed_success"})
+        human_blocking_recovered += max(0, after_resolved - before_resolved)
+        metrics["human_blocking_recovered"] = human_blocking_recovered
+        metrics["human_blocking_recovery_rate"] = (
+            round(human_blocking_recovered / human_blocking_total, 4) if human_blocking_total else 0.0
+        )
         for robot_id in robot_ids(robot_count):
             action_for_robot = actions_by_robot.get(robot_id, {})
             history = recent_histories.setdefault(robot_id, [])
@@ -2003,6 +2136,7 @@ def run_episode(
                 str(action.get("agent") or ""): copy.deepcopy(action.get("validation_failures") or [])
                 for action in actions
             },
+            "blocking_cases": copy.deepcopy(blocking_cases),
             "observation": copy.deepcopy(observations),
             "memory_before": {},
             "memory_after": copy.deepcopy(memories),
@@ -2246,6 +2380,11 @@ def main() -> None:
                     score_key: result["records"][-1][score_key]
                     for score_key in AVG_SCORE_KEYS
                     if score_key in result["records"][-1]
+                },
+                "final_blocking_metrics": {
+                    "human_blocking_total": result["records"][-1].get("human_blocking_total", 0),
+                    "human_blocking_recovered": result["records"][-1].get("human_blocking_recovered", 0),
+                    "human_blocking_recovery_rate": result["records"][-1].get("human_blocking_recovery_rate", 0.0),
                 },
             }
             for result in results

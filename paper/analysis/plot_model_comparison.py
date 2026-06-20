@@ -31,6 +31,7 @@ SCENES = [
 MODELS = [
     ("vllm_qwen3_5_9b", "Qwen3.5-9B", "#4C78A8"),
     ("vllm_deepseek_r1_14b", "DeepSeek-R1-14B", "#F58518"),
+    ("vllm_llama3_1_8b", "Llama-3.1-8B", "#54A24B"),
 ]
 
 METHODS = [
@@ -134,7 +135,7 @@ def plot_final_scores(rows: list[dict[str, str | float]]) -> None:
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     scene_labels = [label for _scene, label, _humans in SCENES]
     x_positions = list(range(len(SCENES)))
-    width = 0.34
+    width = 0.24
 
     fig, axes = plt.subplots(1, len(METHODS), figsize=(12.5, 3.9), sharey=True)
     handles = []

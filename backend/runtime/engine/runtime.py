@@ -6,7 +6,7 @@ from typing import Any
 from backend.core.actions import ActionType
 from backend.core.action_schemas import apply_action_schema
 from backend.core.edges import PARENT_RELATIONS, ROOM_CONNECTIVITY_RELATIONS
-from backend.core.assets.npc_library import get_event_spec
+from backend.core.assets.npc_library import EventPrecondition, get_event_spec
 from backend.core.states import DISCRETE_STATE_SPACE
 from backend.core.timed_transitions import apply_timed_transitions
 from .validator import validate_action
@@ -37,6 +37,7 @@ class SceneGraph:
         self.world_state = copy.deepcopy(scene.get("world_state") or {})
         self.world_state.setdefault("step", 0)
         self.world_state.setdefault("event_log", [])
+        self.world_state.setdefault("blocking_cases", [])
         self.refresh_indices()
 
     def _validate_node_states(self) -> None:
@@ -315,15 +316,44 @@ class HumanEventSystem(System):
                 return node_id
         return fallback
 
-    def precondition_failures(self, event_id: str, actor_id: str) -> list[str]:
+    def _precondition_payload(self, event_id: str, actor_id: str, precondition: EventPrecondition) -> dict[str, Any]:
+        target_ids: list[str] = []
+        if precondition.target:
+            target_ids.append(str(precondition.target))
+        precondition_id = str(
+            precondition.precondition_id
+            or f"{event_id}:{precondition.kind}:{precondition.target or precondition.semantic_type or ','.join(precondition.semantic_types)}"
+        )
+        return {
+            "event_id": event_id,
+            "actor_id": actor_id,
+            "precondition_id": precondition_id,
+            "kind": str(precondition.kind),
+            "target": str(precondition.target or ""),
+            "semantic_type": str(precondition.semantic_type or ""),
+            "semantic_types": [str(item) for item in precondition.semantic_types],
+            "parent": str(precondition.parent or ""),
+            "room": str(precondition.room or ""),
+            "states": copy.deepcopy(precondition.states),
+            "relation": str(precondition.relation or ""),
+            "relation_not": str(precondition.relation_not or ""),
+            "description": str(
+                precondition.description
+                or f"missing {precondition.target or precondition.semantic_type or precondition.semantic_types}"
+            ),
+            "recoverable": bool(precondition.recoverable),
+            "blocking_target_ids": target_ids,
+        }
+
+    def precondition_failure_details(self, event_id: str, actor_id: str) -> list[dict[str, Any]]:
         spec = get_event_spec(event_id)
         if not spec:
             return []
-        failures: list[str] = []
+        failures: list[dict[str, Any]] = []
         for precondition in spec.preconditions:
+            failed = False
             if precondition.kind == "has_node":
-                if not self.matching_nodes(precondition, actor_id, states_are_match=True):
-                    failures.append(precondition.description or f"no {precondition.semantic_type or precondition.target} available")
+                failed = not self.matching_nodes(precondition, actor_id, states_are_match=True)
             elif precondition.kind == "has_semantics":
                 needed = set(precondition.semantic_types)
                 available = {
@@ -331,9 +361,13 @@ class HumanEventSystem(System):
                     for node_id, node in self.graph.nodes.items()
                     if not precondition.room or self.graph.room_of.get(node_id) == precondition.room
                 }
-                if not needed.issubset(available):
-                    failures.append(precondition.description or f"missing semantics: {sorted(needed - available)}")
+                failed = not needed.issubset(available)
+            if failed:
+                failures.append(self._precondition_payload(event_id, actor_id, precondition))
         return failures
+
+    def precondition_failures(self, event_id: str, actor_id: str) -> list[str]:
+        return [str(item.get("description") or "") for item in self.precondition_failure_details(event_id, actor_id)]
 
     def _resolved_parent(self, effect: Any, actor_id: str) -> tuple[str, str]:
         options = tuple(getattr(effect, "parent_options", ()) or ())
@@ -456,7 +490,8 @@ class HumanEventSystem(System):
         event_id = str(payload.get("event") or payload.get("activity") or "")
         actor_id = str(payload.get("actor") or payload.get("agent") or "human_resident")
         spec = get_event_spec(event_id)
-        failures = self.precondition_failures(event_id, actor_id)
+        failure_details = self.precondition_failure_details(event_id, actor_id)
+        failures = [str(item.get("description") or "") for item in failure_details]
         actor = self.graph.nodes.get(actor_id)
         if actor:
             actor["current_activity"] = event_id
@@ -465,6 +500,26 @@ class HumanEventSystem(System):
             for effect in effects:
                 if self.should_apply_effect(effect, payload):
                     self.apply_effect(effect, actor_id)
+        blocking_cases = []
+        if failure_details:
+            step = int(self.graph.world_state.get("step") or 0)
+            for item in failure_details:
+                case = {
+                    "blocking_case_id": f"{event_id}:{item['precondition_id']}:{actor_id}:{step}",
+                    "event_id": event_id,
+                    "actor_id": actor_id,
+                    "precondition_id": item["precondition_id"],
+                    "description": item["description"],
+                    "recoverable": bool(item.get("recoverable", False)),
+                    "status": "open",
+                    "opened_step": step,
+                    "resolved_step": None,
+                    "resolved_by_robot": False,
+                    "resolution_action": "",
+                    "blocking_target_ids": copy.deepcopy(item.get("blocking_target_ids") or []),
+                }
+                blocking_cases.append(case)
+                self.graph.world_state.setdefault("blocking_cases", []).append(copy.deepcopy(case))
         self.graph.log(
             "human_event",
             f"{actor_id} event {event_id}",
@@ -472,10 +527,17 @@ class HumanEventSystem(System):
             actor=actor_id,
             ok=not failures,
             failures=failures,
+            failure_details=failure_details,
+            blocking_cases=blocking_cases,
             period_start=bool(payload.get("period_start", False)),
             period_end=bool(payload.get("period_end", False)),
         )
-        return {"ok": not failures, "failures": failures}
+        return {
+            "ok": not failures,
+            "failures": failures,
+            "failure_details": failure_details,
+            "blocking_cases": blocking_cases,
+        }
 
 
 class EnvironmentSystem(System):
