@@ -13,6 +13,7 @@
 
 \newcommand{\bestcell}[1]{\colorbox{green!12}{\strut #1}}
 \newcommand{\badcell}[1]{\colorbox{red!10}{\strut #1}}
+\newcommand{\placeholder}[1]{\textcolor{red!70!black}{[#1]}}
 
 \hypersetup{
   hidelinks,
@@ -156,11 +157,43 @@ S(t)=0.45S_{\mathrm{state}}(t)+0.35S_{\mathrm{spatial}}(t)+0.20S_{\mathrm{human}
 \end{equation}
 实验同时记录 instant score 和平均曲线。Instant score 展示当前世界状态，平均曲线展示长期共生闭环的稳定性。
 
+除上述连续分数外，我们还记录人类阻塞恢复率作为补充诊断指标。当某个人类事件由于可恢复前置条件失败而无法完成时，记为一个 blocking case；如果后续世界状态重新满足该前置条件，并且恢复轨迹中存在机器人动作介入，则记为一次恢复。设 $B$ 为可恢复 blocking case 总数，$R$ 为恢复数，则
+\begin{equation}
+S_{\mathrm{block}} = \frac{R}{B}.
+\end{equation}
+该指标不参与主综合分数，而用于分析 agent 是否真正恢复了会阻塞后续人类活动的关键条件。
+
 \section{实验}
 \subsection{实验设置}
 我们在五个 base scenes 上实验：家庭、医院、超市、办公室和工厂。家庭包含 1 个 resident；其余场景包含 3 个 NPC，分别覆盖病人/护士/医生、顾客/收银员/理货员、员工/经理/访客、工人/质检员/维修员。所有主实验运行 800 step，机器人设置为 1 个机器人，LLM 使用 Qwen3.5-9B。
 
 实验分三组。主实验评估 5 个 base scene、固定日程和 4 种方法。多样性实验评估 5 个场景、3 种 graph profile 和 no-robot/goal-review 两种方法。日程随机性实验评估 5 个 base scene、fixed/calendar/stochastic 三类日程和多种方法。三组实验分别回答方法是否有效、场景难度变化是否可区分、以及人类扰动模式变化是否影响结果。
+
+此外，我们在修正 blocking case 日志后，额外运行一组 500 step fixed schedule 诊断实验，用于计算人类阻塞恢复率。该组实验包含 5 个 base scene 和 reactive、single-round、goal-review 三种机器人方法，不与 800 step 主分数混合，只用于分析人类流程阻塞是否被恢复。
+
+表~\ref{tab:experiment-matrix} 汇总本文实验矩阵和当前论文呈现状态。主指标为 $S_{\mathrm{state}}$、$S_{\mathrm{spatial}}$、$S_{\mathrm{human}}$ 和综合分 $S$；局部诊断指标用于解释为什么不同方法在长期运行中拉开差距。对于仍在补跑或尚未重新生成的项目，本文先保留占位标记，待对应 raw summary 完成后统一替换图表和数值。
+
+\begin{table*}[t]
+\centering
+\caption{实验矩阵总览。``已完成'' 表示当前工作区已有对应 raw summary 或已生成正式图表；``占位'' 表示论文中先保留图表位置，等待新一轮 raw 结果或重生图替换。}
+\label{tab:experiment-matrix}
+\footnotesize
+\setlength{\tabcolsep}{3.2pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular}{p{0.12\textwidth}p{0.20\textwidth}p{0.19\textwidth}p{0.15\textwidth}p{0.24\textwidth}}
+\toprule
+页面目标 & 实验内容 & 变量矩阵 & 主要图表 & 当前状态 \\
+\midrule
+设置总览 & 五个 base scenes，1 个机器人，1/3 个 NPC，800 step 主实验 & 方法、模型、profile、schedule & 实验矩阵与主指标定义 & 已补入本表；主指标为 $S_{\mathrm{state}}/S_{\mathrm{spatial}}/S_{\mathrm{human}}/S$ \\
+主实验结果 & Base scene fixed schedule & no-robot、reactive、single-round、goal-review & 主实验曲线 & Qwen3.5-9B 三种 with-robot 方法 raw summary 已完成；no-robot 基线为当前图表缓存结果 \placeholder{待统一重生} \\
+分场景分析 & 按场景拆解 final/state/spatial/human & 五个 base scenes $\times$ 四类分数 & 主实验表格与局部结论 & 已完成；重点解释空间归位和流程恢复差异 \\
+模型主干对比 & 相同 fixed schedule 下替换 LLM backbone & Qwen3.5-9B、DeepSeek-R1-14B、Llama-3.1-8B $\times$ 三方法 & 模型对比图 & Qwen raw summary 已完成；DeepSeek/Llama 当前图表为旧结果占位 \placeholder{待本轮 30 条 raw summary 替换} \\
+Graph Profile & 改变拓扑和对象交互压力 & compact、normal、spread $\times$ no-robot/goal-review & 多样性图 & Qwen goal-review compact/spread 10 条已完成；normal 复用 base fixed；no-robot profile 曲线为缓存占位 \placeholder{待重生核对} \\
+日程随机性 & 改变 NPC 日程扰动模式 & fixed、calendar、stochastic & stochastic/schedule 图 & Qwen goal-review calendar/stochastic 10 条已完成；若展示四方法 stochastic，非 goal-review 曲线为占位 \placeholder{待补 raw 或改图} \\
+行为诊断 & 动作画像与局部失败机制 & 阶段完成、局部固着、过早切换、阻塞恢复 & 雷达图与四指标卡片 & 雷达图已完成；四指标卡片见表~\ref{tab:diagnostic-cards} \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 \subsection{主实验：Agent 是否能稳定共生闭环}
 图~\ref{fig:main-grid} 展示 base graph 上的主实验曲线。总体上，带任务结构的 agent 明显优于无机器人基线，尤其在 office 和 factory 等空间秩序强依赖场景中提升显著。表~\ref{tab:main-results} 给出最终分数。Single-round 在 hospital、office 和 factory 中取得最高 final score；goal-review 在 home 和 supermarket 中表现最好。这说明没有单一方法在所有场景中占优：goal-review 在人类事件密集、需要长期坚持流程的家庭和超市中更有优势，而 single-round 在空间归位回报明确的医院、办公室和工厂中更果断。值得注意的是，home 中 single-round 的 final score 反而低于 no-robot 基线，说明在事件链脆弱的场景中，一次性选择高层任务和低层动作更容易做出破坏后续人类事件的错误调度。
@@ -224,19 +257,48 @@ S(t)=0.45S_{\mathrm{state}}(t)+0.35S_{\mathrm{spatial}}(t)+0.20S_{\mathrm{human}
 }
 \end{table*}
 
+\subsection{人类阻塞恢复诊断}
+为了进一步检验 agent 是否真正恢复了会阻塞人类流程的关键条件，我们在 fixed schedule 下补充运行 500 step 诊断实验。表~\ref{tab:blocking-recovery} 报告每种方法在五个场景中的 blocking case 恢复情况，单元格格式为 $R/B$ 和对应恢复率。该实验只用于诊断人类流程阻塞恢复，不与 800 step 主实验的 final score 混合。
+
+\begin{table*}[t]
+\centering
+\caption{500 step fixed schedule 人类阻塞恢复诊断（Qwen3.5-9B）。$B$ 为可恢复 blocking case 数，$R$ 为被机器人恢复的数量。单元格格式为 $R/B$（恢复率）；``--'' 表示该 run 中没有出现可恢复 blocking case。}
+\label{tab:blocking-recovery}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular}{lccc}
+\toprule
+场景 & Reactive & Single-round & Goal-review \\
+\midrule
+家庭 & 0/10 (0.000) & 0/37 (0.000) & 0/7 (0.000) \\
+医院 & 0/34 (0.000) & -- & 0/33 (0.000) \\
+办公室 & 0/251 (0.000) & 76/76 (1.000) & 157/180 (0.872) \\
+超市 & 0/217 (0.000) & 91/91 (1.000) & 120/168 (0.714) \\
+工厂 & 3/714 (0.004) & 160/358 (0.447) & 259/378 (0.685) \\
+\midrule
+合计 & 3/1226 (0.002) & 327/562 (0.582) & \bestcell{536/766 (0.700)} \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+结果显示，人类阻塞恢复率比综合分数更直接地暴露了流程级能力差异。Reactive 几乎不能恢复 blocking case，1226 个可恢复阻塞中只恢复 3 个，说明局部可见动作选择虽然能清理部分状态偏离，却很少把失败的人类前置条件重新变为可用。Single-round 和 goal-review 均显著提高恢复率：single-round 的 pooled recovery 为 0.582，在 office 和 supermarket 达到 1.000；goal-review 的 pooled recovery 最高，为 0.700，并在 factory 中明显高于 single-round（0.685 对 0.447）。这说明显式高层任务结构能够把机器人行为从局部修补推进到人类流程恢复。
+
+不过，home 和 hospital 的 500 step 诊断结果仍为 0，说明当前方法在生活流程和医疗流程中的恢复窗口把握不足。Home 中 clean clothes、bathroom supplies 等问题依赖多步洗衣、倒水、归位和时序窗口；hospital 中处方、冷藏药、床单和医疗废物链条要求更强的阶段保持。该结果与主实验中的 state/spatial 分数分离现象一致：agent 往往能把物体搬回合理位置，却不一定完成足以恢复下一次人类事件的完整流程。因此，人类阻塞恢复率为后续显式任务队列和 deadline-aware 调度提供了更直接的优化目标。
+
 \subsection{模型主干补充实验：同一策略是否受模型能力影响}
-在上述 Qwen3.5-9B 主实验基础上，我们进一步在相同五个 base scenes、相同 800 step 设置下加入 DeepSeek-R1-Distill-Qwen-14B 和 Llama-3.1-8B，比较三种模型在 reactive、single-round 和 goal-review 三种机器人策略下的表现，以检验同一策略是否受模型主干能力影响。图~\ref{fig:model-comparison} 展示最终综合分对比，灰色虚线为对应场景的 no-robot 基线。表~\ref{tab:model-avg-results} 汇总跨场景平均分。
+在上述 Qwen3.5-9B 主实验基础上，我们进一步在相同五个 base scenes、相同 800 step 设置下加入 DeepSeek-R1-Distill-Qwen-14B 和 Llama-3.1-8B，比较三种模型在 reactive、single-round 和 goal-review 三种机器人策略下的表现，以检验同一策略是否受模型主干能力影响。图~\ref{fig:model-comparison} 展示最终综合分对比，灰色虚线为对应场景的 no-robot 基线。表~\ref{tab:model-avg-results} 汇总跨场景平均分。当前 DeepSeek/Llama 的 raw summary 正在按 fixed 15 条补跑，因此本节图表先作为模型主干对比占位，待新结果完成后重新生成。
 
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{figures/model_comparison/model_final_score_comparison.png}
-  \caption{800 step 模型主干对比实验。柱状图为 reactive、single-round 和 goal-review 三种机器人策略在 Qwen3.5-9B、DeepSeek-R1-14B 和 Llama-3.1-8B 上的最终综合分，灰色虚线为对应场景的无机器人基线。}
+  \caption{800 step 模型主干对比实验。柱状图为 reactive、single-round 和 goal-review 三种机器人策略在 Qwen3.5-9B、DeepSeek-R1-14B 和 Llama-3.1-8B 上的最终综合分，灰色虚线为对应场景的无机器人基线。DeepSeek/Llama 结果为占位版本，待本轮 raw summary 完成后替换。}
   \label{fig:model-comparison}
 \end{figure*}
 
 \begin{table}[t]
 \centering
-\caption{五个场景上的 800 step 平均最终综合分。$\Delta$ 表示相对无机器人基线的平均提升；无机器人基线平均最终综合分为 0.5184。}
+\caption{五个场景上的 800 step 平均最终综合分。$\Delta$ 表示相对无机器人基线的平均提升；无机器人基线平均最终综合分为 0.5184。DeepSeek/Llama 列为占位结果，待本轮重跑后更新。}
 \label{tab:model-avg-results}
 \footnotesize
 \setlength{\tabcolsep}{3.0pt}
@@ -295,6 +357,25 @@ Goal-review & 0.6397 & +0.1213 & \bestcell{0.7130} & \bestcell{+0.1946} & 0.6816
   \caption{不同方法的动作画像。动作分布揭示了方法的行为偏好：reactive 更偏局部修补，single-round 更常执行搬运归位，goal-review 在部分场景中会因目标复审而频繁切换。}
   \label{fig:action-profile}
 \end{figure*}
+
+\begin{table*}[t]
+\centering
+\caption{行为诊断四指标卡片（Qwen3.5-9B）。前三项由 800 step fixed 主实验离线重算得到；人类阻塞恢复率来自额外 500 step fixed 诊断实验。$\uparrow$ 表示越高越好，$\downarrow$ 表示越低越好。}
+\label{tab:diagnostic-cards}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular}{lccc p{0.38\textwidth}}
+\toprule
+诊断指标 & Reactive & Single-round & Goal-review & 解释 \\
+\midrule
+阶段完成率 $\uparrow$ & 0.000 & 0.899 & \bestcell{0.971} & 已启动高层任务中，被 agent 推进到完成的比例；衡量阶段保持和闭环执行能力。 \\
+局部固着率 $\downarrow$ & 0.380 & 0.322 & \bestcell{0.299} & 连续围绕同一低价值局部目标重复动作的比例；衡量是否被可见小问题吸住。 \\
+过早切换次数 $\downarrow$ & \bestcell{0.0} & \bestcell{0.0} & 1.4 & 当前任务尚未闭环时切换目标的平均次数；goal-review 的复审机制会带来少量额外切换。 \\
+人类阻塞恢复率 $\uparrow$ & 0.002 & 0.582 & \bestcell{0.700} & 可恢复 blocking case 中，被机器人动作重新满足前置条件的比例；衡量流程恢复能力。 \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 我们观察到三种稳定模式。第一，\emph{空间恢复优先}：agent 更容易理解“物体应放回哪里”，因此 spatial score 往往比 state score 更容易被拉开。第二，\emph{状态流程断裂}：洗衣、冷链、设备运行、床单更换和生产质检都需要多步动作与时间过程，agent 一旦中途切换，state score 就长期无法恢复。第三，\emph{局部目标吸引}：模型倾向选择最近、最显眼、动作结果最确定的目标，例如桌面、柜门、按钮和当前房间对象。这些模式解释了为什么机器人能显著改善世界，但仍没有达到稳定共生。
 

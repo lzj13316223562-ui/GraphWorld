@@ -744,6 +744,27 @@ def room_of(scene: dict[str, Any], node_id: str) -> str:
     return ""
 
 
+def relation_of(scene: dict[str, Any], node_id: str) -> str:
+    item = node(scene, node_id)
+    if not item:
+        return ""
+    runtime_relation = str(item.get("runtime_relation") or "")
+    if runtime_relation:
+        return runtime_relation
+    parent_id = str(item.get("parent") or "")
+    if not parent_id:
+        return ""
+    for edge in scene.get("edges") or []:
+        if str(edge.get("source_id") or "") != parent_id:
+            continue
+        if str(edge.get("target_id") or "") != str(node_id or ""):
+            continue
+        relation = str(edge.get("relation") or "")
+        if relation:
+            return relation
+    return "in"
+
+
 def visible_restore_goal(observation: dict[str, Any], baseline: dict[str, Any], step: int) -> dict[str, Any] | None:
     baseline_nodes = {str(item.get("id") or ""): item for item in baseline.get("nodes") or [] if item.get("id")}
     current_nodes = {str(item.get("id") or ""): item for item in observation.get("nodes") or [] if item.get("id")}
@@ -1659,6 +1680,9 @@ def checkpoint_payload(
     last_record: dict[str, Any],
     cumulative_state_score: float,
     cumulative_spatial_score: float,
+    blocking_cases: list[dict[str, Any]],
+    human_blocking_total: int,
+    human_blocking_recovered: int,
     matrix_paths: list[str],
     metrics_csv: Path,
     replay_jsonl: Path,
@@ -1686,6 +1710,9 @@ def checkpoint_payload(
         "last_record": last_record,
         "cumulative_state_score": cumulative_state_score,
         "cumulative_spatial_score": cumulative_spatial_score,
+        "blocking_cases": blocking_cases,
+        "human_blocking_total": int(human_blocking_total),
+        "human_blocking_recovered": int(human_blocking_recovered),
         "matrix_paths": matrix_paths,
         "metrics_csv": str(metrics_csv),
         "replay_jsonl": str(replay_jsonl),
@@ -1848,6 +1875,21 @@ def run_episode(
         last_record = copy.deepcopy(checkpoint.get("last_record") or (legacy_records[-1] if legacy_records else {}))
         cumulative_state_score = float(checkpoint.get("cumulative_state_score") or 0.0)
         cumulative_spatial_score = float(checkpoint.get("cumulative_spatial_score") or 0.0)
+        blocking_cases = copy.deepcopy(checkpoint.get("blocking_cases") or blocking_cases)
+        human_blocking_total = int(
+            checkpoint.get(
+                "human_blocking_total",
+                (last_record or {}).get("human_blocking_total", human_blocking_total),
+            )
+            or 0
+        )
+        human_blocking_recovered = int(
+            checkpoint.get(
+                "human_blocking_recovered",
+                (last_record or {}).get("human_blocking_recovered", human_blocking_recovered),
+            )
+            or 0
+        )
         matrix_paths = list(checkpoint.get("matrix_paths") or [])
         previous_snapshot = build_matrix_snapshot(orchestrator.graph.to_scene(), expected)
         baseline_snapshot = build_matrix_snapshot(baseline, expected)
@@ -2055,6 +2097,7 @@ def run_episode(
         finalize_blocking_case_outcomes(blocking_cases, result.get("human_events") or [])
         after_resolved = sum(1 for case in blocking_cases if str(case.get("status") or "") in {"resolved", "closed_success"})
         human_blocking_recovered += max(0, after_resolved - before_resolved)
+        metrics["human_blocking_total"] = human_blocking_total
         metrics["human_blocking_recovered"] = human_blocking_recovered
         metrics["human_blocking_recovery_rate"] = (
             round(human_blocking_recovered / human_blocking_total, 4) if human_blocking_total else 0.0
@@ -2188,6 +2231,9 @@ def run_episode(
                 last_record=last_record,
                 cumulative_state_score=cumulative_state_score,
                 cumulative_spatial_score=cumulative_spatial_score,
+                blocking_cases=blocking_cases,
+                human_blocking_total=human_blocking_total,
+                human_blocking_recovered=human_blocking_recovered,
                 matrix_paths=matrix_paths,
                 metrics_csv=csv_path,
                 replay_jsonl=replay_jsonl_path,
