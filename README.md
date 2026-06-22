@@ -154,45 +154,36 @@ $PY backend/run_experiment.py \
 tensorboard --logdir backend/data/tensorboard --host 0.0.0.0 --port 6006
 ```
 
-## 当前实验状态
+## 实验覆盖状态
 
-论文当前使用的主口径如下，详细数值见后文“实验”部分和 `paper/main.tex`。
+论文使用的实验口径如下，详细数值见后文“实验”部分和 `paper/main.tex`。
 
-### 已完成
+### 覆盖矩阵
 
 ```text
 Qwen fixed main:
 5 base scenes x (no_robot + reactive + single_round + goal_review) x 800 steps = 20 runs
 
 Qwen profile diversity:
-5 base scenes x 3 profiles x goal_review x 800 steps = 15 runs
+5 base scenes x 3 profiles x goal_review x 800 steps = 15 with-robot runs
+5 base scenes x 3 profiles x no_robot x 800 steps = 15 baseline curves
 
 Qwen schedule diversity:
 5 base scenes x 3 schedules x goal_review x 800 steps = 15 runs
 
 Model backbone comparison:
-Qwen3.5-9B + DeepSeek-R1-14B
-2 backbones x 5 base scenes x 3 robot methods x 800 steps = 30 with-robot runs
+Qwen3.5-9B + DeepSeek-R1-14B + Llama-3.1-8B
+3 backbones x 5 base scenes x 3 robot methods x 800 steps = 45 with-robot runs
 
 Human blocking recovery diagnostic:
 5 base scenes x 3 robot methods x 500 steps = 15 diagnostic runs
 ```
 
-主实验的 5 条 no-robot fixed baseline 已经在当前 workspace 中重跑到 800 step。主曲线和模型对比图均来自 raw metrics。
+主实验的 5 条 no-robot fixed baseline 已经重跑到 800 step。profile 条件下的 no-robot baseline 也已补齐；normal profile 复用 base fixed，compact/spread 为新增 raw runs。主曲线、模型对比图和 profile diversity 图均来自 raw metrics。
 
-### 仍未纳入正式图表
+### 数据质量备注
 
-```text
-Llama-3.1-8B:
-已有 run 目录，但当前未达到 800 step 完整性要求；模型对比图暂不纳入。
-
-Profile no-robot baselines:
-尚未重跑；profile diversity 图只比较 Qwen goal-review 在 compact/normal/spread 三种图结构下的表现。
-```
-
-### 已知 caveat
-
-`simple_office_1f` 的 Qwen `goal_review` fixed run 有 step 799 final summary，但当前 `metrics.csv`/action log 只保留恢复后的 `646..799` 片段。因此论文表格使用最终累计分，曲线和动作画像中该条件只显示后段日志。
+没有必需的实验矩阵缺口。`simple_office_1f` 的 Qwen `goal_review` fixed run 有 step 799 final summary，但 `metrics.csv`/action log 只保留 `646..799` 片段。因此论文表格使用最终累计分；曲线和动作画像只使用已落盘日志。
 
 ## 引擎设计
 
@@ -504,7 +495,7 @@ maintenance_worker: factory_off_shift, factory_maintenance_check
 
 ### 实验设置
 
-当前论文实验分为五组。
+论文实验分为五组。
 
 | 组别         | 含义                                                                                                                     |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------ |
@@ -513,11 +504,11 @@ maintenance_worker: factory_off_shift, factory_maintenance_check
 | single_round | 一次 LLM 调用：给 active_goal、技能、候选动作，让模型直接选 high_level_task 和 action                                    |
 | goal_review  | 两次 LLM 调用：先判断继续/切换/完成 active_goal，再选择低层 action                                                       |
 
-| 实验组 | 矩阵 | 当前状态 |
+| 实验组 | 矩阵 | 覆盖状态 |
 | ------ | ---- | -------- |
 | 主实验 | 5 base scenes x fixed schedule x `no_robot/reactive/single_round/goal_review` x 800 steps | Qwen3.5-9B 已完成，主图和表格使用 raw metrics |
-| 模型主干对比 | Qwen3.5-9B、DeepSeek-R1-14B x 5 scenes x 3 robot methods x 800 steps | Qwen 和 DeepSeek 已进入正式图表；Llama 未满 800 step，暂不纳入 |
-| Graph profile 多样性 | 5 scenes x `compact/normal/spread` x Qwen goal_review x 800 steps | 已完成；profile no-robot baseline 未重跑，图中不展示 |
+| 模型主干对比 | Qwen3.5-9B、DeepSeek-R1-14B、Llama-3.1-8B x 5 scenes x 3 robot methods x 800 steps | 三个 backbone 均已进入正式图表 |
+| Graph profile 多样性 | 5 scenes x `compact/normal/spread` x Qwen goal_review/no_robot x 800 steps | 已完成；图中实线为 goal-review，虚线为 no-robot baseline |
 | 日程随机性 | 5 scenes x `fixed/calendar/stochastic` x Qwen goal_review x 800 steps | 已完成 |
 | 人类阻塞恢复诊断 | 5 scenes x 3 robot methods x 500 steps | 已完成，只用于 blocking recovery，不和 800-step 主分数混合 |
 
@@ -805,6 +796,6 @@ move, pick, place, press, open, close, brush, fold, dump
 1. GraphWorld 能区分“局部合法动作选择”和“长期世界维护”。`reactive` 有时能维持局部 state score，但缺少跨房间归位和流程恢复能力。
 2. 结构化 agent 的主要收益来自 `spatial_score`：把关键物体放回能支持下一轮人类活动的位置，是长期共生的核心能力之一。
 3. `single_round` 在多个 base scene 中取得最高 final score，说明一次性高层任务选择已经能触发有效搬运和归位闭环。
-4. `goal_review` 对模型主干更敏感。DeepSeek-R1-14B 在 goal-review 上明显高于 Qwen3.5-9B，说明目标复审需要更强的上下文判断。
+4. `goal_review` 对模型主干更敏感。DeepSeek-R1-14B 在 goal-review 上最高，Llama-3.1-8B 次之，Qwen3.5-9B 相对更低，说明目标复审需要更强的上下文判断。
 5. 人类阻塞恢复率提供了比总分更直接的流程级诊断：reactive 几乎不能恢复 blocking case，而 single_round 和 goal_review 能明显恢复人类活动前置条件。
 6. 当前仍未解决的是稳定全局调度：agent 会被局部可见问题吸引，会中途切换长链任务，也会错过人类事件的恢复窗口。
