@@ -19,6 +19,13 @@ ROOT = Path(__file__).resolve().parents[2]
 EXP_ROOT = ROOT / "backend" / "data" / "experiments"
 FIG_DIR = ROOT / "paper" / "figures" / "model_comparison"
 EXPERIMENT_STEPS = int(os.environ.get("EXPERIMENT_STEPS", "800"))
+BASELINE_FALLBACK = {
+    "simple_home_1f": 0.6588,
+    "simple_hospital_1f": 0.5205,
+    "simple_supermarket_1f": 0.5762,
+    "simple_office_1f": 0.4559,
+    "simple_factory_1f": 0.3806,
+}
 
 SCENES = [
     ("simple_home_1f", "Home", 1),
@@ -63,8 +70,33 @@ def final_row(path: Path) -> dict[str, str]:
     return max(rows, key=lambda row: int(float(row["step"])))
 
 
+def reaches_expected_step(path: Path) -> bool:
+    try:
+        row = final_row(path)
+        return int(float(row["step"])) >= EXPERIMENT_STEPS - 1
+    except Exception:
+        return False
+
+
+def completed_models() -> list[tuple[str, str, str]]:
+    complete: list[tuple[str, str, str]] = []
+    for model_slug, model_label, color in MODELS:
+        missing = []
+        for scene, _scene_label, humans in SCENES:
+            for method, _method_label in METHODS:
+                path = find_metrics(scene, humans, model_slug, method)
+                if path is None or not reaches_expected_step(path):
+                    missing.append((scene, method))
+        if missing:
+            print(f"skip incomplete model {model_label}: missing or short {len(missing)} runs")
+            continue
+        complete.append((model_slug, model_label, color))
+    return complete
+
+
 def collect_rows() -> list[dict[str, str | float]]:
     rows: list[dict[str, str | float]] = []
+    active_models = completed_models()
     for scene, scene_label, humans in SCENES:
         baseline_path = find_metrics(scene, humans, None, None)
         baseline_score = None
@@ -73,6 +105,10 @@ def collect_rows() -> list[dict[str, str | float]]:
             row = final_row(baseline_path)
             baseline_score = float(row["final_score"])
             baseline_run = baseline_path.parents[1].name
+        elif scene in BASELINE_FALLBACK:
+            baseline_score = BASELINE_FALLBACK[scene]
+            baseline_run = "fallback_baseline"
+        if baseline_score is not None:
             rows.append(
                 {
                     "scene": scene,
@@ -88,7 +124,7 @@ def collect_rows() -> list[dict[str, str | float]]:
             )
 
         for method, method_label in METHODS:
-            for model_slug, model_label, _color in MODELS:
+            for model_slug, model_label, _color in active_models:
                 path = find_metrics(scene, humans, model_slug, method)
                 if not path:
                     continue
@@ -147,8 +183,15 @@ def plot_final_scores(rows: list[dict[str, str | float]]) -> None:
         if row["method"] == "no_robot"
     }
 
+    active_models = [
+        (model_slug, model_label, color)
+        for model_slug, model_label, color in MODELS
+        if any(row["model_slug"] == model_slug for row in rows)
+    ]
+    width = 0.68 / max(1, len(active_models))
+
     for ax, (method, method_label) in zip(axes, METHODS):
-        for model_idx, (model_slug, model_label, color) in enumerate(MODELS):
+        for model_idx, (model_slug, model_label, color) in enumerate(active_models):
             values: list[float] = []
             for scene, scene_label, _humans in SCENES:
                 match = next(
@@ -160,7 +203,7 @@ def plot_final_scores(rows: list[dict[str, str | float]]) -> None:
                     None,
                 )
                 values.append(float(match["final_score"]) if match else float("nan"))
-            offset = (model_idx - (len(MODELS) - 1) / 2) * width
+            offset = (model_idx - (len(active_models) - 1) / 2) * width
             bars = ax.bar(
                 [x + offset for x in x_positions],
                 values,

@@ -1,51 +1,36 @@
 scene,scene_label,method,method_label,model_slug,model_label,run_id,final_score,delta_vs_no_robot
-simple_home_1f,Home,no_robot,No robot,npc_only_baseline,No robot,20260531T064129Z_7b28d0f1,0.6588,0.0
-simple_home_1f,Home,reactive,Reactive,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T102100Z_f505d799,0.671,0.012199999999999989
-simple_home_1f,Home,reactive,Reactive,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T161103Z_bd97f81e,0.6562,-0.0026000000000000467
-simple_home_1f,Home,reactive,Reactive,vllm_llama3_1_8b,Llama-3.1-8B,20260531T064143Z_5cb5b984,0.6744,0.015599999999999947
-simple_home_1f,Home,single_round,Single-round,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T102214Z_0a0524dc,0.6233,-0.03550000000000009
-simple_home_1f,Home,single_round,Single-round,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T162536Z_b4011ce2,0.627,-0.03180000000000005
-simple_home_1f,Home,single_round,Single-round,vllm_llama3_1_8b,Llama-3.1-8B,20260531T065241Z_335f8156,0.6157,-0.04310000000000003
-simple_home_1f,Home,goal_review,Goal-review,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T102247Z_73d7a563,0.692,0.033199999999999896
-simple_home_1f,Home,goal_review,Goal-review,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T180700Z_e482a967,0.7612,0.10239999999999994
-simple_home_1f,Home,goal_review,Goal-review,vllm_llama3_1_8b,Llama-3.1-8B,20260531T073928Z_61c63536,0.778,0.11919999999999997
-simple_hospital_1f,Hospital,no_robot,No robot,npc_only_baseline,No robot,20260531T083001Z_6a495015,0.5205,0.0
-simple_hospital_1f,Hospital,reactive,Reactive,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T102136Z_2d8dffb6,0.5435,0.02300000000000002
-simple_hospital_1f,Hospital,reactive,Reactive,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T193420Z_244f138a,0.5158,-0.0046999999999999265
-simple_hospital_1f,Hospital,reactive,Reactive,vllm_llama3_1_8b,Llama-3.1-8B,20260531T083024Z_a4546b93,0.5107,-0.00979999999999992
-simple_hospital_1f,Hospital,single_round,Single-round,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T102219Z_5f54cae1,0.6972,0.17670000000000008
-simple_hospital_1f,Hospital,single_round,Single-round,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T195443Z_950470a7,0.6953,0.17480000000000007
-simple_hospital_1f,Hospital,single_round,Single-round,vllm_llama3_1_8b,Llama-3.1-8B,20260531T084035Z_ec706d4e,0.6953,0.17480000000000007
-simple_hospital_1f,Hospital,goal_review,Goal-review,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T102251Z_b31334d1,0.591,0.07050000000000001
-simple_hospital_1f,Hospital,goal_review,Goal-review,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T203956Z_ef784743,0.7329,0.21240000000000003
-simple_hospital_1f,Hospital,goal_review,Goal-review,vllm_llama3_1_8b,Llama-3.1-8B,20260531T090721Z_9eb83615,0.5856,0.06510000000000005
-simple_supermarket_1f,Supermarket,no_robot,No robot,npc_only_baseline,No robot,20260531T095814Z_b3520397,0.5762,0.0
-simple_supermarket_1f,Supermarket,reactive,Reactive,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T102141Z_11e3e08c,0.5503,-0.025900000000000034
-simple_supermarket_1f,Supermarket,reactive,Reactive,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T215759Z_20da938f,0.6097,0.033499999999999974
-simple_supermarket_1f,Supermarket,reactive,Reactive,vllm_llama3_1_8b,Llama-3.1-8B,20260531T095838Z_5cf0b2c6,0.5522,-0.02400000000000002
-simple_supermarket_1f,Supermarket,single_round,Single-round,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T102225Z_578eac56,0.6582,0.08199999999999996
-simple_supermarket_1f,Supermarket,single_round,Single-round,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T221252Z_eaaee666,0.6957,0.11949999999999994
-simple_supermarket_1f,Supermarket,single_round,Single-round,vllm_llama3_1_8b,Llama-3.1-8B,20260531T100913Z_e86bba8b,0.7417,0.16549999999999998
-simple_supermarket_1f,Supermarket,goal_review,Goal-review,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T102257Z_ac8f1f72,0.6736,0.09739999999999993
-simple_supermarket_1f,Supermarket,goal_review,Goal-review,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T223928Z_6a8531b1,0.686,0.10980000000000001
-simple_supermarket_1f,Supermarket,goal_review,Goal-review,vllm_llama3_1_8b,Llama-3.1-8B,20260531T103330Z_9d69856f,0.6855,0.10929999999999995
-simple_office_1f,Office,no_robot,No robot,npc_only_baseline,No robot,20260531T111138Z_28fbf9f4,0.4559,0.0
-simple_office_1f,Office,reactive,Reactive,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T102146Z_36a760b7,0.5132,0.05729999999999996
-simple_office_1f,Office,reactive,Reactive,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T232727Z_001f3766,0.4624,0.00649999999999995
-simple_office_1f,Office,reactive,Reactive,vllm_llama3_1_8b,Llama-3.1-8B,20260531T111202Z_62610d4d,0.5968,0.14089999999999997
-simple_office_1f,Office,single_round,Single-round,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T102229Z_47e7be20,0.7546,0.2987
-simple_office_1f,Office,single_round,Single-round,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260529T234155Z_6a70bb84,0.7398,0.2839
-simple_office_1f,Office,single_round,Single-round,vllm_llama3_1_8b,Llama-3.1-8B,20260531T112229Z_a7d54a8b,0.7341,0.27819999999999995
-simple_office_1f,Office,goal_review,Goal-review,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T102301Z_95638a4e,0.6734,0.21749999999999997
-simple_office_1f,Office,goal_review,Goal-review,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260530T000946Z_7ae3a0f1,0.7415,0.2856
-simple_office_1f,Office,goal_review,Goal-review,vllm_llama3_1_8b,Llama-3.1-8B,20260531T114736Z_e3382fab,0.7137,0.2578
-simple_factory_1f,Factory,no_robot,No robot,npc_only_baseline,No robot,20260531T122729Z_e6b8a57e,0.3806,0.0
-simple_factory_1f,Factory,reactive,Reactive,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T102151Z_c7b8bb6f,0.3753,-0.005299999999999971
-simple_factory_1f,Factory,reactive,Reactive,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260530T010059Z_3ea5e142,0.3845,0.0039000000000000146
-simple_factory_1f,Factory,reactive,Reactive,vllm_llama3_1_8b,Llama-3.1-8B,20260531T122754Z_a2ea6ba8,0.352,-0.028600000000000014
-simple_factory_1f,Factory,single_round,Single-round,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T102234Z_ef8a96cc,0.6519,0.27130000000000004
-simple_factory_1f,Factory,single_round,Single-round,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260530T011329Z_861b65ca,0.6461,0.2655
-simple_factory_1f,Factory,single_round,Single-round,vllm_llama3_1_8b,Llama-3.1-8B,20260531T123719Z_71d2c509,0.6421,0.2615
-simple_factory_1f,Factory,goal_review,Goal-review,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T102304Z_2544064a,0.5967,0.21610000000000001
-simple_factory_1f,Factory,goal_review,Goal-review,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260530T013655Z_85d489bb,0.6433,0.2627
-simple_factory_1f,Factory,goal_review,Goal-review,vllm_llama3_1_8b,Llama-3.1-8B,20260531T125856Z_4f42f761,0.6451,0.2645
+simple_home_1f,Home,no_robot,No robot,npc_only_baseline,No robot,20260622T031935Z_3610cc67,0.6588,0.0
+simple_home_1f,Home,reactive,Reactive,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T135842Z_e07416d8,0.6719,0.0131
+simple_home_1f,Home,reactive,Reactive,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260621T142425Z_699d71da,0.653,-0.005800000000000027
+simple_home_1f,Home,single_round,Single-round,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T142657Z_c8cc3cdd,0.6192,-0.03960000000000008
+simple_home_1f,Home,single_round,Single-round,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260621T142434Z_a4c79592,0.6261,-0.03270000000000006
+simple_home_1f,Home,goal_review,Goal-review,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T142820Z_3d510941,0.7349,0.07609999999999995
+simple_home_1f,Home,goal_review,Goal-review,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260621T142439Z_e826d1d5,0.7549,0.09609999999999996
+simple_hospital_1f,Hospital,no_robot,No robot,npc_only_baseline,No robot,20260622T031954Z_da224f9f,0.5205,0.0
+simple_hospital_1f,Hospital,reactive,Reactive,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T135906Z_58e3fa2e,0.5439,0.023400000000000087
+simple_hospital_1f,Hospital,reactive,Reactive,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260621T142450Z_6280daba,0.5158,-0.0046999999999999265
+simple_hospital_1f,Hospital,single_round,Single-round,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T142701Z_58555b22,0.6953,0.17480000000000007
+simple_hospital_1f,Hospital,single_round,Single-round,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260621T142502Z_1edc242b,0.6953,0.17480000000000007
+simple_hospital_1f,Hospital,goal_review,Goal-review,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T142824Z_38b4bfc6,0.6121,0.09160000000000001
+simple_hospital_1f,Hospital,goal_review,Goal-review,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260621T142509Z_9b7d8c3f,0.7311,0.2106
+simple_supermarket_1f,Supermarket,no_robot,No robot,npc_only_baseline,No robot,20260622T032032Z_98f55bcb,0.5762,0.0
+simple_supermarket_1f,Supermarket,reactive,Reactive,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T135911Z_26562a26,0.5684,-0.007800000000000029
+simple_supermarket_1f,Supermarket,reactive,Reactive,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260621T142546Z_68c31c1a,0.6072,0.030999999999999917
+simple_supermarket_1f,Supermarket,single_round,Single-round,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T142707Z_ef663e1f,0.6945,0.11829999999999996
+simple_supermarket_1f,Supermarket,single_round,Single-round,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260621T142554Z_1f64cf8f,0.6957,0.11949999999999994
+simple_supermarket_1f,Supermarket,goal_review,Goal-review,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T142828Z_7ecac6de,0.658,0.08179999999999998
+simple_supermarket_1f,Supermarket,goal_review,Goal-review,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260621T142601Z_2dc069ab,0.7528,0.17659999999999998
+simple_office_1f,Office,no_robot,No robot,npc_only_baseline,No robot,20260622T032130Z_a1db08b3,0.4559,0.0
+simple_office_1f,Office,reactive,Reactive,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T135915Z_2b5b2eb3,0.5127,0.05680000000000002
+simple_office_1f,Office,reactive,Reactive,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260621T142516Z_044beb94,0.5933,0.13740000000000002
+simple_office_1f,Office,single_round,Single-round,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T142713Z_79de0788,0.7584,0.30249999999999994
+simple_office_1f,Office,single_round,Single-round,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260621T142530Z_659380d8,0.7397,0.2838
+simple_office_1f,Office,goal_review,Goal-review,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T102301Z_95638a4e,0.6827,0.22679999999999995
+simple_office_1f,Office,goal_review,Goal-review,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260621T142539Z_8e44a93a,0.7393,0.28339999999999993
+simple_factory_1f,Factory,no_robot,No robot,npc_only_baseline,No robot,20260622T032234Z_041923ae,0.3806,0.0
+simple_factory_1f,Factory,reactive,Reactive,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T135919Z_09714f2e,0.3748,-0.005799999999999972
+simple_factory_1f,Factory,reactive,Reactive,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260621T142608Z_0402ae51,0.3844,0.0038000000000000256
+simple_factory_1f,Factory,single_round,Single-round,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T142717Z_53074a4e,0.6516,0.27099999999999996
+simple_factory_1f,Factory,single_round,Single-round,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260621T142614Z_cdc7d0c8,0.647,0.2664
+simple_factory_1f,Factory,goal_review,Goal-review,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T142833Z_d31f6c01,0.581,0.20039999999999997
+simple_factory_1f,Factory,goal_review,Goal-review,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260621T142619Z_5e0d0fee,0.642,0.2614

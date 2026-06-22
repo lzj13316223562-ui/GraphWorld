@@ -62,7 +62,7 @@
 \maketitle
 
 \begin{abstract}
-现有具身智能基准大多围绕一次性任务完成展开：系统给出一个明确目标，智能体在有限 episode 内导航、抓取、开关或放置物体。真实环境具有更强的持续性，由人类活动、环境状态和机器人干预共同构成动态共生系统。本文提出 GraphWorld，一个面向人机世界共生（human-agent world symbiosis）的动态图评测基准。GraphWorld 将家庭、医院、超市、办公室和工厂等场景统一建模为持续演化的层次化场景图，其中房间、物体、设备、NPC 和机器人共享同一图结构，节点状态和空间关系会随人类日程、设备周期、环境过程和机器人动作持续变化。我们将人机世界共生定义为一种闭环状态：人类活动持续改变环境，具身智能体持续调节环境，使世界保持可用、有序，并继续支持后续人类活动。围绕这一目标，GraphWorld 提供 NPC 事件模型、动作 schema 验证、局部感知、技能条件化 agent、状态/空间/人类事件三维评分，以及多场景、多难度、多日程扰动的实验协议。实验表明，机器人干预通常显著优于无机器人基线，但现有 LLM agent 仍容易被局部可见偏离吸引，缺少稳定的长期任务调度能力。GraphWorld 的意义在于把具身智能评测从完成孤立指令推进到维持人、机器人与动态世界之间的长期共生闭环。
+现有具身智能基准大多围绕一次性任务完成展开：系统给出一个明确目标，智能体在有限 episode 内导航、抓取、开关或放置物体。真实环境具有更强的持续性，由人类活动、环境状态和机器人干预共同构成动态共生系统。本文提出 GraphWorld，一个面向人机世界共生（human-agent world symbiosis）的动态图评测基准。GraphWorld 将家庭、医院、超市、办公室和工厂等场景统一建模为持续演化的层次化场景图，其中房间、物体、设备、NPC 和机器人共享同一图结构，节点状态和空间关系会随人类日程、设备周期、环境过程和机器人动作持续变化。我们将人机世界共生定义为一种闭环状态：人类活动持续改变环境，具身智能体持续调节环境，使世界保持可用、有序，并继续支持后续人类活动。围绕这一目标，GraphWorld 提供 NPC 事件模型、动作 schema 验证、局部感知、技能条件化 agent、状态/空间/人类事件三维评分，以及多场景、多难度、多日程扰动的实验协议。实验表明，结构化机器人策略能够明显提升长期世界维护效果，但当前 LLM agent 仍容易被局部可见偏离吸引，缺少稳定的长期任务调度能力。GraphWorld 的意义在于把具身智能评测从完成孤立指令推进到维持人、机器人与动态世界之间的长期共生闭环。
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -76,7 +76,7 @@
 
 我们对这一问题的核心判断是：持续动态世界中的主要瓶颈并不在于机器人是否“知道某个技能”，而在于它能否从不断积累的环境偏离中抽取任务、判断优先级、保持阶段执行，并在中断后恢复高价值流程。基于这一认识，我们构建了 GraphWorld。它把房间、物体、设备、NPC 和机器人统一建模为一个持续演化的层次化场景图，并将 NPC 事件、设备周期、动作 schema、局部感知和长期评分机制统一到同一个 graph-native runtime 中。在这个设定里，任务不再来自外部给定指令，而是来自人类活动留下的状态偏离、空间偏离和流程阻塞；机器人行为也不再只由最终成功与否评价，而是由其对长期共生闭环的调节能力来评价。围绕这一框架，我们设计了多场景、多 graph profile、多日程扰动的实验，并引入状态、空间和人类事件三类长期评分，以及用于诊断任务调度失败机制的分析视角。
 
-实验结果表明，机器人干预通常显著优于无机器人基线，说明 GraphWorld 中的大部分问题具有明确的可恢复性；但现有 LLM agent 仍普遍表现出局部目标固着、阶段任务闭环不足，以及对关键人类阻塞问题恢复不稳定等现象。更强模型和结构化的 goal-review 策略能够带来改进，但并不能消除长期任务调度这一核心瓶颈。换言之，GraphWorld 所揭示的困难并不主要来自单步动作生成，而是来自持续动态世界中的长期维护决策本身。
+实验结果表明，结构化机器人策略通常优于无机器人基线和纯 reactive 策略，说明 GraphWorld 中的大部分问题具有明确的可恢复性；但在当前完成的 Qwen3.5-9B 和 DeepSeek-R1-14B 实验中，LLM agent 仍表现出局部目标固着、阶段任务闭环不足，以及对关键人类阻塞问题恢复不稳定等现象。更强模型和结构化的 goal-review 策略能够带来改进，但长期任务调度仍是主要瓶颈。换言之，GraphWorld 所揭示的困难并不主要来自单步动作生成，而是来自持续动态世界中的长期维护决策本身。
 
 本文贡献如下：
 \begin{itemize}
@@ -167,7 +167,7 @@ S_{\mathrm{block}} = \frac{R}{B}.
 \subsection{实验设置}
 我们在五个 base scenes 上实验：家庭、医院、超市、办公室和工厂。家庭包含 1 个 resident；其余场景包含 3 个 NPC，分别覆盖病人/护士/医生、顾客/收银员/理货员、员工/经理/访客、工人/质检员/维修员。所有主实验运行 800 step，机器人设置为 1 个机器人，LLM 使用 Qwen3.5-9B。
 
-实验分三组。主实验评估 5 个 base scene、固定日程和 4 种方法。多样性实验评估 5 个场景、3 种 graph profile 和 no-robot/goal-review 两种方法。日程随机性实验评估 5 个 base scene、fixed/calendar/stochastic 三类日程和多种方法。三组实验分别回答方法是否有效、场景难度变化是否可区分、以及人类扰动模式变化是否影响结果。
+实验分三组。主实验评估 5 个 base scene、固定日程和 4 种方法。多样性实验评估 5 个场景、3 种 graph profile 下的 goal-review 方法；profile 条件下的 no-robot 基线尚未重跑，因此本节只比较同一 agent 在不同图结构中的表现。日程随机性实验评估 5 个 base scene、fixed/calendar/stochastic 三类日程下的 goal-review 方法。三组实验分别回答方法是否有效、场景难度变化是否可区分、以及人类扰动模式变化是否影响结果。
 
 此外，我们在修正 blocking case 日志后，额外运行一组 500 step fixed schedule 诊断实验，用于计算人类阻塞恢复率。该组实验包含 5 个 base scene 和 reactive、single-round、goal-review 三种机器人方法，不与 800 step 主分数混合，只用于分析人类流程阻塞是否被恢复。
 
@@ -185,33 +185,33 @@ S_{\mathrm{block}} = \frac{R}{B}.
 页面目标 & 实验内容 & 变量矩阵 & 主要图表 & 当前状态 \\
 \midrule
 设置总览 & 五个 base scenes，1 个机器人，1/3 个 NPC，800 step 主实验 & 方法、模型、profile、schedule & 实验矩阵与主指标定义 & 已补入本表；主指标为 $S_{\mathrm{state}}/S_{\mathrm{spatial}}/S_{\mathrm{human}}/S$ \\
-主实验结果 & Base scene fixed schedule & no-robot、reactive、single-round、goal-review & 主实验曲线 & Qwen3.5-9B 三种 with-robot 方法 raw summary 已完成；no-robot 基线为当前图表缓存结果 \placeholder{待统一重生} \\
+主实验结果 & Base scene fixed schedule & no-robot、reactive、single-round、goal-review & 主实验曲线 & Qwen3.5-9B 三种 with-robot 方法和 no-robot 800 step raw metrics/曲线已完成；office goal-review 的曲线日志为恢复后的后段片段 \\
 分场景分析 & 按场景拆解 final/state/spatial/human & 五个 base scenes $\times$ 四类分数 & 主实验表格与局部结论 & 已完成；重点解释空间归位和流程恢复差异 \\
-模型主干对比 & 相同 fixed schedule 下替换 LLM backbone & Qwen3.5-9B、DeepSeek-R1-14B、Llama-3.1-8B $\times$ 三方法 & 模型对比图 & Qwen raw summary 已完成；DeepSeek/Llama 当前图表为旧结果占位 \placeholder{待本轮 30 条 raw summary 替换} \\
-Graph Profile & 改变拓扑和对象交互压力 & compact、normal、spread $\times$ no-robot/goal-review & 多样性图 & Qwen goal-review compact/spread 10 条已完成；normal 复用 base fixed；no-robot profile 曲线为缓存占位 \placeholder{待重生核对} \\
-日程随机性 & 改变 NPC 日程扰动模式 & fixed、calendar、stochastic & stochastic/schedule 图 & Qwen goal-review calendar/stochastic 10 条已完成；若展示四方法 stochastic，非 goal-review 曲线为占位 \placeholder{待补 raw 或改图} \\
-行为诊断 & 动作画像与局部失败机制 & 阶段完成、局部固着、过早切换、阻塞恢复 & 雷达图与四指标卡片 & 雷达图已完成；四指标卡片见表~\ref{tab:diagnostic-cards} \\
+模型主干对比 & 相同 fixed schedule 下替换 LLM backbone & Qwen3.5-9B、DeepSeek-R1-14B $\times$ 三方法；Llama-3.1-8B 待补齐 & 模型对比图 & Qwen 与 DeepSeek fixed 30 条已完成并进入正式图表；Llama 当前 15 条 run 均未达到 800 step，暂不纳入统计 \placeholder{待重跑/补齐} \\
+Graph Profile & 改变拓扑和对象交互压力 & compact、normal、spread $\times$ goal-review & 多样性图 & Qwen goal-review compact/spread 10 条已完成；normal 复用 base fixed；no-robot profile 基线待补 \placeholder{未进入当前图} \\
+日程随机性 & 改变 NPC 日程扰动模式 & fixed、calendar、stochastic $\times$ goal-review & schedule 图 & Qwen goal-review calendar/stochastic 10 条已完成；fixed 复用主实验，图表已按 800 step 重生 \\
+行为诊断 & 动作画像与局部失败机制 & 阶段完成、局部固着、过早切换、阻塞恢复 & 雷达图与四指标卡片 & 雷达图由当前可用 action log 重生，用作行为倾向辅助图；四指标卡片见表~\ref{tab:diagnostic-cards} \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
 \subsection{主实验：Agent 是否能稳定共生闭环}
-图~\ref{fig:main-grid} 展示 base graph 上的主实验曲线。总体上，带任务结构的 agent 明显优于无机器人基线，尤其在 office 和 factory 等空间秩序强依赖场景中提升显著。表~\ref{tab:main-results} 给出最终分数。Single-round 在 hospital、office 和 factory 中取得最高 final score；goal-review 在 home 和 supermarket 中表现最好。这说明没有单一方法在所有场景中占优：goal-review 在人类事件密集、需要长期坚持流程的家庭和超市中更有优势，而 single-round 在空间归位回报明确的医院、办公室和工厂中更果断。值得注意的是，home 中 single-round 的 final score 反而低于 no-robot 基线，说明在事件链脆弱的场景中，一次性选择高层任务和低层动作更容易做出破坏后续人类事件的错误调度。
+图~\ref{fig:main-grid} 展示 base graph 上的主实验曲线。总体上，带任务结构的 agent 比 reactive 更稳定，尤其在 office 和 factory 等空间秩序强依赖场景中提升显著。表~\ref{tab:main-results} 给出 step 799 的累计平均分数。Single-round 在 hospital、supermarket、office 和 factory 中取得最高 final score；goal-review 在 home 中表现最好。这说明没有单一方法在所有场景中占优：goal-review 在家庭这类人类事件密集、需要长期坚持流程的场景中更有优势，而 single-round 在空间归位回报明确、可快速执行搬运和放置链条的场景中更果断。
 
-更细地看，三类分数揭示了 agent 改善世界的不同机制。Office 和 factory 中 single-round 的优势集中体现在 spatial score：它把 spatial 从基线的 0.350、0.608 拉高到 0.975、0.987，能快速归还文件、工具、PPE 和零件箱，使人类职业流程恢复可用，但 state score 仍偏低（factory 仅 0.419），说明设备链和状态恢复并未同步完成。Hospital 中 single-round 的提升同样以 spatial 为主（从 0.290 提高到 0.685），并把 human event score 拉满到 1.000，说明医院场景的关键不是单个状态清洁，而是处方、药品、病床和医疗垃圾等对象是否回到流程可用位置。Supermarket 中 goal-review 同时改善 spatial 和 human score，体现出对补货和顾客事件链的长期坚持。Reactive 虽然有时能维持较高 state score（office 0.652、hospital 0.619），但缺少跨房间归位和流程恢复能力，spatial 几乎不动，因此 final score 在 home、supermarket、factory 中可能低于或接近 no-robot。
+更细地看，三类分数揭示了 agent 改善世界的不同机制。Office 和 factory 中 single-round 的优势集中体现在 spatial score：它把 spatial 拉高到 0.975 和 0.985，能快速归还文件、工具、PPE 和零件箱，使人类职业流程恢复可用，但 factory 的 state score 仍只有 0.423，说明设备链和状态恢复并未同步完成。Hospital 中 single-round 的提升同样以 spatial 为主（0.685），并把 human event score 拉满到 1.000，说明医院场景的关键不是单个状态清洁，而是处方、药品、病床和医疗垃圾等对象是否回到流程可用位置。Supermarket 中 single-round 的 spatial 和 human score 同时较高（0.905 和 0.833），说明一次性输出高层任务与低层动作已经足以稳定推进补货和顾客事件链。Reactive 虽然有时能维持较高 state score（office 0.652、hospital 0.619），但缺少跨房间归位和流程恢复能力，spatial 明显低于结构化方法。
 
 这一结果也解释了为什么 GraphWorld 需要拆分指标。不同 agent 的表面分数可能接近，但其行为机制不同：有的主要清洁局部状态，有的主要恢复空间秩序，有的能支撑人类事件继续发生。三维评分使这些差异可以被拆开观察，避免被单一 success rate 掩盖。
 
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{figures/overview/score_curves_by_scene_metric.png}
-  \caption{Base scene 主实验曲线。列为场景，行为 final/state/spatial/human 四类分数。}
+  \caption{Base scene 主实验曲线。列为场景，行为 final/state/spatial/human 四类累计平均分数；灰色虚线为同设置下新运行的 no-robot 800 step raw 曲线。Office goal-review 的当前 metrics log 只保留恢复后的后段片段，因此该子图中对应曲线从后段开始显示。}
   \label{fig:main-grid}
 \end{figure*}
 
 \begin{table*}[t]
 \centering
-\caption{Base scene 800 step 长期运行结果（Qwen3.5-9B，fixed schedule）。F/S/Sp/H 分别表示综合分、状态分、空间分和人类事件分，取全程平均分。绿色表示该场景综合分最高的方法；红色表示综合分低于无机器人基线。}
+\caption{Base scene 800 step 长期运行结果（Qwen3.5-9B，fixed schedule）。F/S/Sp/H 分别表示综合分、状态分、空间分和人类事件分，取 step 799 的累计平均分。no-robot 为同设置下的无机器人 raw baseline；绿色表示该场景综合分最高的方法。}
 \label{tab:main-results}
 \scriptsize
 \setlength{\tabcolsep}{1.6pt}
@@ -229,29 +229,29 @@ Graph Profile & 改变拓扑和对象交互压力 & compact、normal、spread $\
 \midrule
 家庭
 & 0.659 & 0.596 & 0.619 & 0.871
-& 0.667 & 0.614 & 0.619 & 0.871
-& \badcell{0.618} & 0.626 & 0.555 & 0.710
-& \bestcell{0.672} & 0.576 & 0.672 & 0.887 \\
+& 0.672 & 0.625 & 0.619 & 0.871
+& 0.619 & 0.629 & 0.555 & 0.710
+& \bestcell{0.735} & 0.620 & 0.759 & 0.952 \\
 医院
 & 0.521 & 0.563 & 0.290 & 0.826
-& 0.544 & 0.619 & 0.289 & 0.819
+& 0.544 & 0.619 & 0.290 & 0.819
 & \bestcell{0.695} & 0.568 & 0.685 & 1.000
-& 0.573 & 0.584 & 0.408 & 0.833 \\
+& 0.612 & 0.572 & 0.518 & 0.868 \\
 超市
 & 0.576 & 0.449 & 0.732 & 0.590
-& \badcell{0.568} & 0.489 & 0.658 & 0.590
-& 0.658 & 0.466 & 0.850 & 0.756
-& \bestcell{0.690} & 0.467 & 0.872 & 0.872 \\
+& 0.568 & 0.489 & 0.658 & 0.590
+& \bestcell{0.695} & 0.469 & 0.905 & 0.833
+& 0.658 & 0.466 & 0.849 & 0.756 \\
 办公室
 & 0.456 & 0.519 & 0.350 & 0.500
 & 0.513 & 0.652 & 0.340 & 0.500
-& \bestcell{0.755} & 0.538 & 0.975 & 0.857
-& 0.672 & 0.520 & 0.850 & 0.702 \\
+& \bestcell{0.758} & 0.546 & 0.975 & 0.857
+& 0.683 & 0.520 & 0.868 & 0.726 \\
 工厂
 & 0.381 & 0.256 & 0.608 & 0.264
-& \badcell{0.370} & 0.309 & 0.508 & 0.264
-& \bestcell{0.648} & 0.419 & 0.987 & 0.569
-& 0.593 & 0.308 & 0.975 & 0.569 \\
+& 0.375 & 0.320 & 0.508 & 0.264
+& \bestcell{0.652} & 0.423 & 0.985 & 0.583
+& 0.581 & 0.308 & 0.963 & 0.528 \\
 \bottomrule
 \end{tabular}
 }
@@ -287,74 +287,75 @@ Graph Profile & 改变拓扑和对象交互压力 & compact、normal、spread $\
 不过，home 和 hospital 的 500 step 诊断结果仍为 0，说明当前方法在生活流程和医疗流程中的恢复窗口把握不足。Home 中 clean clothes、bathroom supplies 等问题依赖多步洗衣、倒水、归位和时序窗口；hospital 中处方、冷藏药、床单和医疗废物链条要求更强的阶段保持。该结果与主实验中的 state/spatial 分数分离现象一致：agent 往往能把物体搬回合理位置，却不一定完成足以恢复下一次人类事件的完整流程。因此，人类阻塞恢复率为后续显式任务队列和 deadline-aware 调度提供了更直接的优化目标。
 
 \subsection{模型主干补充实验：同一策略是否受模型能力影响}
-在上述 Qwen3.5-9B 主实验基础上，我们进一步在相同五个 base scenes、相同 800 step 设置下加入 DeepSeek-R1-Distill-Qwen-14B 和 Llama-3.1-8B，比较三种模型在 reactive、single-round 和 goal-review 三种机器人策略下的表现，以检验同一策略是否受模型主干能力影响。图~\ref{fig:model-comparison} 展示最终综合分对比，灰色虚线为对应场景的 no-robot 基线。表~\ref{tab:model-avg-results} 汇总跨场景平均分。当前 DeepSeek/Llama 的 raw summary 正在按 fixed 15 条补跑，因此本节图表先作为模型主干对比占位，待新结果完成后重新生成。
+在上述 Qwen3.5-9B 主实验基础上，我们进一步在相同五个 base scenes、相同 800 step 设置下加入 DeepSeek-R1-Distill-Qwen-14B，比较两种模型在 reactive、single-round 和 goal-review 三种机器人策略下的表现，以检验同一策略是否受模型主干能力影响。Llama-3.1-8B 的 15 条 run 当前均已启动并落盘，但最长只运行到 246 step，未达到 800 step 完整性要求，因此本版不纳入正式统计。图~\ref{fig:model-comparison} 展示最终综合分对比，灰色虚线为对应场景的 no-robot 基线。表~\ref{tab:model-avg-results} 汇总跨场景平均分。
 
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{figures/model_comparison/model_final_score_comparison.png}
-  \caption{800 step 模型主干对比实验。柱状图为 reactive、single-round 和 goal-review 三种机器人策略在 Qwen3.5-9B、DeepSeek-R1-14B 和 Llama-3.1-8B 上的最终综合分，灰色虚线为对应场景的无机器人基线。DeepSeek/Llama 结果为占位版本，待本轮 raw summary 完成后替换。}
+  \caption{800 step 模型主干对比实验。柱状图为 reactive、single-round 和 goal-review 三种机器人策略在 Qwen3.5-9B 和 DeepSeek-R1-14B 上的最终综合分，灰色虚线为对应场景的无机器人基线。Llama-3.1-8B 当前 run 未达到 800 step，暂不进入正式图表。}
   \label{fig:model-comparison}
 \end{figure*}
 
 \begin{table}[t]
 \centering
-\caption{五个场景上的 800 step 平均最终综合分。$\Delta$ 表示相对无机器人基线的平均提升；无机器人基线平均最终综合分为 0.5184。DeepSeek/Llama 列为占位结果，待本轮重跑后更新。}
+\caption{五个场景上的 800 step 平均最终综合分。$\Delta$ 表示相对无机器人基线的平均提升；无机器人基线平均最终综合分为 0.5184。}
 \label{tab:model-avg-results}
 \footnotesize
 \setlength{\tabcolsep}{3.0pt}
-\begin{tabular}{lcccccc}
+\begin{tabular}{lcccc}
 \toprule
 \multirow{2}{*}{策略}
 & \multicolumn{2}{c}{Qwen3.5-9B}
-& \multicolumn{2}{c}{DeepSeek-R1-14B}
-& \multicolumn{2}{c}{Llama-3.1-8B} \\
-\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
-& 分数 & $\Delta$ & 分数 & $\Delta$ & 分数 & $\Delta$ \\
+& \multicolumn{2}{c}{DeepSeek-R1-14B} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+& 分数 & $\Delta$ & 分数 & $\Delta$ \\
 \midrule
-Reactive & 0.5323 & +0.0139 & 0.5257 & +0.0073 & 0.5372 & +0.0188 \\
-Single-round & 0.6748 & +0.1564 & 0.6808 & +0.1624 & 0.6858 & +0.1674 \\
-Goal-review & 0.6397 & +0.1213 & \bestcell{0.7130} & \bestcell{+0.1946} & 0.6816 & +0.1632 \\
+Reactive & 0.5343 & +0.0159 & \bestcell{0.5507} & \bestcell{+0.0323} \\
+Single-round & \bestcell{0.6838} & \bestcell{+0.1654} & 0.6808 & +0.1624 \\
+Goal-review & 0.6537 & +0.1353 & \bestcell{0.7240} & \bestcell{+0.2056} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-结果显示，reactive 方法对模型能力不敏感，三个模型相对 no-robot 的平均提升都很小，说明局部可见图和合法动作候选不足以形成长期维护策略。Single-round 在三种模型上都稳定提升，且 Llama-3.1-8B 与 DeepSeek-R1-14B 都高于 Qwen3.5-9B，表明显式输出高层任务与低层动作已经能利用图状态中的长期异常。Goal-review 对模型能力更敏感：Qwen3.5-9B 平均提升为 +0.1213，Llama-3.1-8B 为 +0.1632，DeepSeek-R1-14B 达到 +0.1946，是该补充实验中的最佳结果。这说明当策略被拆成“是否继续当前目标”和“下一步动作选择”两个层次后，更强的模型更能保持长链任务上下文，减少过早切换目标和重复局部动作。
+结果显示，模型主干能力会改变长期共生表现，但这种影响与 agent 策略耦合。Qwen3.5-9B 与 DeepSeek-R1-14B 的 single-round 平均分接近（0.6838 对 0.6808），说明一次性高层任务选择在两个主干上都能稳定触发搬运和归位链条。DeepSeek 在 goal-review 上更高（0.7240 对 0.6537），说明“是否继续当前目标”和“下一步动作选择”拆开后，更强的推理主干更能利用复审阶段保持长链任务上下文。Reactive 的提升较小（0.5507 对 0.5343），表明仅替换模型并不能完全弥补缺少高层任务结构的问题。
+
+因此，模型对比支持两个结论。第一，GraphWorld 对 backbone 能力敏感，尤其在需要目标复审和阶段保持的策略中更明显。第二，策略结构仍然重要：DeepSeek 的 goal-review 比 reactive 高 0.1733，Qwen 的 single-round 比 reactive 高 0.1495，说明长期共生能力来自模型理解能力和任务组织机制的共同作用。Llama-3.1-8B 的完整 800 step 结果补齐后，可用于进一步检验更强 backbone 是否会缩小不同策略之间的差距。
 
 \subsection{多样性实验：Graph Profile 是否拉开难度}
-图~\ref{fig:diversity-grid} 展示三种 graph profile 的结果。多样性实验验证了两个点。第一，no-robot 随着任务物体压力增加而明显下降，尤其在 hospital、supermarket、office 和 factory 中，spread/device profile 更容易积累状态偏离和流程阻塞。第二，goal-review 大多数情况下高于 no-robot，说明 agent 对共生闭环的调节能力不是只对一个固定 base graph 有效。
+图~\ref{fig:diversity-grid} 展示三种 graph profile 下 goal-review 的结果。该实验不改变模型、方法和日程，只改变同一 base scene 中关键物体、房间拓扑和设备链压力，用于检验图结构本身是否会改变长期调度难度。当前 800 step 结果显示，profile 对不同场景的影响并不一致：hospital、office 和 factory 在 compact profile 下更容易取得高分，而 home 和 supermarket 在 spread profile 下反而更高。这说明 profile 不是简单的“越分散越难”，而是在改变可见目标、跨房间搬运、设备链和人类事件窗口之间的平衡。
 
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{figures/overview/diversity_profile_grid.png}
-  \caption{Graph 多样性实验。虚线为 no-robot，实线为 goal-review；颜色表示 compact、normal 和 spread 三种 profile。}
+  \caption{Graph 多样性实验。曲线为 Qwen3.5-9B goal-review 在 compact、normal 和 spread 三种 profile 下的累计平均 final/state/spatial/human 分数。Profile 条件下 no-robot 基线尚未重跑，因此不在该图中展示。}
   \label{fig:diversity-grid}
 \end{figure*}
 
-但这组实验也暴露了短板。Factory spread 中 goal-review 仅从 0.391 提升到 0.465，远低于 normal profile 中的 0.202 提升；hospital normal 中提升也只有 0.052。轨迹统计显示，factory spread 中机器人执行了 980 次 \texttt{brush}，其中 973 次集中在 \texttt{table\_break\_room}，导致它没有充分处理 PPE、零件箱、设备链和质检记录等更高价值的流程目标。hospital normal 中机器人 1518 次为 \texttt{move}，长期围绕 \texttt{locker\_staff\_room} 和 staff room 局部目标移动，未能稳定推进药品、处方、病床和医疗垃圾闭环。
+具体来看，hospital compact 的 final score 为 0.7815，明显高于 normal 的 0.6121 和 spread 的 0.6973，说明医疗场景中把关键药品、床位和医疗废物链条压缩到更短拓扑后，goal-review 更容易维持完整流程。Factory 也呈现类似趋势：compact 为 0.6806，normal 为 0.5810，spread 下降到 0.4430，说明生产场景中的 PPE、零件箱、设备和质检记录一旦被拉散，agent 容易被局部清洁或近处物体吸引，难以稳定完成生产链恢复。Office 中 compact 和 normal 接近，spread 略低；home 与 supermarket 则在 spread 下更高，说明部分生活和零售任务受益于更清晰的空间分区或更少的局部竞争目标。
 
-因此，graph profile 的作用在于改变 agent 面临的调度结构，而非简单增加物体数量。\texttt{compact\_cleaning} 主要考察局部清洁和短链恢复，agent 往往容易得到稳定收益；\texttt{normal\_logistics} 考察跨房间搬运和补给，要求 agent 在多个对象之间排序；\texttt{spread\_device} 引入更远拓扑和设备依赖，要求 agent 完成长链流程。Factory spread 的失败说明，当任务需要从局部清洁转向生产链恢复时，当前 LLM agent 很容易停留在“看见什么修什么”的策略层级，而没有形成面向流程的全局优先级。
+因此，graph profile 的作用在于改变 agent 面临的调度结构，而非简单增加物体数量。\texttt{compact\_cleaning} 主要考察局部清洁和短链恢复，\texttt{normal\_logistics} 考察跨房间搬运和补给，\texttt{spread\_device} 引入更远拓扑和设备依赖。Factory spread 的失败说明，当任务需要从局部清洁转向生产链恢复时，当前 LLM agent 很容易停留在“看见什么修什么”的策略层级，而没有形成面向流程的全局优先级。
 
 \subsection{日程随机性实验：扰动模式是否影响方法表现}
-图~\ref{fig:schedule-stochastic} 展示 stochastic schedule 下的方法对比。补充方法实验显示，日程扰动会改变环境偏离累积轨迹，但不是所有场景都同样敏感。Home 的 stochastic 设置中 goal-review 明显高于 no-robot，而 single-round 低于 no-robot，说明家庭中错误任务选择会直接破坏人类事件链。Office 和 factory 中 single-round 在 final score 上高于 goal-review，主要来自空间恢复分数更高；goal-review 虽然也显著优于 no-robot，但更容易在局部目标 review 中保守切换。
+图~\ref{fig:schedule-goal-review} 展示 800 step 下 goal-review 在 fixed、calendar 和 stochastic 三类日程中的表现。该实验控制模型、场景和 agent 方法不变，只改变 NPC 事件发生顺序和日程扰动方式，用于检验同一策略是否对人类活动节奏敏感。结果显示，日程扰动会改变环境偏离累积轨迹，但不是所有场景都同样敏感。Home 和 supermarket 中三类日程差异较小，说明 goal-review 对生活和零售流程中的常见扰动具有一定稳健性；hospital 的 calendar 设置低于 fixed/stochastic，说明医疗流程对事件时序更敏感；office 和 factory 的 stochastic 分数反而更高，说明随机化有时会打散固定日程中连续积累的局部阻塞，使 agent 获得更多恢复窗口。
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=\textwidth]{figures/overview/schedule_methods_stochastic_grid.png}
-  \caption{Stochastic schedule 下四种方法对比。灰色虚线为 no-robot，红色为 reactive，黄色为 single-round，蓝色为 goal-review。}
-  \label{fig:schedule-stochastic}
+  \includegraphics[width=\textwidth]{figures/overview/goal_review_schedule_avg_grid.png}
+  \caption{800 step 日程随机性实验。曲线为 Qwen3.5-9B goal-review 在 fixed、calendar 和 stochastic 三类日程下的累计平均 final/state/spatial/human 分数。}
+  \label{fig:schedule-goal-review}
 \end{figure*}
 
-这一结果说明，GraphWorld 不只是证明某个 agent 更强，也能揭示方法结构的失败模式。Reactive 通常只能修补局部状态，难以恢复空间链；single-round 在部分场景中更果断，能快速选择高价值空间目标；goal-review 对长期目标有帮助，但如果 review 机制没有显式任务优先级，就可能被反复出现的小环境偏离吸住。
+这一结果说明，GraphWorld 不只是证明某个 agent 更强，也能揭示同一 agent 在不同人类扰动节奏下的稳定性。Fixed schedule 给出可重复的基准轨迹；calendar schedule 引入工作日/时段结构，使人类事件更接近真实流程；stochastic schedule 在日程框架内打乱部分事件顺序，用于测试 agent 是否依赖固定事件先后关系。Goal-review 在大多数场景中保持高于或接近 fixed 的表现，但 hospital 的下降表明，仅靠目标复审仍不足以处理强流程依赖场景中的时序窗口。
 
 从日程角度看，场景敏感性与人类流程的耦合程度有关。Home、hospital 和 factory 对事件顺序更敏感，因为穿衣、取药、上岗、生产和质检都依赖前序对象是否可用；一旦机器人错过恢复窗口，后续事件会连续失败。Supermarket 和 office 的部分活动更像可并行服务流，单个事件失败不一定立即阻断全天流程，因此曲线更平滑。这个现象说明，GraphWorld 的随机日程用于区分“局部修补型 agent”和“能理解流程依赖的 agent”。
 
 \subsection{Agent 行为模式}
-除了分数曲线，我们进一步统计不同方法的动作分布和目标选择。图~\ref{fig:action-profile} 展示了方法级动作画像。Reactive 更偏向局部 \texttt{brush}、\texttt{close} 和短距离 \texttt{move}，这与其缺少高层任务结构一致。Single-round 的 \texttt{pick}/\texttt{place} 比例更高，说明它更常进入搬运和归位流程。Goal-review 理论上应增强长期目标坚持，但实际轨迹显示，它也可能在 review 阶段频繁切换，尤其当当前可见目标语义明确但价值较低时。
+除了分数曲线，我们进一步统计不同方法的动作分布和目标选择。图~\ref{fig:action-profile} 展示了当前可用 action log 上的方法级动作画像。Reactive 更偏向局部 \texttt{brush}、\texttt{close} 和短距离 \texttt{move}，这与其缺少高层任务结构一致。Single-round 的 \texttt{pick}/\texttt{place} 比例更高，说明它更常进入搬运和归位流程。Goal-review 理论上应增强长期目标坚持，但实际轨迹显示，它也可能在 review 阶段频繁切换，尤其当当前可见目标语义明确但价值较低时。由于个别恢复运行只保留了后段 action log，动作画像只作为行为倾向辅助图，正式诊断结论以表~\ref{tab:diagnostic-cards} 为准。
 
 \begin{figure*}[t]
   \centering
   \includegraphics[width=0.82\textwidth]{figures/overview/action_profile_radar_by_method.png}
-  \caption{不同方法的动作画像。动作分布揭示了方法的行为偏好：reactive 更偏局部修补，single-round 更常执行搬运归位，goal-review 在部分场景中会因目标复审而频繁切换。}
+  \caption{不同方法的动作画像。该图由当前可用 action log 重生，用于辅助观察方法的行为偏好：reactive 更偏局部修补，single-round 更常执行搬运归位，goal-review 在部分场景中会因目标复审而频繁切换。}
   \label{fig:action-profile}
 \end{figure*}
 
@@ -377,7 +378,7 @@ Goal-review & 0.6397 & +0.1213 & \bestcell{0.7130} & \bestcell{+0.1946} & 0.6816
 \end{tabular}
 \end{table*}
 
-我们观察到三种稳定模式。第一，\emph{空间恢复优先}：agent 更容易理解“物体应放回哪里”，因此 spatial score 往往比 state score 更容易被拉开。第二，\emph{状态流程断裂}：洗衣、冷链、设备运行、床单更换和生产质检都需要多步动作与时间过程，agent 一旦中途切换，state score 就长期无法恢复。第三，\emph{局部目标吸引}：模型倾向选择最近、最显眼、动作结果最确定的目标，例如桌面、柜门、按钮和当前房间对象。这些模式解释了为什么机器人能显著改善世界，但仍没有达到稳定共生。
+我们观察到三种稳定模式。第一，\emph{空间恢复优先}：agent 更容易理解“物体应放回哪里”，因此 spatial score 往往比 state score 更容易被拉开。第二，\emph{状态流程断裂}：洗衣、冷链、设备运行、床单更换和生产质检都需要多步动作与时间过程，agent 一旦中途切换，state score 就长期无法恢复。第三，\emph{局部目标吸引}：模型倾向选择最近、最显眼、动作结果最确定的目标，例如桌面、柜门、按钮和当前房间对象。这些模式解释了为什么结构化机器人策略能改善世界状态，但仍没有达到稳定共生。
 
 \subsection{失败分析：为什么现有 Agent 仍然不够}
 当前最明显的失败来自局部可见偏离吸引。LLM 在每一步看到合法候选和可见状态时，很容易选择最近、最确定、语义最直接的动作，例如清洁当前房间的桌子、关闭当前可见柜子或移动到最近控制物。只要 NPC 事件持续制造这些局部可见偏离，agent 就会反复处理低价值任务，而忽略跨房间、跨设备、跨人类事件的长链任务。
@@ -396,7 +397,7 @@ GraphWorld 的核心是把已知技能放到持续扰动世界里，评估 agent
 当前限制主要有三点。第一，NPC 事件仍带有模板化设计，一些事件会持续制造局部状态偏离，可能过强地吸引 agent。第二，评分中的合理状态仍主要基于稳态目标，未来需要更多 activity-conditioned target，例如吃饭时餐具在桌上是合理的，饭后才成为待恢复状态。第三，多机器人虽然在数据结构上可表示，但缺少强仲裁和资源 claim 机制，尚不能系统研究多机器人协同调节。
 
 \section{结论}
-本文提出 GraphWorld，一个面向人机世界共生的动态图评测基准。GraphWorld 将具身智能评测从完成孤立指令推进到在持续人类扰动下调节多样化动态世界。通过层次化场景图、NPC 事件、动作 schema、局部感知、技能条件化 agent 和三维长期评分，GraphWorld 能够系统分析机器人如何调节状态健康、空间秩序和人类活动支持能力。五个场景、三类 graph profile 和多种日程扰动的实验表明，现有 LLM agent 能显著改善世界状态，但仍缺少稳定的全局任务调度能力。我们认为，人机世界共生将成为服务机器人从单次任务执行走向长期共处的重要评测方向。
+本文提出 GraphWorld，一个面向人机世界共生的动态图评测基准。GraphWorld 将具身智能评测从完成孤立指令推进到在持续人类扰动下调节多样化动态世界。通过层次化场景图、NPC 事件、动作 schema、局部感知、技能条件化 agent 和三维长期评分，GraphWorld 能够系统分析机器人如何调节状态健康、空间秩序和人类活动支持能力。五个场景、三类 graph profile 和多种日程扰动的实验表明，结构化 LLM agent 能改善世界状态和空间秩序，但仍缺少稳定的全局任务调度能力。我们认为，人机世界共生将成为服务机器人从单次任务执行走向长期共处的重要评测方向。
 
 \bibliographystyle{IEEEtran}
 \bibliography{refs}

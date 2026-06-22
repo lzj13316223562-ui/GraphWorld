@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 ROOT = Path(__file__).resolve().parents[2]
 EXP_ROOT = ROOT / "backend" / "data" / "experiments"
 FIG_DIR = ROOT / "paper" / "figures" / "overview"
+EXPERIMENT_STEPS = 800
 
 SCENES = [
     ("simple_home_1f", "Home", 1),
@@ -52,7 +53,7 @@ def read_summary(path: Path) -> dict[str, Any]:
 
 def latest_run(scene: str, humans: int, schedule_mode: str) -> Path:
     candidates: list[tuple[float, Path]] = []
-    pattern = "steps_1600__robots_1__humans_*__model_vllm_qwen3_5_9b_goal_review*/**/summary.json"
+    pattern = f"steps_{EXPERIMENT_STEPS}__robots_1__humans_*__model_vllm_qwen3_5_9b_goal_review*/**/summary.json"
     for summary_path in (EXP_ROOT / scene).glob(pattern):
         try:
             summary = read_summary(summary_path)
@@ -60,7 +61,7 @@ def latest_run(scene: str, humans: int, schedule_mode: str) -> Path:
             continue
         if summary.get("scene") != scene:
             continue
-        if int(summary.get("steps", -1)) != 1600:
+        if int(summary.get("steps", -1)) != EXPERIMENT_STEPS:
             continue
         if int(summary.get("robots", -1)) != 1 or int(summary.get("humans", -1)) != humans:
             continue

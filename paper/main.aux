@@ -15,35 +15,63 @@
 \global\let\hyper@last\relax 
 \gdef\HyperFirstAtBeginDocument#1{#1}
 \providecommand*\HyPL@Entry[1]{}
-\citation{hydrarss2022,sayplan2023,taskography2022}
-\citation{generativeagents2023}
 \HyPL@Entry{0<</S/D>>}
-\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {II}Related Work}{1}{section.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}Scene Graphs and Semantic World Representations}{1}{subsection.2.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}Persistent Simulated Worlds}{1}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {I}引言}{1}{section.1}\protected@file@percent }
+\citation{hydrarss2022}
+\citation{sayplan2023}
+\citation{taskography2022}
 \citation{saycan2022,innermonologue2022}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-C}}Symbolic Planning and Long-Horizon Benchmarks}{2}{subsection.2.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {III}Method}{2}{section.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}自演化图世界模型定义}{2}{subsection.3.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}图的构建方法}{2}{subsection.3.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {III-B}0a}1) 房间拓扑生成}{2}{paragraph.3.2.0.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {III-B}0b}2) 房间填充与关系补全}{2}{paragraph.3.2.0.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {III-B}0c}3) 运行时状态构建}{2}{paragraph.3.2.0.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}图质量评价}{2}{subsection.3.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {III-C}0a}1) 结构复杂度与多样性}{2}{paragraph.3.3.0.1}\protected@file@percent }
+\citation{generativeagents2023}
+\@writefile{toc}{\contentsline {section}{\numberline {II}相关工作}{2}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}具身任务完成基准}{2}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}场景图与语义世界表示}{2}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-C}}长程规划与语言模型机器人}{2}{subsection.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-D}}人类活动与持续世界}{2}{subsection.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {III}方法}{2}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}问题定义：人机世界共生}{2}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}动态图世界}{3}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}人类事件模型}{3}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-D}}动作 Schema 与合法性}{3}{subsection.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-E}}Agent 方法}{3}{subsection.3.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-F}}评分}{3}{subsection.3.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {IV}实验}{4}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}实验设置}{4}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}主实验：Agent 是否能稳定共生闭环}{4}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}人类阻塞恢复诊断}{4}{subsection.4.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces 实验矩阵总览。``已完成'' 表示当前工作区已有对应 raw summary 或已生成正式图表；``占位'' 表示论文中先保留图表位置，等待新一轮 raw 结果或重生图替换。}}{5}{table.1}\protected@file@percent }
+\newlabel{tab:experiment-matrix}{{I}{5}{实验矩阵总览。``已完成'' 表示当前工作区已有对应 raw summary 或已生成正式图表；``占位'' 表示论文中先保留图表位置，等待新一轮 raw 结果或重生图替换。}{table.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-D}}模型主干补充实验：同一策略是否受模型能力影响}{5}{subsection.4.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Base scene 主实验曲线。列为场景，行为 final/state/spatial/human 四类累计平均分数；灰色虚线为同设置下新运行的 no-robot 800 step raw 曲线。Office goal-review 的当前 metrics log 只保留恢复后的后段片段，因此该子图中对应曲线从后段开始显示。}}{6}{figure.1}\protected@file@percent }
+\newlabel{fig:main-grid}{{1}{6}{Base scene 主实验曲线。列为场景，行为 final/state/spatial/human 四类累计平均分数；灰色虚线为同设置下新运行的 no-robot 800 step raw 曲线。Office goal-review 的当前 metrics log 只保留恢复后的后段片段，因此该子图中对应曲线从后段开始显示。}{figure.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-E}}多样性实验：Graph Profile 是否拉开难度}{6}{subsection.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-F}}日程随机性实验：扰动模式是否影响方法表现}{6}{subsection.4.6}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Base scene 800 step 长期运行结果（Qwen3.5-9B，fixed schedule）。F/S/Sp/H 分别表示综合分、状态分、空间分和人类事件分，取 step 799 的累计平均分。no-robot 为同设置下的无机器人 raw baseline；绿色表示该场景综合分最高的方法。}}{7}{table.2}\protected@file@percent }
+\newlabel{tab:main-results}{{II}{7}{Base scene 800 step 长期运行结果（Qwen3.5-9B，fixed schedule）。F/S/Sp/H 分别表示综合分、状态分、空间分和人类事件分，取 step 799 的累计平均分。no-robot 为同设置下的无机器人 raw baseline；绿色表示该场景综合分最高的方法。}{table.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces 500 step fixed schedule 人类阻塞恢复诊断（Qwen3.5-9B）。$B$ 为可恢复 blocking case 数，$R$ 为被机器人恢复的数量。单元格格式为 $R/B$（恢复率）；``--'' 表示该 run 中没有出现可恢复 blocking case。}}{7}{table.3}\protected@file@percent }
+\newlabel{tab:blocking-recovery}{{III}{7}{500 step fixed schedule 人类阻塞恢复诊断（Qwen3.5-9B）。$B$ 为可恢复 blocking case 数，$R$ 为被机器人恢复的数量。单元格格式为 $R/B$（恢复率）；``--'' 表示该 run 中没有出现可恢复 blocking case。}{table.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces 五个场景上的 800 step 平均最终综合分。$\Delta $ 表示相对无机器人基线的平均提升；无机器人基线平均最终综合分为 0.5184。}}{7}{table.4}\protected@file@percent }
+\newlabel{tab:model-avg-results}{{IV}{7}{五个场景上的 800 step 平均最终综合分。$\Delta $ 表示相对无机器人基线的平均提升；无机器人基线平均最终综合分为 0.5184。}{table.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces 800 step 模型主干对比实验。柱状图为 reactive、single-round 和 goal-review 三种机器人策略在 Qwen3.5-9B 和 DeepSeek-R1-14B 上的最终综合分，灰色虚线为对应场景的无机器人基线。Llama-3.1-8B 当前 run 未达到 800 step，暂不进入正式图表。}}{8}{figure.2}\protected@file@percent }
+\newlabel{fig:model-comparison}{{2}{8}{800 step 模型主干对比实验。柱状图为 reactive、single-round 和 goal-review 三种机器人策略在 Qwen3.5-9B 和 DeepSeek-R1-14B 上的最终综合分，灰色虚线为对应场景的无机器人基线。Llama-3.1-8B 当前 run 未达到 800 step，暂不进入正式图表。}{figure.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-G}}Agent 行为模式}{8}{subsection.4.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-H}}失败分析：为什么现有 Agent 仍然不够}{8}{subsection.4.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {V}讨论}{8}{section.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Graph 多样性实验。曲线为 Qwen3.5-9B goal-review 在 compact、normal 和 spread 三种 profile 下的累计平均 final/state/spatial/human 分数。Profile 条件下 no-robot 基线尚未重跑，因此不在该图中展示。}}{9}{figure.3}\protected@file@percent }
+\newlabel{fig:diversity-grid}{{3}{9}{Graph 多样性实验。曲线为 Qwen3.5-9B goal-review 在 compact、normal 和 spread 三种 profile 下的累计平均 final/state/spatial/human 分数。Profile 条件下 no-robot 基线尚未重跑，因此不在该图中展示。}{figure.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {V}{\ignorespaces 行为诊断四指标卡片（Qwen3.5-9B）。前三项由 800 step fixed 主实验离线重算得到；人类阻塞恢复率来自额外 500 step fixed 诊断实验。$\uparrow $ 表示越高越好，$\downarrow $ 表示越低越好。}}{9}{table.5}\protected@file@percent }
+\newlabel{tab:diagnostic-cards}{{V}{9}{行为诊断四指标卡片（Qwen3.5-9B）。前三项由 800 step fixed 主实验离线重算得到；人类阻塞恢复率来自额外 500 step fixed 诊断实验。$\uparrow $ 表示越高越好，$\downarrow $ 表示越低越好。}{table.5}{}}
 \bibstyle{IEEEtran}
 \bibdata{refs}
 \bibcite{hydrarss2022}{1}
 \bibcite{sayplan2023}{2}
 \bibcite{taskography2022}{3}
-\bibcite{generativeagents2023}{4}
-\bibcite{saycan2022}{5}
-\bibcite{innermonologue2022}{6}
-\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {III-C}0b}2) 物理有效性}{3}{paragraph.3.3.0.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {III-C}0c}3) 任务可用性与交互性}{3}{paragraph.3.3.0.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {III-C}0d}4) 运行时可演化性}{3}{paragraph.3.3.0.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-D}}NPC Agent 概念}{3}{subsection.3.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {IV}Current Scope and Limitations}{3}{section.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {V}Conclusion}{3}{section.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{参考文献}{3}{section*.2}\protected@file@percent }
+\bibcite{saycan2022}{4}
+\bibcite{innermonologue2022}{5}
+\bibcite{generativeagents2023}{6}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces 800 step 日程随机性实验。曲线为 Qwen3.5-9B goal-review 在 fixed、calendar 和 stochastic 三类日程下的累计平均 final/state/spatial/human 分数。}}{10}{figure.4}\protected@file@percent }
+\newlabel{fig:schedule-goal-review}{{4}{10}{800 step 日程随机性实验。曲线为 Qwen3.5-9B goal-review 在 fixed、calendar 和 stochastic 三类日程下的累计平均 final/state/spatial/human 分数。}{figure.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}结论}{10}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{参考文献}{10}{section*.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces 不同方法的动作画像。该图由当前可用 action log 重生，用于辅助观察方法的行为偏好：reactive 更偏局部修补，single-round 更常执行搬运归位，goal-review 在部分场景中会因目标复审而频繁切换。}}{11}{figure.5}\protected@file@percent }
+\newlabel{fig:action-profile}{{5}{11}{不同方法的动作画像。该图由当前可用 action log 重生，用于辅助观察方法的行为偏好：reactive 更偏局部修补，single-round 更常执行搬运归位，goal-review 在部分场景中会因目标复审而频繁切换。}{figure.5}{}}
+\gdef \@abspage@last{11}

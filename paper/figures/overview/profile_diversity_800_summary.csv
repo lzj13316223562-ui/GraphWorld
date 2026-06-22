@@ -1,0 +1,16 @@
+scene,profile,final_score,state_score,spatial_score,human_event_score
+simple_home_1f,Compact,0.6722,0.6,0.6515,0.871
+simple_home_1f,Normal,0.7349,0.6196,0.7592,0.9516
+simple_home_1f,Spread,0.7559,0.6515,0.769,0.9677
+simple_hospital_1f,Compact,0.7815,0.6608,0.8158,0.9931
+simple_hospital_1f,Normal,0.6121,0.5717,0.5177,0.8681
+simple_hospital_1f,Spread,0.6973,0.6104,0.6995,0.8889
+simple_supermarket_1f,Compact,0.7221,0.6098,0.8248,0.7949
+simple_supermarket_1f,Normal,0.658,0.4656,0.8492,0.7564
+simple_supermarket_1f,Spread,0.7398,0.4849,0.9628,0.9231
+simple_office_1f,Compact,0.6967,0.6329,0.7892,0.6786
+simple_office_1f,Normal,0.6827,0.5196,0.8675,0.7262
+simple_office_1f,Spread,0.6368,0.5318,0.7546,0.6667
+simple_factory_1f,Compact,0.6806,0.5529,0.9479,0.5
+simple_factory_1f,Normal,0.581,0.3079,0.9625,0.5278
+simple_factory_1f,Spread,0.443,0.3249,0.6971,0.2639
