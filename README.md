@@ -1,156 +1,198 @@
 # GraphWorld
 
-GraphWorld 是一个面向长时程具身任务规划的持续运行符号图仿真框架。这里的世界不是一次性任务快照，而是一个会被人持续使用、持续变乱、持续产生新任务的动态图：房间、物体、设备、NPC 和机器人都在同一张场景图里，状态会随人类日程、机器人动作、设备周期和环境规则不断变化。
+GraphWorld 是一个面向人机世界共生的动态图评测基准。它把具身智能评测从“一次性完成给定任务”推进到“在持续人类扰动下长期维护世界”：房间、物体、设备、NPC 和机器人都在同一张场景图里，状态会随人类日程、机器人动作、设备周期和环境规则不断变化。
 
-当前核心问题：
+## 我们关注的问题
+
+服务机器人最终要进入的是一个被人持续使用的世界，而不是一个静态任务快照。人在家里穿衣、吃饭、洗漱；在医院看诊、用药、换床单；在超市购物、补货、结账；在办公室开会、归档、接待访客；在工厂上岗、生产、质检、交接。这些活动会不断消耗资源、弄脏物体、移动关键物品、打开设备、制造垃圾。
+
+因此我们关心的问题是：
 
 ```text
 机器人能不能在无限任务流中长期维持世界，而不是只完成一条给定指令。
 ```
 
-也就是说，我们关心的不是“把杯子放到桌上”这种短任务，而是：人每天会穿衣、吃饭、看病、购物、开会、生产；这些活动会消耗资源、弄脏物体、移动关键物品、打开设备、制造垃圾。机器人需要持续发现问题、选择任务、执行完整闭环，让世界分数和人的活动成功率回升。
+这个问题的意义在于：长期共处能力不只取决于单步动作是否正确，也取决于机器人能否判断当前世界中哪些偏离会影响后续人类活动、是否能坚持完成多步闭环、是否能在新事件不断出现时避免被局部小问题吸走。
 
-## 快速命令
+## 现有评测缺口
 
-TensorBoard：
+现有具身智能评测通常覆盖以下能力：
 
-```bash
-tensorboard --logdir backend/data/tensorboard --host 0.0.0.0 --port 6006
+- 指令跟随：给定一个目标，看 agent 是否完成。
+- 操作规划：在静态或短时程环境中生成动作序列。
+- 导航与交互：测试局部观察、移动、抓取、开关和放置。
+- LLM agent 决策：在合法动作候选中选择下一步动作。
+
+这些评测很重要，但它们通常没有把“人类持续使用世界”作为核心扰动源，也很少同时追踪三类长期后果：
+
+- `state`：世界状态是否健康，例如脏污、开闭、湿度、腐烂、设备状态。
+- `spatial`：关键物体是否回到能支持后续活动的位置。
+- `human`：人类事件是否因为前置条件被破坏而失败。
+
+GraphWorld 的目标不是替代短任务成功率，而是补上长期世界维护这一层：机器人需要在持续扰动中调节状态健康、空间秩序和人类活动支持能力。
+
+## Benchmark 设计
+
+GraphWorld 把一个可持续运行的生活/工作环境建模为动态图：
+
+```text
+GraphWorld_t = SceneGraph + DynamicStates_t + HumanEvents_t + RobotActions_t
 ```
 
-跑 baseline：
+每个环境由五类核心机制组成：
+
+| 模块 | 作用 |
+| ---- | ---- |
+| 场景图 | 表示房间、固定物体、可移动物体、设备、NPC 和机器人 |
+| NPC 日程 | 按时间触发人类活动，活动成功或失败都会改变世界 |
+| 动作系统 | 枚举并执行合法机器人动作，避免模型直接输出非法操作 |
+| 环境过程 | 推进设备周期、晾干、腐烂、垃圾容量、补给刷新等变化 |
+| 评分器 | 用 `state/spatial/human` 三维累计分衡量长期维护效果 |
+
+评测不是要求机器人一次性完成固定目标，而是在 800 step 长期运行中不断制造新问题，让 agent 自主选择要维护什么、何时切换任务、如何完成闭环。
+
+## 方法与模块
+
+GraphWorld 的机器人 agent 不是纯反应式，也不是完整符号规划器，而是把规则约束、技能库和 LLM 语义选择结合起来：
+
+```text
+规则枚举问题和合法动作
++ active_goal 维持长期任务
++ skill_library 提供常见闭环流程
++ LLM 做语义选择
++ engine 执行动作并更新世界
+```
+
+主要代码入口：
+
+| 文件 | 内容 |
+| ---- | ---- |
+| `backend/run_experiment.py` | 实验入口、resume、日志、metrics、TensorBoard |
+| `backend/runtime/engine/runtime.py` | 每一步调度 human、robot、environment |
+| `backend/core/assets/npc_library.py` | NPC 角色、日程、事件前提和事件效果 |
+| `backend/core/assets/task_library.py` | 机器人技能库和长期闭环定义 |
+| `backend/runtime/engine/validator.py` | 动作合法性检查 |
+| `backend/runtime/engine/transition_rules.py` | 机器人动作造成的状态转移 |
+| `paper/analysis/*.py` | 论文图表和诊断指标重算脚本 |
+
+## 快速上手
+
+当前论文实验统一使用 800 step，除非特别标注为 500 step 诊断子集。下面命令按本机工作区写法给出；如果环境路径不同，只需要替换 `PY`。
 
 ```bash
-cd /home/jansen/GraphWorld
+cd /home/swzz/data/GraphWorld
+PY=/home/swzz/anaconda3/gra/bin/python
+```
 
-/home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py \
+可用 agent mode：
+
+```text
+reactive
+single_round
+goal_review
+```
+
+跑 no-robot baseline：
+
+```bash
+$PY backend/run_experiment.py \
   --scene simple_supermarket_1f \
-  --steps 1600 \
+  --steps 800 \
   --only no_robot \
   --robots 0 \
   --humans 3 \
   --no-clean \
   --replay-scene-interval 20 \
-  --metric-log-interval 20
-```
-
-跑单轮 agent：
-
-```bash
-VLLM_MODEL=qwen35-9b \
-VLLM_BASE_URL=http://127.0.0.1:8000/v1 \
-/home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py \
-  --scene simple_supermarket_1f \
-  --steps 1600 \
-  --only with_robot \
-  --robots 1 \
-  --humans 3 \
-  --agent-model vllm-qwen3.5-9b \
-  --agent-mode single_round \
-  --no-clean \
-  --replay-scene-interval 20 \
   --metric-log-interval 10
 ```
 
-跑多轮/goal-review agent：
+跑一个 Qwen goal-review agent：
 
 ```bash
-VLLM_MODEL=qwen35-9b \
+VLLM_MODEL=qwen3.5-9b \
 VLLM_BASE_URL=http://127.0.0.1:8000/v1 \
-/home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py \
+$PY backend/run_experiment.py \
   --scene simple_supermarket_1f \
-  --steps 1600 \
+  --steps 800 \
   --only with_robot \
   --robots 1 \
   --humans 3 \
   --agent-model vllm-qwen3.5-9b \
   --agent-mode goal_review \
+  --schedule-mode fixed \
+  --schedule-seed 0 \
   --no-clean \
   --replay-scene-interval 20 \
   --metric-log-interval 10
 ```
 
-输出目录带方法名，避免混：
-
-```text
-model_vllm_qwen3_5_9b_single_round
-model_vllm_qwen3_5_9b_goal_review
-model_vllm_qwen3_5_9b_reactive
-```
-
-续跑：
+重生论文图表和 PDF：
 
 ```bash
-# 先列出所有可续跑的中断 run
-/home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py --resume
+MPLCONFIGDIR=/tmp/matplotlib-cache $PY paper/analysis/plot_main_800_curves.py
+MPLCONFIGDIR=/tmp/matplotlib-cache $PY paper/analysis/plot_model_comparison.py
+MPLCONFIGDIR=/tmp/matplotlib-cache $PY paper/analysis/plot_profile_diversity_800.py
+MPLCONFIGDIR=/tmp/matplotlib-cache $PY paper/analysis/plot_goal_review_schedule_grid.py
+MPLCONFIGDIR=/tmp/matplotlib-cache $PY paper/analysis/plot_action_profile_800.py
+
+cd paper
+latexmk -xelatex -interaction=nonstopmode -halt-on-error main.tex
+```
+
+续跑和监控：
+
+```bash
+# 列出可续跑 run
+$PY backend/run_experiment.py --resume
 
 # 选一个 run_id 或完整 run 目录继续
-/home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py \
+$PY backend/run_experiment.py \
   --resume \
-  --resume-run 20260513T062846Z_0bb6e257 \
+  --resume-run 20260620T142820Z_3d510941 \
   --no-clean
+
+tensorboard --logdir backend/data/tensorboard --host 0.0.0.0 --port 6006
 ```
 
-## 当前重跑清单
+## 当前实验状态
 
-NPC event effect 更新后，世界动态和 no_robot baseline 都变了。为了公平对比，旧的 agent 曲线不要和新 baseline 混用。
+论文当前使用的主口径如下，详细数值见后文“实验”部分和 `paper/main.tex`。
 
-核心 base-scene 实验一共需要：
+### 已完成
 
 ```text
-5 scenes x (no_robot + reactive + single_round + goal_review) = 20 runs
+Qwen fixed main:
+5 base scenes x (no_robot + reactive + single_round + goal_review) x 800 steps = 20 runs
+
+Qwen profile diversity:
+5 base scenes x 3 profiles x goal_review x 800 steps = 15 runs
+
+Qwen schedule diversity:
+5 base scenes x 3 schedules x goal_review x 800 steps = 15 runs
+
+Model backbone comparison:
+Qwen3.5-9B + DeepSeek-R1-14B
+2 backbones x 5 base scenes x 3 robot methods x 800 steps = 30 with-robot runs
+
+Human blocking recovery diagnostic:
+5 base scenes x 3 robot methods x 500 steps = 15 diagnostic runs
 ```
 
-其中 5 个 `no_robot` 已经重跑过。现在主要补 15 个机器人实验：
+主实验的 5 条 no-robot fixed baseline 已经在当前 workspace 中重跑到 800 step。主曲线和模型对比图均来自 raw metrics。
+
+### 仍未纳入正式图表
 
 ```text
-5 scenes x 3 agent methods = 15 runs
+Llama-3.1-8B:
+已有 run 目录，但当前未达到 800 step 完整性要求；模型对比图暂不纳入。
+
+Profile no-robot baselines:
+尚未重跑；profile diversity 图只比较 Qwen goal-review 在 compact/normal/spread 三种图结构下的表现。
 ```
 
-### reactive
+### 已知 caveat
 
-```bash
-cd /home/jansen/GraphWorld
-
-VLLM_MODEL=qwen35-9b VLLM_BASE_URL=http://127.0.0.1:8000/v1 /home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py --scene simple_home_1f --steps 1600 --only with_robot --robots 1 --humans 1 --agent-model vllm-qwen3.5-9b --agent-mode reactive --no-clean --replay-scene-interval 20 --metric-log-interval 10
-VLLM_MODEL=qwen35-9b VLLM_BASE_URL=http://127.0.0.1:8000/v1 /home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py --scene simple_hospital_1f --steps 1600 --only with_robot --robots 1 --humans 3 --agent-model vllm-qwen3.5-9b --agent-mode reactive --no-clean --replay-scene-interval 20 --metric-log-interval 10
-VLLM_MODEL=qwen35-9b VLLM_BASE_URL=http://127.0.0.1:8000/v1 /home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py --scene simple_supermarket_1f --steps 1600 --only with_robot --robots 1 --humans 3 --agent-model vllm-qwen3.5-9b --agent-mode reactive --no-clean --replay-scene-interval 20 --metric-log-interval 10
-VLLM_MODEL=qwen35-9b VLLM_BASE_URL=http://127.0.0.1:8000/v1 /home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py --scene simple_office_1f --steps 1600 --only with_robot --robots 1 --humans 3 --agent-model vllm-qwen3.5-9b --agent-mode reactive --no-clean --replay-scene-interval 20 --metric-log-interval 10
-VLLM_MODEL=qwen35-9b VLLM_BASE_URL=http://127.0.0.1:8000/v1 /home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py --scene simple_factory_1f --steps 1600 --only with_robot --robots 1 --humans 3 --agent-model vllm-qwen3.5-9b --agent-mode reactive --no-clean --replay-scene-interval 20 --metric-log-interval 10
-```
-
-### single_round
-
-```bash
-cd /home/jansen/GraphWorld
-
-VLLM_MODEL=qwen35-9b VLLM_BASE_URL=http://127.0.0.1:8000/v1 /home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py --scene simple_home_1f --steps 1600 --only with_robot --robots 1 --humans 1 --agent-model vllm-qwen3.5-9b --agent-mode single_round --no-clean --replay-scene-interval 20 --metric-log-interval 10
-VLLM_MODEL=qwen35-9b VLLM_BASE_URL=http://127.0.0.1:8000/v1 /home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py --scene simple_hospital_1f --steps 1600 --only with_robot --robots 1 --humans 3 --agent-model vllm-qwen3.5-9b --agent-mode single_round --no-clean --replay-scene-interval 20 --metric-log-interval 10
-VLLM_MODEL=qwen35-9b VLLM_BASE_URL=http://127.0.0.1:8000/v1 /home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py --scene simple_supermarket_1f --steps 1600 --only with_robot --robots 1 --humans 3 --agent-model vllm-qwen3.5-9b --agent-mode single_round --no-clean --replay-scene-interval 20 --metric-log-interval 10
-VLLM_MODEL=qwen35-9b VLLM_BASE_URL=http://127.0.0.1:8000/v1 /home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py --scene simple_office_1f --steps 1600 --only with_robot --robots 1 --humans 3 --agent-model vllm-qwen3.5-9b --agent-mode single_round --no-clean --replay-scene-interval 20 --metric-log-interval 10
-VLLM_MODEL=qwen35-9b VLLM_BASE_URL=http://127.0.0.1:8000/v1 /home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py --scene simple_factory_1f --steps 1600 --only with_robot --robots 1 --humans 3 --agent-model vllm-qwen3.5-9b --agent-mode single_round --no-clean --replay-scene-interval 20 --metric-log-interval 10
-```
-
-### goal_review
-
-```bash
-cd /home/jansen/GraphWorld
-
-VLLM_MODEL=qwen35-9b VLLM_BASE_URL=http://127.0.0.1:8000/v1 /home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py --scene simple_home_1f --steps 1600 --only with_robot --robots 1 --humans 1 --agent-model vllm-qwen3.5-9b --agent-mode goal_review --no-clean --replay-scene-interval 20 --metric-log-interval 10
-VLLM_MODEL=qwen35-9b VLLM_BASE_URL=http://127.0.0.1:8000/v1 /home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py --scene simple_hospital_1f --steps 1600 --only with_robot --robots 1 --humans 3 --agent-model vllm-qwen3.5-9b --agent-mode goal_review --no-clean --replay-scene-interval 20 --metric-log-interval 10
-VLLM_MODEL=qwen35-9b VLLM_BASE_URL=http://127.0.0.1:8000/v1 /home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py --scene simple_supermarket_1f --steps 1600 --only with_robot --robots 1 --humans 3 --agent-model vllm-qwen3.5-9b --agent-mode goal_review --no-clean --replay-scene-interval 20 --metric-log-interval 10
-VLLM_MODEL=qwen35-9b VLLM_BASE_URL=http://127.0.0.1:8000/v1 /home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py --scene simple_office_1f --steps 1600 --only with_robot --robots 1 --humans 3 --agent-model vllm-qwen3.5-9b --agent-mode goal_review --no-clean --replay-scene-interval 20 --metric-log-interval 10
-VLLM_MODEL=qwen35-9b VLLM_BASE_URL=http://127.0.0.1:8000/v1 /home/jansen/miniconda3/envs/gra/bin/python backend/run_experiment.py --scene simple_factory_1f --steps 1600 --only with_robot --robots 1 --humans 3 --agent-model vllm-qwen3.5-9b --agent-mode goal_review --no-clean --replay-scene-interval 20 --metric-log-interval 10
-```
-
-如果要把 graph variant 那组也同步更新，则还要补：
-
-```text
-5 scenes x 3 graph profiles x no_robot = 15 runs
-5 scenes x 3 graph profiles x goal_review = 15 runs
-```
-
-但论文主图先看 base-scene 三方法对比时，优先跑上面 15 个机器人实验。
+`simple_office_1f` 的 Qwen `goal_review` fixed run 有 step 799 final summary，但当前 `metrics.csv`/action log 只保留恢复后的 `646..799` 片段。因此论文表格使用最终累计分，曲线和动作画像中该条件只显示后段日志。
 
 ## 引擎设计
 
@@ -462,9 +504,7 @@ maintenance_worker: factory_off_shift, factory_maintenance_check
 
 ### 实验设置
 
-实验分两层。
-
-第一层是 base scene，对比不同机器人方法：
+当前论文实验分为五组。
 
 | 组别         | 含义                                                                                                                     |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------ |
@@ -473,100 +513,32 @@ maintenance_worker: factory_off_shift, factory_maintenance_check
 | single_round | 一次 LLM 调用：给 active_goal、技能、候选动作，让模型直接选 high_level_task 和 action                                    |
 | goal_review  | 两次 LLM 调用：先判断继续/切换/完成 active_goal，再选择低层 action                                                       |
 
-base scene 矩阵：
+| 实验组 | 矩阵 | 当前状态 |
+| ------ | ---- | -------- |
+| 主实验 | 5 base scenes x fixed schedule x `no_robot/reactive/single_round/goal_review` x 800 steps | Qwen3.5-9B 已完成，主图和表格使用 raw metrics |
+| 模型主干对比 | Qwen3.5-9B、DeepSeek-R1-14B x 5 scenes x 3 robot methods x 800 steps | Qwen 和 DeepSeek 已进入正式图表；Llama 未满 800 step，暂不纳入 |
+| Graph profile 多样性 | 5 scenes x `compact/normal/spread` x Qwen goal_review x 800 steps | 已完成；profile no-robot baseline 未重跑，图中不展示 |
+| 日程随机性 | 5 scenes x `fixed/calendar/stochastic` x Qwen goal_review x 800 steps | 已完成 |
+| 人类阻塞恢复诊断 | 5 scenes x 3 robot methods x 500 steps | 已完成，只用于 blocking recovery，不和 800-step 主分数混合 |
 
-```text
-5 scenes x (no_robot + 3 agent methods) = 20 runs
-```
+### Graph profile
 
-第二层是 scene graph 难度变体，用来回答一个更关键的问题：**agent 是真的学会了长期维护，还是只在固定图上被我们提示词喂得太舒服。**
+每个 base scene 有三种 profile，用来改变同一场景内部的拓扑和任务压力：
 
-每个 base scene 生成三个静态 scene graph 变体：
+| profile | 目的 |
+| ------- | ---- |
+| `compact_cleaning` | 关键对象更集中，测试局部清洁和短链恢复 |
+| `normal` | 复用 base scene，测试标准物流闭环 |
+| `spread_device` | 关键房间和设备链拉远，测试长链任务和跨房间恢复 |
 
-| profile              | 拓扑                 | 任务物体压力           | 目的                           |
-| -------------------- | -------------------- | ---------------------- | ------------------------------ |
-| `compact_cleaning` | 房间和关键物体更集中 | 清洁类债务为主         | 低难度，测试基本清洁维护       |
-| `normal_logistics` | 保留原始拓扑         | 搬运、归位、补给为主   | 中难度，测试物流闭环           |
-| `spread_device`    | 关键房间和设备拉远   | 设备链和跨房间依赖为主 | 高难度，测试长链任务和空间探索 |
-
-variant 矩阵：
-
-```text
-5 scenes x 3 graph profiles = 15 scene variants
-```
-
-命名方式：
+profile variant 的命名方式使用双下划线，例如：
 
 ```text
 simple_home_1f__compact_cleaning
-simple_home_1f__normal_logistics
 simple_home_1f__spread_device
-...
 ```
 
-所有实验默认运行 1600 step。home 使用 1 个 human，其余场景使用 3 个 human。
-
-### 为什么要做三种 graph profile
-
-如果只在一个固定场景图上测试，agent 分数高可能有三种解释：
-
-1. agent 真的能长期维护世界。
-2. 场景太简单，机器人只要做几个固定闭环就够。
-3. prompt 和规则给得太多，模型只是在结构化候选里做很小的选择。
-
-所以新增 graph profile 不是为了继续堆场景类型，而是为了在同一类场景内部改变难度：
-
-- `compact_cleaning`：任务集中，空间成本低，主要看能不能快速清理。
-- `normal_logistics`：物品在典型位置流转，主要看能不能完成归位和补给。
-- `spread_device`：房间更分散，任务依赖设备链，主要看 agent 是否能坚持长目标。
-
-预期 no_robot 的下降趋势是：
-
-```text
-compact_cleaning 掉分最慢
-normal_logistics 居中
-spread_device 掉分最快
-```
-
-这个趋势已经用 15 个 no_robot 1600-step run 检查过，排序成立。后续要补的是 15 个 with_robot `goal_review`，看机器人是否还能在更难 graph 上拉开和 no_robot 的差距。
-
-### No-robot 难度检查
-
-`final`：最后一步长期累计分。
-
-`AUC`：整条曲线的平均分，近似表示长期维持水平。
-
-| 场景        | compact final/AUC | normal final/AUC | spread final/AUC |
-| ----------- | ----------------: | ---------------: | ---------------: |
-| home        |   0.7825 / 0.8138 |  0.7803 / 0.8120 |  0.7799 / 0.8117 |
-| hospital    |   0.6776 / 0.7002 |  0.6748 / 0.6976 |  0.6703 / 0.6933 |
-| supermarket |   0.7793 / 0.8013 |  0.7664 / 0.7890 |  0.7635 / 0.7862 |
-| office      |   0.6378 / 0.6521 |  0.6287 / 0.6436 |  0.6270 / 0.6420 |
-| factory     |   0.6567 / 0.6683 |  0.6502 / 0.6620 |  0.6464 / 0.6583 |
-
-- 五个场景都满足 `compact >= normal >= spread`。
-- home 的差距很小，说明 home 的长期压力主要来自日程周期，不太受拓扑变体影响。
-- supermarket、office、factory 的差距更明显，说明这些场景更适合用来区分机器人维护能力。
-
-### 当前要跑的核心实验
-
-下一批重点不是再扩场景，而是把 15 个 graph variants 的 with_robot 跑完：
-
-```text
-5 scenes x 3 graph profiles x goal_review = 15 runs
-```
-
-这批实验验证三个问题：
-
-1. agent 在换图后是否仍然能超过 no_robot。
-2. `spread_device` 是否明显比 `compact_cleaning` 更难维护。
-3. agent 的收益主要来自 state、spatial 还是 human_event。
-
-| Scene | Profile          | No Robot Final | Robot Final | ΔFinal | No Robot AUC | Robot AUC | ΔAUC |
-| ----- | ---------------- | -------------: | ----------: | ------: | -----------: | --------: | ----: |
-| home  | compact_cleaning |                |             |         |              |           |       |
-| home  | normal_logistics |                |             |         |              |           |       |
-| home  | spread_device    |                |             |         |              |           |       |
+落盘目录会被 slug 成单下划线形式，例如 `simple_home_1f_compact_cleaning`。
 
 ### 主图
 
@@ -586,73 +558,52 @@ spread_device 掉分最快
 - 黄色：`single_round`
 - 蓝色：`goal_review`
 
-### Base scene 最终结果
+### Base scene 800-step 结果
 
-这张表不是只报分数，主要想说明三件事：
+下面是当前论文主表使用的 step 799 累计平均分。`F/S/Sp/H` 分别是 final、state、spatial、human event。
 
-1. `reactive` 是一个很弱的下界：只给局部观察和合法动作，模型通常不会自动形成长期维护策略。
-2. `single_round / goal_review` 的提升主要来自 `spatial_score`，说明长期维护的核心是把关键物体放回能支持下一轮人类活动的位置。
-3. 不同场景暴露不同短板：hospital 更考验流程闭环，factory 更考验从局部动作里跳出来做搬运和归位。
-
-摘要如下：
-
-| 场景        | 最好方法         | 相比 no_robot 的 Final 变化 | 最主要收益      | 说明                                                             |
-| ----------- | ---------------- | --------------------------: | --------------- | ---------------------------------------------------------------- |
-| home        | `single_round` |                     +0.1116 | Spatial + Human | 家庭任务比较规则，单轮目标已经能维护洗衣、餐具和归位             |
-| hospital    | `goal_review`  |                     +0.1700 | Spatial + Human | 医院流程链更长，goal review 能更好坚持补药、床单、医疗废物等闭环 |
-| supermarket | `single_round` |                     +0.1783 | Spatial + Human | 购物车、冷柜、货架和收银区被维护后，人类事件明显恢复             |
-| office      | `single_round` |                     +0.3260 | Spatial         | 文件、杯子、会议室、工位归位带来最大收益                         |
-| factory     | `single_round` |                     +0.2414 | Spatial         | 工厂主要靠安全装备、零件箱、工具、质检记录的物流恢复             |
-
-原始分数如下。颜色含义：
-
-- `<span style="background-color:#d9ead3">`绿色：该场景 Final 最高的方法。
-- `<span style="background-color:#f4cccc">`红色：低于 no_robot，说明虽然有机器人，但动作没有转化成有效维护。
-
-| 场景                                                   | 方法                                                    |                                             Final |                                             State |                                           Spatial |                                             Human |
-| ------------------------------------------------------ | ------------------------------------------------------- | ------------------------------------------------: | ------------------------------------------------: | ------------------------------------------------: | ------------------------------------------------: |
-| home                                                   | no_robot                                                |                                            0.7802 |                                            0.8888 |                                            0.6049 |                                            0.8425 |
-| `<span style="background-color:#f4cccc">`home        | `<span style="background-color:#f4cccc">`reactive     | `<span style="background-color:#f4cccc">`0.7553 | `<span style="background-color:#f4cccc">`0.8341 | `<span style="background-color:#f4cccc">`0.6049 | `<span style="background-color:#f4cccc">`0.8413 |
-| `<span style="background-color:#d9ead3">`home        | `<span style="background-color:#d9ead3">`single_round | `<span style="background-color:#d9ead3">`0.8918 | `<span style="background-color:#d9ead3">`0.8926 | `<span style="background-color:#d9ead3">`0.8743 | `<span style="background-color:#d9ead3">`0.9206 |
-| home                                                   | goal_review                                             |                                            0.8536 |                                            0.8652 |                                            0.8004 |                                            0.9206 |
-| hospital                                               | no_robot                                                |                                            0.6773 |                                            0.9074 |                                            0.2816 |                                            0.8519 |
-| `<span style="background-color:#f4cccc">`hospital    | `<span style="background-color:#f4cccc">`reactive     | `<span style="background-color:#f4cccc">`0.6522 | `<span style="background-color:#f4cccc">`0.8704 | `<span style="background-color:#f4cccc">`0.2808 | `<span style="background-color:#f4cccc">`0.8111 |
-| `<span style="background-color:#f4cccc">`hospital    | `<span style="background-color:#f4cccc">`single_round | `<span style="background-color:#f4cccc">`0.6698 | `<span style="background-color:#f4cccc">`0.9073 | `<span style="background-color:#f4cccc">`0.2816 | `<span style="background-color:#f4cccc">`0.8148 |
-| `<span style="background-color:#d9ead3">`hospital    | `<span style="background-color:#d9ead3">`goal_review  | `<span style="background-color:#d9ead3">`0.8473 | `<span style="background-color:#d9ead3">`0.9253 | `<span style="background-color:#d9ead3">`0.7106 | `<span style="background-color:#d9ead3">`0.9111 |
-| supermarket                                            | no_robot                                                |                                            0.7693 |                                            0.8919 |                                            0.7297 |                                            0.5629 |
-| supermarket                                            | reactive                                                |                                            0.7792 |                                            0.9463 |                                            0.7371 |                                            0.4768 |
-| `<span style="background-color:#d9ead3">`supermarket | `<span style="background-color:#d9ead3">`single_round | `<span style="background-color:#d9ead3">`0.9476 | `<span style="background-color:#d9ead3">`0.9059 | `<span style="background-color:#d9ead3">`0.9751 | `<span style="background-color:#d9ead3">`0.9934 |
-| supermarket                                            | goal_review                                             |                                            0.9289 |                                            0.9027 |                                            0.9485 |                                            0.9536 |
-| office                                                 | no_robot                                                |                                            0.6261 |                                            0.8993 |                                            0.3414 |                                            0.5096 |
-| office                                                 | reactive                                                |                                            0.6580 |                                            0.9737 |                                            0.3368 |                                            0.5096 |
-| `<span style="background-color:#d9ead3">`office      | `<span style="background-color:#d9ead3">`single_round | `<span style="background-color:#d9ead3">`0.9521 | `<span style="background-color:#d9ead3">`0.9807 | `<span style="background-color:#d9ead3">`0.9681 | `<span style="background-color:#d9ead3">`0.8599 |
-| office                                                 | goal_review                                             |                                            0.8918 |                                            0.9563 |                                            0.8854 |                                            0.7580 |
-| factory                                                | no_robot                                                |                                            0.6449 |                                            0.9274 |                                            0.5053 |                                            0.2537 |
-| `<span style="background-color:#f4cccc">`factory     | `<span style="background-color:#f4cccc">`reactive     | `<span style="background-color:#f4cccc">`0.6144 | `<span style="background-color:#f4cccc">`0.9368 | `<span style="background-color:#f4cccc">`0.4061 | `<span style="background-color:#f4cccc">`0.2537 |
-| `<span style="background-color:#d9ead3">`factory     | `<span style="background-color:#d9ead3">`single_round | `<span style="background-color:#d9ead3">`0.8863 | `<span style="background-color:#d9ead3">`0.9475 | `<span style="background-color:#d9ead3">`0.9858 | `<span style="background-color:#d9ead3">`0.5746 |
-| factory                                                | goal_review                                             |                                            0.8560 |                                            0.9433 |                                            0.9556 |                                            0.4851 |
+| 场景 | 方法 | F | S | Sp | H |
+| ---- | ---- | -: | -: | -: | -: |
+| home | no_robot | 0.659 | 0.596 | 0.619 | 0.871 |
+| home | reactive | 0.672 | 0.625 | 0.619 | 0.871 |
+| home | single_round | 0.619 | 0.629 | 0.555 | 0.710 |
+| home | goal_review | 0.735 | 0.620 | 0.759 | 0.952 |
+| hospital | no_robot | 0.521 | 0.563 | 0.290 | 0.826 |
+| hospital | reactive | 0.544 | 0.619 | 0.290 | 0.819 |
+| hospital | single_round | 0.695 | 0.568 | 0.685 | 1.000 |
+| hospital | goal_review | 0.612 | 0.572 | 0.518 | 0.868 |
+| supermarket | no_robot | 0.576 | 0.449 | 0.732 | 0.590 |
+| supermarket | reactive | 0.568 | 0.489 | 0.658 | 0.590 |
+| supermarket | single_round | 0.695 | 0.469 | 0.905 | 0.833 |
+| supermarket | goal_review | 0.658 | 0.466 | 0.849 | 0.756 |
+| office | no_robot | 0.456 | 0.519 | 0.350 | 0.500 |
+| office | reactive | 0.513 | 0.652 | 0.340 | 0.500 |
+| office | single_round | 0.758 | 0.546 | 0.975 | 0.857 |
+| office | goal_review | 0.683 | 0.520 | 0.868 | 0.726 |
+| factory | no_robot | 0.381 | 0.256 | 0.608 | 0.264 |
+| factory | reactive | 0.375 | 0.320 | 0.508 | 0.264 |
+| factory | single_round | 0.652 | 0.423 | 0.985 | 0.583 |
+| factory | goal_review | 0.581 | 0.308 | 0.963 | 0.528 |
 
 ### 主要观察
 
-1. `reactive` 在多数场景中不能稳定超过 `no_robot`。这说明只给局部观察和合法动作，并不足以让 LLM 自发学会长期维护。
-2. `single_round` 和 `goal_review` 的主要收益来自 `spatial_score`，尤其是 home、supermarket、office、factory。长期维护的关键不是多做动作，而是把关键物体放回对后续人类事件有用的位置。
-3. hospital 是强流程依赖场景。`goal_review` 明显优于 `single_round`，说明医院补药、处方、床单、医疗废物等任务需要更强的长期目标保持。
-4. factory 暴露了 reactive 的典型失败：它大量执行合法但无效的局部动作，例如围绕按钮、产线、冰箱、工作间反复 `move/open/close/press`，但几乎不 `pick/place`。最新 factory reactive 统计为 `move=925, press=344, open=165, close=164, pick=1, place=0`，所以空间债无法恢复，最终甚至低于 no_robot。
-5. 这些结果说明 GraphWorld 的价值不只是证明某个 agent 更强，而是暴露不同 agent 在长期机器人维护任务中的弱点：局部 affordance 偏置、目标保持不足、闭环完成不足、时间窗口不敏感。
+1. `single_round` 在 hospital、supermarket、office 和 factory 取得最高 final score；`goal_review` 在 home 最高。
+2. 结构化方法的主要收益来自 `spatial_score`，也就是把关键物体放回能支持下一轮人类事件的位置。
+3. `reactive` 有时能维持 state score，但缺少跨房间归位和流程恢复能力，spatial score 通常拉不开。
+4. `goal_review` 对模型能力更敏感。DeepSeek-R1-14B 在 goal-review 上明显高于 Qwen3.5-9B，说明“继续/切换目标”的判断依赖更强的上下文推理。
+5. 人类阻塞恢复率显示，reactive 几乎不能恢复 blocking case；single_round 和 goal_review 能明显恢复流程前置条件，其中 goal_review pooled recovery 最高。
 
-### Failure case 分析
+### 论文图表
 
-当前重点 failure case 图包括：
+| 图表 | 文件 |
+| ---- | ---- |
+| 主实验曲线 | `paper/figures/overview/score_curves_by_scene_metric.png` |
+| 模型主干对比 | `paper/figures/model_comparison/model_final_score_comparison.png` |
+| Graph profile 多样性 | `paper/figures/overview/diversity_profile_grid.png` |
+| 日程随机性 | `paper/figures/overview/goal_review_schedule_avg_grid.png` |
+| 动作画像 | `paper/figures/overview/action_profile_radar_by_method.png` |
 
-![Factory reactive failure](paper/figures/failure/factory_reactive_failure_timeline.png)
-
-![Hospital single-round failure](paper/figures/failure/hospital_single_round_failure_timeline.png)
-
-重画命令：
-
-```bash
-/home/jansen/miniconda3/envs/gra/bin/python paper/analysis/plot_focused_figures.py
-```
+论文主文件是 `paper/main.tex`，编译产物是 `paper/main.pdf`。
 
 ## 分数为什么涨落
 
@@ -851,8 +802,9 @@ move, pick, place, press, open, close, brush, fold, dump
 
 ## 当前结论
 
-1. 场景已经够用。现在重点不应继续堆场景，而是分析五个场景里分数涨落和机器人行为的因果关系。
-2. baseline 普遍呈周期性下降：NPC 活动不断制造状态债和位置债。
-3. robot 能让分数回升，但回升来自具体闭环，不是玄学：清理、归位、补货、关门、倒垃圾、洗衣、补药。
-4. 之前 office/factory/supermarket 过于简单或贴线，主要是场景逻辑问题：前置条件太松，柜子 affordance 不完整。现在已经收紧。
-5. 单轮和多轮都值得保留。单轮是便宜基线，多轮是方法主张，但多轮需要控制 review 频率，避免目标过度切换。
+1. GraphWorld 能区分“局部合法动作选择”和“长期世界维护”。`reactive` 有时能维持局部 state score，但缺少跨房间归位和流程恢复能力。
+2. 结构化 agent 的主要收益来自 `spatial_score`：把关键物体放回能支持下一轮人类活动的位置，是长期共生的核心能力之一。
+3. `single_round` 在多个 base scene 中取得最高 final score，说明一次性高层任务选择已经能触发有效搬运和归位闭环。
+4. `goal_review` 对模型主干更敏感。DeepSeek-R1-14B 在 goal-review 上明显高于 Qwen3.5-9B，说明目标复审需要更强的上下文判断。
+5. 人类阻塞恢复率提供了比总分更直接的流程级诊断：reactive 几乎不能恢复 blocking case，而 single_round 和 goal_review 能明显恢复人类活动前置条件。
+6. 当前仍未解决的是稳定全局调度：agent 会被局部可见问题吸引，会中途切换长链任务，也会错过人类事件的恢复窗口。
