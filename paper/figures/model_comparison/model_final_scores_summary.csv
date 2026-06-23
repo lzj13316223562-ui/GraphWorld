@@ -36,7 +36,7 @@ simple_office_1f,Office,reactive,Reactive,vllm_llama3_1_8b,Llama-3.1-8B,20260622
 simple_office_1f,Office,single_round,Single-round,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T142713Z_79de0788,0.7584,0.30249999999999994
 simple_office_1f,Office,single_round,Single-round,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260621T142530Z_659380d8,0.7397,0.2838
 simple_office_1f,Office,single_round,Single-round,vllm_llama3_1_8b,Llama-3.1-8B,20260622T015322Z_a0dda289,0.7341,0.27819999999999995
-simple_office_1f,Office,goal_review,Goal-review,vllm_qwen3_5_9b,Qwen3.5-9B,20260620T102301Z_95638a4e,0.6827,0.22679999999999995
+simple_office_1f,Office,goal_review,Goal-review,vllm_qwen3_5_9b,Qwen3.5-9B,20260623T083230Z_7dd7e3f8,0.688,0.23209999999999992
 simple_office_1f,Office,goal_review,Goal-review,vllm_deepseek_r1_14b,DeepSeek-R1-14B,20260621T142539Z_8e44a93a,0.7393,0.28339999999999993
 simple_office_1f,Office,goal_review,Goal-review,vllm_llama3_1_8b,Llama-3.1-8B,20260622T015327Z_b5c0b97f,0.7162,0.2602999999999999
 simple_factory_1f,Factory,no_robot,No robot,npc_only_baseline,No robot,20260622T032234Z_041923ae,0.3806,0.0

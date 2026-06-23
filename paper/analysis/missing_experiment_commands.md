@@ -15,12 +15,8 @@ methods: no_robot, reactive, single_round, goal_review
 
 The no-robot fixed baseline has been rerun at 800 steps for all five base
 scenes. The main curve/table now use raw no-robot metrics instead of cached
-reference values.
-
-Data quality note: `simple_office_1f` goal-review has a valid final summary at
-step 799, but `metrics.csv`/action log only contains the `646..799` segment.
-Tables use its final cumulative summary; curves/action profiles use available
-logged rows.
+reference values. All Qwen fixed main metrics used by the paper cover steps
+0..799.
 
 ### Qwen Profile Diversity
 
@@ -44,8 +40,8 @@ schedules: fixed, calendar, stochastic
 ```
 
 `fixed` reuses the fixed base-scene goal-review runs. The 10 additional
-calendar/stochastic runs are complete. The fixed office goal-review condition
-inherits the data-quality note from the main fixed experiment.
+calendar/stochastic runs are complete. All schedule curves used by the paper
+cover steps 0..799.
 
 ### Model Backbone Comparison
 

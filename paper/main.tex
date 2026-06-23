@@ -244,7 +244,7 @@ Graph profile & 检验图结构和对象分布是否改变调度难度 & 5 scene
 & 0.456 & 0.519 & 0.350 & 0.500
 & 0.513 & 0.652 & 0.340 & 0.500
 & \bestcell{0.758} & 0.546 & 0.975 & 0.857
-& 0.683 & 0.520 & 0.868 & 0.726 \\
+& 0.688 & 0.522 & 0.886 & 0.714 \\
 工厂
 & 0.381 & 0.256 & 0.608 & 0.264
 & 0.375 & 0.320 & 0.508 & 0.264
@@ -312,15 +312,15 @@ Graph profile & 检验图结构和对象分布是否改变调度难度 & 5 scene
 \midrule
 Reactive & 0.5343 & +0.0159 & \bestcell{0.5507} & \bestcell{+0.0323} & 0.5128 & -0.0056 \\
 Single-round & \bestcell{0.6838} & \bestcell{+0.1654} & 0.6808 & +0.1624 & 0.6749 & +0.1565 \\
-Goal-review & 0.6537 & +0.1353 & \bestcell{0.7240} & \bestcell{+0.2056} & 0.6826 & +0.1642 \\
+Goal-review & 0.6548 & +0.1364 & \bestcell{0.7240} & \bestcell{+0.2056} & 0.6826 & +0.1642 \\
 \bottomrule
 \end{tabular}
 }
 \end{table}
 
-结果显示，模型主干能力会改变长期共生表现，但这种影响与 agent 策略耦合。三个模型的 single-round 平均分接近（Qwen 0.6838、DeepSeek 0.6808、Llama 0.6749），说明一次性高层任务选择在不同主干上都能稳定触发搬运和归位链条。DeepSeek 在 goal-review 上最高（0.7240），Llama 次之（0.6826），Qwen 为 0.6537，说明“是否继续当前目标”和“下一步动作选择”拆开后，更强的推理主干更能利用复审阶段保持长链任务上下文。Reactive 的差异较小，且 Llama reactive 平均分略低于 no-robot baseline（0.5128 对 0.5184），表明仅替换模型并不能弥补缺少高层任务结构的问题。
+结果显示，模型主干能力会改变长期共生表现，但这种影响与 agent 策略耦合。三个模型的 single-round 平均分接近（Qwen 0.6838、DeepSeek 0.6808、Llama 0.6749），说明一次性高层任务选择在不同主干上都能稳定触发搬运和归位链条。DeepSeek 在 goal-review 上最高（0.7240），Llama 次之（0.6826），Qwen 为 0.6548，说明“是否继续当前目标”和“下一步动作选择”拆开后，更强的推理主干更能利用复审阶段保持长链任务上下文。Reactive 的差异较小，且 Llama reactive 平均分略低于 no-robot baseline（0.5128 对 0.5184），表明仅替换模型并不能弥补缺少高层任务结构的问题。
 
-因此，模型对比支持两个结论。第一，GraphWorld 对 backbone 能力敏感，尤其在需要目标复审和阶段保持的策略中更明显。第二，策略结构仍然重要：DeepSeek 的 goal-review 比 reactive 高 0.1733，Qwen 的 single-round 比 reactive 高 0.1495，Llama 的 goal-review 比 reactive 高 0.1698，说明长期共生能力来自模型理解能力和任务组织机制的共同作用。
+因此，模型对比支持两个结论。第一，GraphWorld 对 backbone 能力敏感，尤其在需要目标复审和阶段保持的策略中更明显。第二，策略结构仍然重要：DeepSeek 的 goal-review 比 reactive 高 0.1733，Qwen 的 single-round 比 reactive 高 0.1495，Llama 的 goal-review 比 reactive 高 0.1697，说明长期共生能力来自模型理解能力和任务组织机制的共同作用。
 
 \subsection{多样性实验：Graph Profile 是否拉开难度}
 图~\ref{fig:diversity-grid} 展示三种 graph profile 下 goal-review 与 no-robot baseline 的结果。该实验不改变模型、方法和日程，只改变同一 base scene 中关键物体、房间拓扑和设备链压力，用于检验图结构本身是否会改变长期调度难度。800 step 结果显示，profile 对不同场景的影响并不一致：hospital、office 和 factory 在 compact profile 下更容易取得高分，而 home 和 supermarket 在 spread profile 下反而更高。这说明 profile 不是简单的“越分散越难”，而是在改变可见目标、跨房间搬运、设备链和人类事件窗口之间的平衡。

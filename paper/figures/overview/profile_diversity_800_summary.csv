@@ -19,7 +19,7 @@ simple_supermarket_1f,Spread,Goal-review,0.7398,0.4849,0.9628,0.9231
 simple_supermarket_1f,Spread,No-robot,0.5727,0.4411,0.7321,0.5897
 simple_office_1f,Compact,Goal-review,0.6967,0.6329,0.7892,0.6786
 simple_office_1f,Compact,No-robot,0.505,0.6281,0.3496,0.5
-simple_office_1f,Normal,Goal-review,0.6827,0.5196,0.8675,0.7262
+simple_office_1f,Normal,Goal-review,0.688,0.5221,0.8863,0.7143
 simple_office_1f,Normal,No-robot,0.4559,0.5189,0.3496,0.5
 simple_office_1f,Spread,Goal-review,0.6368,0.5318,0.7546,0.6667
 simple_office_1f,Spread,No-robot,0.4515,0.5091,0.3496,0.5

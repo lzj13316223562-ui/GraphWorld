@@ -181,9 +181,9 @@ Human blocking recovery diagnostic:
 
 主实验的 5 条 no-robot fixed baseline 已经重跑到 800 step。profile 条件下的 no-robot baseline 也已补齐；normal profile 复用 base fixed，compact/spread 为新增 raw runs。主曲线、模型对比图和 profile diversity 图均来自 raw metrics。
 
-### 数据质量备注
+### 覆盖审计
 
-没有必需的实验矩阵缺口。`simple_office_1f` 的 Qwen `goal_review` fixed run 有 step 799 final summary，但 `metrics.csv`/action log 只保留 `646..799` 片段。因此论文表格使用最终累计分；曲线和动作画像只使用已落盘日志。
+没有必需的实验矩阵缺口。论文使用的 800-step 主图、profile 图、schedule 图和模型对比图均已由完整 raw metrics 重生。
 
 ## 引擎设计
 
@@ -570,7 +570,7 @@ simple_home_1f__spread_device
 | office | no_robot | 0.456 | 0.519 | 0.350 | 0.500 |
 | office | reactive | 0.513 | 0.652 | 0.340 | 0.500 |
 | office | single_round | 0.758 | 0.546 | 0.975 | 0.857 |
-| office | goal_review | 0.683 | 0.520 | 0.868 | 0.726 |
+| office | goal_review | 0.688 | 0.522 | 0.886 | 0.714 |
 | factory | no_robot | 0.381 | 0.256 | 0.608 | 0.264 |
 | factory | reactive | 0.375 | 0.320 | 0.508 | 0.264 |
 | factory | single_round | 0.652 | 0.423 | 0.985 | 0.583 |
