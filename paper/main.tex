@@ -1,3 +1,4 @@
+% !TeX program = pdflatex
 \documentclass[journal]{IEEEtran}
 
 \usepackage[UTF8,fontset=none]{ctex}
@@ -22,29 +23,6 @@
 }
 
 % 中文写作版本；后续英文投稿稿可在此基础上整体翻译和压缩。
-\setmainfont[
-  Extension=.otf,
-  UprightFont=*-regular,
-  BoldFont=*-bold,
-  ItalicFont=*-italic,
-  BoldItalicFont=*-bolditalic
-]{texgyretermes}
-\setsansfont[
-  Extension=.otf,
-  UprightFont=*-regular,
-  BoldFont=*-bold,
-  ItalicFont=*-italic,
-  BoldItalicFont=*-bolditalic
-]{texgyreheros}
-\setmonofont[
-  Extension=.otf,
-  UprightFont=*-regular,
-  BoldFont=*-regular,
-  ItalicFont=*-regular
-]{texgyrecursor}
-\setCJKmainfont{Noto Serif CJK SC}
-\setCJKsansfont{Noto Sans CJK SC}
-\setCJKmonofont{Noto Sans Mono CJK SC}
 
 \begin{document}
 
@@ -85,17 +63,26 @@
 \end{itemize}
 
 \section{相关工作}
-\subsection{具身任务完成基准}
-已有具身智能基准主要关注给定任务能否完成。语言导航、对象操作和家庭任务基准通常将每个 episode 组织为一个明确目标，智能体在有限时间内完成导航、抓取、放置或开关动作。这类基准适合评估感知、grounding 和短程执行，但其任务边界通常由外部给出，环境在 episode 内的变化也主要服务于该任务。GraphWorld 关注另一类问题：人类活动持续改变世界，机器人需要从状态偏离、空间偏离和流程压力中自主组织任务。
+\subsection{具身与开放式评测}
+具身智能评测的核心差异首先体现在“评测单位”上。若 benchmark 以单个 episode 和外部给定目标为单位，智能体主要被考察的是指令理解、局部 grounding、动作可行性和终止条件达成；但真实服务环境并不在一次任务结束后重置。人类会反复使用同一空间，制造脏污、移动关键物体、消耗资源、打开设备并留下流程前置条件。于是困难从“如何完成这一条指令”转变为“如何在持续积累的世界偏离中发现任务、排序任务并维持后续活动可用性”。这一转变正是 GraphWorld 关注的 benchmark 问题。
 
-\subsection{场景图与语义世界表示}
-场景图和语义地图为机器人提供了结构化环境表示。Hydra 研究实时 3D 场景图构建和优化~\cite{hydrarss2022}，SayPlan 将 3D 场景图用于大规模语言模型规划 grounding~\cite{sayplan2023}，Taskography 从任务规划角度评价大规模 3D 场景图~\cite{taskography2022}。这些工作说明图结构能够表达空间层次、对象关系和任务上下文。GraphWorld 继承这种结构化优势，但进一步把图变成运行时世界：节点状态、空间关系和事件日志会在每一步被更新，并直接参与动作合法性和长期评分。
+更广义的 AGI evaluation 综述已经指出，静态、任务特化和封闭测试集分数难以充分说明系统是否具有广泛能力、稳健部署能力、长程执行能力和对齐约束下的决策能力~\cite{agisurvey2024,agieval2025}。在具身语境下，TongTest 进一步将评测环境明确为动态、具身、物理和社会交互系统，并强调无限任务、自驱任务生成、价值对齐和因果理解~\cite{tongtest2024}；C-U-V framework 则把 agent 的认知结构、能力函数和价值函数放在统一形式化空间中讨论，说明智能应在与物理环境和其他智能体的交互中被评价~\cite{cuv2026}。这些工作为 GraphWorld 提供的是评测哲学和问题动机：智能体不应只在固定题库里回答问题或完成给定目标，而应在开放动态世界中长期维持有价值的行为后果。
 
-\subsection{长程规划与语言模型机器人}
-SayCan、Inner Monologue 等方法将语言模型与可供性、环境反馈或中间推理结合，用于长程任务分解和动作选择~\cite{saycan2022,innermonologue2022}。它们通常从给定指令出发，将任务拆分为可执行技能。GraphWorld 的关注点更靠前：在持续变化的世界中，哪些任务值得做，何时继续当前目标，何时切换到更紧急的环境偏离，任务做一半后如何恢复。这使得语言模型不只是任务分解器，而是人机世界共生闭环中的环境调节策略。
+具体到具身 benchmark，ALFRED、VirtualHome、BEHAVIOR-1K 和 Habitat 3.0 等工作已经推动了家庭场景、程序化日常活动、丰富对象状态和人机共居环境的发展~\cite{alfred2020,virtualhome2018,behavior1k2024,habitat3_2023}。近期 Daily Composite Tasks 也开始在动态家庭环境中考察多模态大模型的对象理解、空间智能和社会活动能力~\cite{dailycomposite2025}。这些工作说明，具身评测已经从单步操作走向复杂活动链条和人类场景。然而，它们多数仍以预定义任务、episode success 或 composite task performance 为主要评价对象；人类活动即使出现，也通常作为任务背景或任务内容，而不是持续生成维护压力的世界动力学。GraphWorld 的区别在于，任务不是外部列好的 item，而是人类长期使用世界后自然产生的状态偏离、空间偏离和流程阻塞；评价对象也不是某个活动是否完成，而是智能体能否长期维护世界的可用性、秩序和人类活动支持能力。
 
-\subsection{人类活动与持续世界}
-Generative Agents 等系统展示了长期运行的人类角色、日程和社会行为~\cite{generativeagents2023}。这类工作启发我们将 NPC 视为世界动力学的一部分，而非静态背景对象。但机器人评测需要更明确的可执行状态：门是否打开、杯子是否有水、药品是否在冷藏处、衣服是否湿、垃圾桶是否满。GraphWorld 因此将人类活动转化为可验证、可恢复、可评分的图状态变化。
+\subsection{场景图与长程机器人规划}
+一旦评测目标从单次任务完成转向长期世界维护，世界表示就不能只是静态地图或视觉上下文。它必须保存对象身份、空间层级、动态关系、可变状态、设备周期、人类事件前置条件和动作后果；同时，观察、动作合法性、状态转移和评分也需要在同一表示上闭环。场景图和语义地图正是解决这一问题的重要基础。Hydra、ConceptGraphs 和 Taskography 等工作展示了 3D scene graph 在空间层次、对象关系、开放词汇感知和任务规划评估中的价值~\cite{hydrarss2022,conceptgraphs2024,taskography2022}。
+
+长程机器人规划进一步说明，结构化世界表示需要与动作选择和反馈机制结合。SayCan 将语言模型规划与 affordance grounding 结合，Inner Monologue 引入环境反馈和中间推理，SayPlan 利用 3D scene graph 支持大规模机器人任务规划~\cite{saycan2022,innermonologue2022,sayplan2023}。已有 HLR 等状态感知闭环规划工作也表明，层次化场景图能够帮助机器人在复杂环境中组织多步任务~\cite{hlr2025}。这些工作共同说明，图、可供性、语言模型和执行反馈能够支撑更长链条的机器人行为。
+
+但在多数已有工作中，图仍主要作为感知输出、语义地图或任务 grounding 的中间表示：目标由外部给定，图服务于规划如何到达目标。GraphWorld 中的图承担更基础的角色。它不是规划器的辅助输入，而是运行时世界本体：节点状态、空间关系、人类事件、设备周期、动作效果和事件日志都在同一动态图中随时间更新；机器人观察来自该图，动作 schema 在该图上验证，NPC 事件在该图上检查前置条件并写入效果，长期评分也直接从图状态中计算。因此，GraphWorld 将 scene graph 从“任务规划表示”推进为“评测世界状态转移系统”，使扰动、动作、观察和评价共享同一个 graph-native substrate。
+
+\subsection{人类中心与价值感知智能体评测}
+如果长期服务机器人只被评价为是否清洁了物体、移动了物体或完成了某个技能，仍然会遗漏一个核心问题：这些行为是否让人类活动继续可行。人类中心和价值相关评测已经指出，智能体能力不能只由工具性成功率衡量。Social intelligence benchmark 关注模型是否能够理解他人意图、社会动态和递归推理~\cite{socialintelligence2024}。RVBench 从角色价值角度评估 role-playing LLM 的价值取向一致性~\cite{rvbench2025}。Value soft alignment 研究机器人如何识别人类短期行为与长期价值之间的不一致，并在适当时提供建议~\cite{valuesoftalignment2024}。LLM psychometrics 则从心理测量学角度讨论人格、价值、智能和社会能力的评估方式~\cite{llmpsychometrics2026}。
+
+这些工作共同说明，面向人类环境的智能体不应只优化局部动作结果，还应考虑行为是否支持人类目标、社会规范和长期价值。但许多社会/价值评测主要发生在语言问答、问卷、角色扮演或局部交互中，较少把价值后果落到可执行、可验证、会随时间累积的物理世界状态中。GraphWorld 不直接评估抽象人格或价值观，而是采用更操作化的定义：如果一个世界仍然支持人类日程中的关键活动，那么机器人对这个世界的维护就是有价值的。药品是否回到药房、冷柜是否关闭、购物车是否在入口、治疗床是否清洁、文件是否归档，这些不是孤立物体属性，而是后续人类事件能否发生的前置条件。
+
+因此，GraphWorld 将 human-centered evaluation 转化为两类可测后果：一是 human event score，即截至当前时刻人类日程事件是否因世界状态被维护而成功；二是 blocking recovery，即当人类活动因可恢复前置条件失败而阻塞后，机器人是否在后续步骤中修复该条件。这样的设计避免把“价值”停留在抽象问卷或语言判断上，而是把它落实为动态世界是否继续支持人类活动。综上，已有工作分别提供了开放式具身评测理念、日常活动 benchmark、图结构规划表示以及社会/价值评测信号，但这些要素通常被分开研究。GraphWorld 填补的缺口在于，将它们统一到一个长期动态图世界基准中：人类活动持续扰动环境，机器人动作修改同一运行时图，智能体通过状态健康、空间恢复和人类活动支持三类累计指标接受评测。GraphWorld 因而不是又一个单次任务完成基准，而是面向人机世界共生的长期世界维护评测基准。
 
 \section{方法}
 \subsection{问题定义：人机世界共生}

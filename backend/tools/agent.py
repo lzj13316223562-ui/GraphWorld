@@ -156,6 +156,16 @@ SUPPORTED_AGENTS = {
         "base_url_env": "VLLM_BASE_URL",
         "multimodal": False,
     },
+    "claude-opus-4.8": {
+        "type": "anthropic",
+        "model": "claude-opus-4.8",
+        "model_env": "ANTHROPIC_MODEL",
+        "api_key": "",
+        "api_key_env": "ANTHROPIC_AUTH_TOKEN",
+        "base_url": "https://api.anthropic.com",
+        "base_url_env": "ANTHROPIC_BASE_URL",
+        "multimodal": False,
+    },
 }
 
 # ========== 统一客户端管理 ==========
@@ -196,6 +206,54 @@ class OllamaHTTPClient:
         )
         response.raise_for_status()
         return response.json()
+
+
+class AnthropicHTTPClient:
+    def __init__(self, *, api_key: str, base_url: str):
+        self.api_key = api_key
+        self.base_url = base_url.rstrip("/")
+
+    @property
+    def messages_url(self) -> str:
+        if self.base_url.endswith("/v1"):
+            return f"{self.base_url}/messages"
+        return f"{self.base_url}/v1/messages"
+
+    def messages_create(
+        self,
+        *,
+        model: str,
+        system_prompt: str,
+        user_query: str,
+        max_tokens: int,
+        timeout: int,
+    ) -> str:
+        headers = {
+            "content-type": "application/json",
+            "anthropic-version": os.environ.get("ANTHROPIC_VERSION", "2023-06-01"),
+            "x-api-key": self.api_key,
+            "authorization": f"Bearer {self.api_key}",
+        }
+        response = requests.post(
+            self.messages_url,
+            headers=headers,
+            json={
+                "model": model,
+                "system": system_prompt,
+                "messages": [{"role": "user", "content": user_query}],
+                "temperature": TEMP,
+                "top_p": TOP_P,
+                "max_tokens": max_tokens,
+            },
+            timeout=max(60, int(timeout or 300)),
+        )
+        response.raise_for_status()
+        payload = response.json()
+        parts = []
+        for item in payload.get("content") or []:
+            if isinstance(item, dict) and item.get("type") == "text":
+                parts.append(str(item.get("text") or ""))
+        return "\n".join(part for part in parts if part).strip()
 
 
 def _ollama_chat(client, *, model: str, messages: list, options: dict | None = None, timeout: int | None = None):
@@ -246,6 +304,17 @@ def get_client(agent: str):
             clients[agent] = client
             return client
 
+        elif client_type == "anthropic":
+            api_key = _cfg_value(cfg, "api_key")
+            api_key_env = cfg.get("api_key_env")
+            base_url = _cfg_value(cfg, "base_url")
+            if not api_key:
+                hint = f"（可通过环境变量 {api_key_env} 提供）" if api_key_env else ""
+                raise RuntimeError(f"缺少 {agent} 的 API key{hint}")
+            client = AnthropicHTTPClient(api_key=api_key, base_url=base_url)
+            clients[agent] = client
+            return client
+
         elif client_type == "zhipu":
             from zhipuai import ZhipuAI
             client = ZhipuAI(api_key=cfg["api_key"])
@@ -259,6 +328,7 @@ def get_client(agent: str):
         pkg = {
             "ollama": "ollama",
             "openai": "openai",
+            "anthropic": "requests",
             "zhipu": "zhipuai"
         }.get(client_type, client_type)
         raise ImportError(f"请安装依赖包: pip install {pkg}") from e
@@ -353,6 +423,17 @@ def llm_query(system_prompt: str, user_query: str, agent: str = "glm-4", timeout
                 **extra_args  # 将扩展参数解包传入
             )
             answer = response.choices[0].message.content
+
+        elif cfg["type"] == "anthropic":
+            if enable_search:
+                tqdm.write("⚠️ Warning: Anthropic Messages API 未接入联网搜索参数，已忽略该参数。")
+            answer = client.messages_create(
+                model=_cfg_value(cfg, "model"),
+                system_prompt=system_prompt,
+                user_query=user_query,
+                max_tokens=128,
+                timeout=timeout,
+            )
 
         elif cfg["type"] == "zhipu":
             # ✨ 针对智谱，直接通过内置 tools 开启
