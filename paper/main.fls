@@ -794,6 +794,9 @@ INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam7.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm7.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmr6.tfm
+INPUT ./figures/rule_baselines/rule_baseline_scores.png
+INPUT ./figures/rule_baselines/rule_baseline_scores.png
+INPUT figures/rule_baselines/rule_baseline_scores.png
 INPUT ./figures/model_comparison/model_final_score_comparison.png
 INPUT ./figures/model_comparison/model_final_score_comparison.png
 INPUT figures/model_comparison/model_final_score_comparison.png

@@ -1,0 +1,16 @@
+scene,scene_label,method,method_label,run_id,final_score,state_score,spatial_score,human_event_score
+simple_home_1f,Home,no_robot,No robot,20260622T031935Z_3610cc67,0.6588,0.5956,0.6187,0.871
+simple_home_1f,Home,nearest_repair,Nearest repair,20260627T140551Z_37ad19ae,0.6767,0.6355,0.6187,0.871
+simple_home_1f,Home,human_blocking_first,Human-blocking first,20260627T140649Z_4a1a93b3,0.6693,0.6189,0.6187,0.871
+simple_hospital_1f,Hospital,no_robot,No robot,20260622T031954Z_da224f9f,0.5205,0.5634,0.2904,0.8264
+simple_hospital_1f,Hospital,nearest_repair,Nearest repair,20260627T140748Z_412c95a0,0.5205,0.5634,0.2904,0.8264
+simple_hospital_1f,Hospital,human_blocking_first,Human-blocking first,20260627T140934Z_a36d05c0,0.5275,0.5791,0.2904,0.8264
+simple_supermarket_1f,Supermarket,no_robot,No robot,20260622T032032Z_98f55bcb,0.5762,0.449,0.7321,0.5897
+simple_supermarket_1f,Supermarket,nearest_repair,Nearest repair,20260627T141124Z_37a1e1cf,0.6119,0.4656,0.7321,0.7308
+simple_supermarket_1f,Supermarket,human_blocking_first,Human-blocking first,20260627T141312Z_2f1edeac,0.6029,0.4766,0.7507,0.6282
+simple_office_1f,Office,no_robot,No robot,20260622T032130Z_a1db08b3,0.4559,0.5189,0.3496,0.5
+simple_office_1f,Office,nearest_repair,Nearest repair,20260627T141522Z_6f55b06a,0.4559,0.5189,0.3496,0.5
+simple_office_1f,Office,human_blocking_first,Human-blocking first,20260627T141758Z_2e4159b7,0.5899,0.5019,0.6729,0.6429
+simple_factory_1f,Factory,no_robot,No robot,20260622T032234Z_041923ae,0.3806,0.2555,0.608,0.2639
+simple_factory_1f,Factory,nearest_repair,Nearest repair,20260627T142021Z_56e87164,0.3914,0.2796,0.608,0.2639
+simple_factory_1f,Factory,human_blocking_first,Human-blocking first,20260627T142435Z_f79635c6,0.386,0.2676,0.608,0.2639

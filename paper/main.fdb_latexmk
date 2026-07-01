@@ -1,16 +1,16 @@
 # Fdb version 3
-["bibtex main"] 1782099759 "main.aux" "main.bbl" "main" 1782099763
+["bibtex main"] 1782571515 "main.aux" "main.bbl" "main" 1782571519
   "/usr/share/texlive/texmf-dist/bibtex/bst/ieeetran/IEEEtran.bst" 1440712899 57748 7c8250ecf02814ce6ddc0cdbb63df1dd ""
-  "main.aux" 1782099760 10805 29e0084a3ed91da4b8c5ffc2fb910f03 "xelatex"
-  "refs.bib" 1775535566 1417 9a542fda3cf4b498377e5dae161ac707 ""
+  "main.aux" 1782571516 11946 98c56c405ca0f4b2e84b3656f9160f4b "xelatex"
+  "refs.bib" 1782568179 5752 7f612f5635845a26ad4cb2754fc58678 ""
   (generated)
   "main.bbl"
   "main.blg"
-["xdvipdfmx"] 1782099760 "main.xdv" "main.pdf" "main" 1782099763
-  "main.xdv" 1782099760 280016 1bd8a995f12012e30b20108bbf3b0d2c "xelatex"
+["xdvipdfmx"] 1782571516 "main.xdv" "main.pdf" "main" 1782571519
+  "main.xdv" 1782571516 357980 5f7be1cf9d18b5e80201127aa112cb2e "xelatex"
   (generated)
   "main.pdf"
-["xelatex"] 1782099759 "main.tex" "main.xdv" "main" 1782099763
+["xelatex"] 1782571515 "main.tex" "main.xdv" "main" 1782571519
   "/etc/texmf/web2c/texmf.cnf" 1776160944 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/zapfding/pzdr.tfm" 1136768653 1528 f853c4d1b4e0550255e02831fdc8496f ""
@@ -115,15 +115,16 @@
   "/usr/share/texmf/tex/latex/CJK/CJKfntef.sty" 1485503905 12851 a92a26031294f6fa88114f524b3b794a ""
   "/usr/share/texmf/web2c/texmf.cnf" 1644012257 39432 7155514e09a3d69036fac785183a21c2 ""
   "/var/lib/texmf/web2c/xetex/xelatex.fmt" 1781959628 3720339 95f5f65500c877cbd403734e85c61158 ""
-  "figures/model_comparison/model_final_score_comparison.png" 1782098803 141628 50aafa8a165a0448b3fd13458cc56bcc ""
-  "figures/overview/action_profile_radar_by_method.png" 1782094745 281295 66c999509c9e4955f4d4a608c36e6b58 ""
-  "figures/overview/diversity_profile_grid.png" 1782094206 504149 47bf86515b73058f97b42d71b6f47918 ""
-  "figures/overview/goal_review_schedule_avg_grid.png" 1782093890 502402 ed22fe8b0690e9428314efa6f716e97d ""
-  "figures/overview/score_curves_by_scene_metric.png" 1782098804 543908 04f60177cb06f84169548c151fe837b6 ""
-  "main.aux" 1782099760 10805 29e0084a3ed91da4b8c5ffc2fb910f03 "xelatex"
-  "main.bbl" 1782099759 2012 1a84929e041690db7f57e780fd70bdf2 "bibtex main"
-  "main.out" 1782099760 3094 968f242c5ae140574f41254c209f4cf6 "xelatex"
-  "main.tex" 1782099752 42550 c9fb09bec438b5a18e289c92097ad67a ""
+  "figures/model_comparison/model_final_score_comparison.png" 1782205689 143932 8ef4e839ea4a97a5311e6ebbb91f77f9 ""
+  "figures/overview/action_profile_radar_by_method.png" 1782205688 281944 b60350154eac6ffd9c5a85d04c644116 ""
+  "figures/overview/diversity_profile_grid.png" 1782205683 649188 cd2f217490ffb3061aa775178d3b8a5b ""
+  "figures/overview/goal_review_schedule_avg_grid.png" 1782205685 517734 6560dddbfb3d65c5c685b345d2afa82d ""
+  "figures/overview/score_curves_by_scene_metric.png" 1782205681 560123 849ee27a6d896ed61ca3bf1418f04872 ""
+  "figures/rule_baselines/rule_baseline_scores.png" 1782571346 94040 7bb604ce8deba2e26a1f0cca6e4001f7 ""
+  "main.aux" 1782571516 11946 98c56c405ca0f4b2e84b3656f9160f4b "xelatex"
+  "main.bbl" 1782571515 4959 1e874d55a9e84cf39770acaa3f968f88 "bibtex main"
+  "main.out" 1782571516 3142 96be104711b4f869c57083ea177f2c74 "xelatex"
+  "main.tex" 1782571506 50192 69d872570cd283ee3412a48c12ffe0d1 ""
   (generated)
   "main.aux"
   "main.log"

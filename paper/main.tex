@@ -1,7 +1,10 @@
-% !TeX program = pdflatex
+% !TeX program = xelatex
 \documentclass[journal]{IEEEtran}
 
 \usepackage[UTF8,fontset=none]{ctex}
+\setCJKmainfont{Noto Serif CJK SC}
+\setCJKsansfont{Noto Sans CJK SC}
+\setCJKmonofont{Noto Sans Mono CJK SC}
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
@@ -151,9 +154,9 @@ S_{\mathrm{block}} = \frac{R}{B}.
 
 \section{实验}
 \subsection{实验设置}
-我们在五个 base scenes 上实验：家庭、医院、超市、办公室和工厂。家庭包含 1 个 resident；其余场景包含 3 个 NPC，分别覆盖病人/护士/医生、顾客/收银员/理货员、员工/经理/访客、工人/质检员/维修员。所有主实验运行 800 step，机器人设置为 1 个机器人，LLM 使用 Qwen3.5-9B。
+我们在五个 base scenes 上实验：家庭、医院、超市、办公室和工厂。家庭包含 1 个 resident；其余场景包含 3 个 NPC，分别覆盖病人/护士/医生、顾客/收银员/理货员、员工/经理/访客、工人/质检员/维修员。所有主实验运行 800 step，机器人设置为 1 个机器人，LLM 主实验使用 Qwen3.5-9B；规则基线不调用 LLM。
 
-实验分三组。主实验评估 5 个 base scene、固定日程和 4 种方法。多样性实验评估 5 个场景、3 种 graph profile 下的 goal-review 方法，并加入对应 profile 的 no-robot raw baseline。日程随机性实验评估 5 个 base scene、fixed/calendar/stochastic 三类日程下的 goal-review 方法。三组实验分别回答方法是否有效、场景难度变化是否可区分、以及人类扰动模式变化是否影响结果。
+实验分四组。主实验评估 5 个 base scene、固定日程和 4 种方法。规则调度基线在相同 800 step fixed schedule 下加入 nearest-repair 和 human-blocking-first 两种无 LLM 策略，用于检验 GraphWorld 是否确实测量长期维护调度，而不只是 prompt 技巧。多样性实验评估 5 个场景、3 种 graph profile 下的 goal-review 方法，并加入对应 profile 的 no-robot raw baseline。日程随机性实验评估 5 个 base scene、fixed/calendar/stochastic 三类日程下的 goal-review 方法。四组实验分别回答方法是否有效、基准是否具有构念有效性、场景难度变化是否可区分、以及人类扰动模式变化是否影响结果。
 
 此外，我们在修正 blocking case 日志后，额外运行一组 500 step fixed schedule 诊断实验，用于计算人类阻塞恢复率。该组实验包含 5 个 base scene 和 reactive、single-round、goal-review 三种机器人方法，不与 800 step 主分数混合，只用于分析人类流程阻塞是否被恢复。
 
@@ -172,6 +175,7 @@ S_{\mathrm{block}} = \frac{R}{B}.
 \midrule
 主实验 & 比较机器人策略是否改善长期世界健康 & 5 scenes $\times$ \{no-robot, reactive, single-round, goal-review\} & 20 & 图~\ref{fig:main-grid}，表~\ref{tab:main-results} \\
 分场景拆解 & 解释综合分差异来自状态、空间还是人类流程 & 5 scenes $\times$ 4 scores & 同主实验 & 表~\ref{tab:main-results} \\
+规则调度基线 & 检验分数是否测量长期维护调度而非 LLM prompt 技巧 & 5 scenes $\times$ \{nearest-repair, human-blocking-first\} & 10 & 图~\ref{fig:rule-baseline-scores}，表~\ref{tab:rule-baseline-results} \\
 模型主干对比 & 检验同一策略是否依赖 LLM backbone & 3 backbones $\times$ 5 scenes $\times$ 3 robot methods & 45 & 图~\ref{fig:model-comparison}，表~\ref{tab:model-avg-results} \\
 Graph profile & 检验图结构和对象分布是否改变调度难度 & 5 scenes $\times$ 3 profiles $\times$ \{goal-review, no-robot\} & 30 & 图~\ref{fig:diversity-grid} \\
 日程随机性 & 检验人类事件节奏变化下的稳定性 & 5 scenes $\times$ 3 schedules $\times$ goal-review & 15 & 图~\ref{fig:schedule-goal-review} \\
@@ -270,6 +274,45 @@ Graph profile & 检验图结构和对象分布是否改变调度难度 & 5 scene
 结果显示，人类阻塞恢复率比综合分数更直接地暴露了流程级能力差异。Reactive 几乎不能恢复 blocking case，1226 个可恢复阻塞中只恢复 3 个，说明局部可见动作选择虽然能清理部分状态偏离，却很少把失败的人类前置条件重新变为可用。Single-round 和 goal-review 均显著提高恢复率：single-round 的 pooled recovery 为 0.582，在 office 和 supermarket 达到 1.000；goal-review 的 pooled recovery 最高，为 0.700，并在 factory 中明显高于 single-round（0.685 对 0.447）。这说明显式高层任务结构能够把机器人行为从局部修补推进到人类流程恢复。
 
 不过，home 和 hospital 的 500 step 诊断结果仍为 0，说明这些方法在生活流程和医疗流程中的恢复窗口把握不足。Home 中 clean clothes、bathroom supplies 等问题依赖多步洗衣、倒水、归位和时序窗口；hospital 中处方、冷藏药、床单和医疗废物链条要求更强的阶段保持。该结果与主实验中的 state/spatial 分数分离现象一致：agent 往往能把物体搬回合理位置，却不一定完成足以恢复下一次人类事件的完整流程。因此，人类阻塞恢复率为后续显式任务队列和 deadline-aware 调度提供了更直接的优化目标。
+
+\subsection{构念有效性：规则调度基线}
+为了检验 GraphWorld 是否真的测量长期世界维护能力，而不是只奖励某种 LLM prompt 或局部动作偏好，我们额外加入两个无需 LLM 的规则调度基线。Nearest-repair 总是优先选择距离近、能直接修复当前偏离的动作，代表局部修补策略；human-blocking-first 优先处理已经记录的人类流程阻塞，代表显式面向人类活动可用性的规则策略。二者使用同一动作 schema、同一感知和同一评分函数，不调用语言模型，因此可作为调度机制的非语言对照。
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/rule_baselines/rule_baseline_scores.png}
+\caption{800 step fixed schedule 规则调度基线对比。柱状图比较 no-robot、nearest-repair 和 human-blocking-first 在五个 base scenes 上的综合分、状态分、空间分和人类事件分。}
+\label{fig:rule-baseline-scores}
+\end{figure*}
+
+\begin{table*}[t]
+\centering
+\caption{800 step fixed schedule 规则调度基线。F/S/Sp/H 分别表示综合分、状态分、空间分和人类事件分；$R/B$ 为 800 step 日志中的 human blocking recovery。}
+\label{tab:rule-baseline-results}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular}{llccccc}
+\toprule
+场景 & 规则策略 & F & S & Sp & H & Blocking $R/B$ \\
+\midrule
+家庭 & nearest-repair & 0.677 & 0.636 & 0.619 & 0.871 & 0/22 \\
+家庭 & human-blocking-first & 0.669 & 0.619 & 0.619 & 0.871 & 0/22 \\
+医院 & nearest-repair & 0.521 & 0.563 & 0.290 & 0.826 & 0/55 \\
+医院 & human-blocking-first & 0.528 & 0.579 & 0.290 & 0.826 & 0/55 \\
+超市 & nearest-repair & 0.612 & 0.466 & 0.732 & 0.731 & 4/24 \\
+超市 & human-blocking-first & 0.603 & 0.477 & 0.751 & 0.628 & 4/276 \\
+办公室 & nearest-repair & 0.456 & 0.519 & 0.350 & 0.500 & 0/447 \\
+办公室 & human-blocking-first & 0.590 & 0.502 & 0.673 & 0.643 & 0/305 \\
+工厂 & nearest-repair & 0.391 & 0.280 & 0.608 & 0.264 & 3/1078 \\
+工厂 & human-blocking-first & 0.386 & 0.268 & 0.608 & 0.264 & 3/1078 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+图~\ref{fig:rule-baseline-scores} 和表~\ref{tab:rule-baseline-results} 显示，两个简单规则基线能够在部分场景中维持非平凡分数，但不能系统替代长期调度。Nearest-repair 在 home、hospital 和 supermarket 中接近 no-robot 或略高，说明这些场景存在可被局部修补利用的稳定信号；但它在 office 和 factory 中显著低于结构化 LLM agent，暴露了跨房间归位、流程阶段保持和任务优先级排序的需求。Human-blocking-first 在 office 中将 final score 从 0.456 提高到 0.590，并把 spatial score 从 0.350 提高到 0.673，说明显式关注人类流程会改变维护行为；但它在 supermarket 和 factory 中并未稳定提高 human event score 或 recovery rate，表明“看见阻塞”不等于能完成恢复链条。
+
+这些结果支持 GraphWorld 的构念有效性。若该 benchmark 只是在奖励局部清洁或最近归位，nearest-repair 应当在多数场景中接近最优；若 human event score 只是 state/spatial score 的附属指标，human-blocking-first 不应在 office 中改变空间和人类事件表现，也不应在 supermarket 中暴露更高的 blocking case 压力。相反，规则基线表现出清楚的能力边界：局部修补、阻塞优先和 LLM 任务结构分别捕捉长期维护中的不同因素。GraphWorld 因而不只是让几个 agent 在手写事件里跑分，而是在同一动态图状态空间中区分局部修复、人类流程恢复和长期调度策略。
 
 \subsection{模型主干补充实验：同一策略是否受模型能力影响}
 在上述 Qwen3.5-9B 主实验基础上，我们进一步在相同五个 base scenes、相同 800 step 设置下加入 DeepSeek-R1-Distill-Qwen-14B 和 Llama-3.1-8B，比较三种模型在 reactive、single-round 和 goal-review 三种机器人策略下的表现，以检验同一策略是否受模型主干能力影响。三个 backbone 的 45 条 with-robot run 均达到 step 799 完整性要求，因此全部纳入正式统计。图~\ref{fig:model-comparison} 展示最终综合分对比，灰色虚线为对应场景的 no-robot 基线。表~\ref{tab:model-avg-results} 汇总跨场景平均分。
@@ -378,7 +421,7 @@ Goal-review & 0.6548 & +0.1364 & \bestcell{0.7240} & \bestcell{+0.2056} & 0.6826
 这些失败并不是简单的模型不够大。即使给定技能库和合法动作空间，agent 仍然需要判断任务价值、流程阶段和切换时机。换言之，GraphWorld 将问题从“能否生成合法动作”推进到了“能否在动态世界中组织长期行为”。这也是我们认为该 benchmark 有研究价值的地方：它把 LLM agent 的短程常识能力和长期调度能力分离开来，使后者成为可以被系统测量的问题。
 
 \section{讨论}
-GraphWorld 的核心是把已知技能放到持续扰动世界里，评估 agent 是否能长期调度它们。因此，技能库将评测焦点从“模型是否知道洗衣常识”转移到“模型能否在多类环境偏离之间进行长期共生调节”。在这个意义上，未来可以加入 oracle skill upper bound：若完美调度且完美执行所有技能，分数上界是多少；再将 LLM agent 与该上界比较，区分场景/评分问题和 agent 调度问题。
+GraphWorld 的核心是把已知技能放到持续扰动世界里，评估 agent 是否能长期调度它们。因此，技能库将评测焦点从“模型是否知道洗衣常识”转移到“模型能否在多类环境偏离之间进行长期共生调节”。本文加入的规则调度基线已经表明，局部修补和阻塞优先都只能覆盖长期维护问题的一部分；未来仍可进一步加入 oracle skill upper bound，估计完美调度且完美执行所有技能时的分数上界，从而更精细地区分场景/评分限制和 agent 调度限制。
 
 多场景设计服务于同一个抽象问题。Home、hospital、supermarket、office 和 factory 分别代表生活秩序、健康安全流程、零售补给、协作信息流和生产流程。未来加入 warehouse 或 greenhouse 时，也应按同一抽象扩展：仓储调节库存、通道和拣货流；农业大棚调节作物状态、温湿度、灌溉和工具流程。这样 GraphWorld 可以作为 human-agent world symbiosis 的统一基准，而不局限于某个单一 domain 的任务集。
 
