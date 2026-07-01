@@ -949,6 +949,18 @@ def llm_choose_reactive_action(
     return candidates[index], answer
 
 
+def ranked_rule_candidates(
+    candidates: list[dict[str, Any]],
+    observation: dict[str, Any],
+    initial_scene: dict[str, Any] | None = None,
+    active_goal: dict[str, Any] | None = None,
+    agent_id: str = "robot_01",
+) -> list[tuple[int, int, dict[str, Any]]]:
+    nodes = _node_index(observation)
+    initial_nodes = _scene_node_index(initial_scene)
+    return _ranked_prompt_candidates(candidates, nodes, initial_nodes, active_goal, agent_id)
+
+
 def fallback_choose_action(candidates: list[dict[str, Any]]) -> dict[str, Any]:
     for action_name in ("brush", "close"):
         for candidate in candidates:
@@ -975,4 +987,11 @@ def execute(orchestrator: Orchestrator, action: dict[str, Any], agent_id: str = 
     return orchestrator.step([payload], [])
 
 
-__all__ = ["decide", "execute", "fallback_choose_action", "llm_choose_action", "parse_action_index"]
+__all__ = [
+    "decide",
+    "execute",
+    "fallback_choose_action",
+    "llm_choose_action",
+    "parse_action_index",
+    "ranked_rule_candidates",
+]
